@@ -40,10 +40,6 @@ public class ClassBuilder {
         return buffer.toString();
     }
 
-    public void addLinkedMethod(ClassOrInterfaceDeclaration classSpecToLink) {
-//        outputClass.addMethod(this.generateLinkedMethod(generateRandomName(10), classSpecToLink));
-    }
-
     public void addBasicMethod(String name) {
         MethodDeclaration method = this.outputClass.addMethod(name);
 
@@ -59,19 +55,28 @@ public class ClassBuilder {
         Parameter parameter = new Parameter();
         parameter.setType(String[].class);
         parameter.setName("args");
+        parameters.add(parameter);
         method.setParameters(parameters);
     }
 
-//    private MethodDeclaration generateLinkedMethod(String name, TypeSpec classSpecToLink) {
-//        List<MethodDeclaration> methodsSpecs = classSpecToLink.methodSpecs;
-//
-//        // TODO: check how imports will be handled in that case. If the input class isn't imported, it won't compile
-//        MethodDeclaration.Builder methodBuilder = MethodDeclaration.methodBuilder(name)
-//                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-//                .returns(void.class)
-//                .addParameter(ClassName.bestGuess(classSpecToLink.name), "inputClass")
-//                .addStatement("inputClass." + methodsSpecs.get(2).name + "()");
-//
-//        return methodBuilder.build();
-//    }
+    public void addBasicLinkedMethod(String name, ClassOrInterfaceDeclaration classToLink) {
+        // TODO: check how imports will be handled. If the input class isn't imported at the top, it won't compile
+        MethodDeclaration method = this.outputClass.addMethod(name);
+
+        method.setModifiers(PUBLIC, STATIC);
+        List<MethodDeclaration> methodsSpecs = classToLink.getMethods();
+
+        method.setType(void.class);
+
+        NodeList<Parameter> parameters = new NodeList<>();
+        Parameter param = new Parameter();
+        param.setType(String.valueOf(classToLink.getName()));
+        param.setName("inputClass");
+        parameters.add(param);
+        method.setParameters(parameters);
+
+        BlockStmt methodBody = new BlockStmt();
+        methodBody.addStatement("inputClass." + classToLink.getMethods().get(2).getName() + "();");
+        method.setBody(methodBody);
+    }
 }
