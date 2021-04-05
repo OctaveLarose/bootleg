@@ -1,14 +1,18 @@
 package com.github.octavelarose.codegenerator;
 
 import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.TypeSpec;
+import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.body.Parameter;
+import com.github.javaparser.ast.stmt.BlockStmt;
+
+import static com.github.javaparser.ast.Modifier.Keyword.*;
 
 import javax.lang.model.element.Modifier;
 import java.util.List;
 import java.util.Random;
+
 
 public class ClassBuilder {
     ClassOrInterfaceDeclaration outputClass;
@@ -18,8 +22,7 @@ public class ClassBuilder {
         this.outputClass.setPublic(true);
 
         for (int i = 0; i < methodsNbr; i++)
-            this.outputClass.addField(int.class, generateRandomName(i + 5));
-//            outputClass.addMethod(this.generateBasicMethod(generateRandomName(i + 5)));
+            this.addBasicMethod(generateRandomName(i + 5));
     }
 
     public ClassOrInterfaceDeclaration build() {
@@ -37,30 +40,38 @@ public class ClassBuilder {
         return buffer.toString();
     }
 
-    public void addLinkedMethod(TypeSpec classSpecToLink) {
+    public void addLinkedMethod(ClassOrInterfaceDeclaration classSpecToLink) {
 //        outputClass.addMethod(this.generateLinkedMethod(generateRandomName(10), classSpecToLink));
     }
 
-    private MethodSpec generateBasicMethod(String name) {
-        MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(name)
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .returns(void.class)
-                .addParameter(String[].class, "args")
-                .addStatement("$T.out.println($S)", System.class, "Hello world!");
+    public void addBasicMethod(String name) {
+        MethodDeclaration method = this.outputClass.addMethod(name);
 
-        return methodBuilder.build();
+        method.setModifiers(PUBLIC, STATIC);
+
+        BlockStmt methodBody = new BlockStmt();
+        methodBody.addStatement("System.out.println(\"Hello world!\");");
+        method.setBody(methodBody);
+
+        method.setType(int.class);
+
+        NodeList<Parameter> parameters = new NodeList<>();
+        Parameter parameter = new Parameter();
+        parameter.setType(String[].class);
+        parameter.setName("args");
+        method.setParameters(parameters);
     }
 
-    private MethodSpec generateLinkedMethod(String name, TypeSpec classSpecToLink) {
-        List<MethodSpec> methodsSpecs = classSpecToLink.methodSpecs;
-
-        // TODO: check how imports will be handled in that case. If the input class isn't imported, it won't compile
-        MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(name)
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .returns(void.class)
-                .addParameter(ClassName.bestGuess(classSpecToLink.name), "inputClass")
-                .addStatement("inputClass." + methodsSpecs.get(2).name + "()");
-
-        return methodBuilder.build();
-    }
+//    private MethodDeclaration generateLinkedMethod(String name, TypeSpec classSpecToLink) {
+//        List<MethodDeclaration> methodsSpecs = classSpecToLink.methodSpecs;
+//
+//        // TODO: check how imports will be handled in that case. If the input class isn't imported, it won't compile
+//        MethodDeclaration.Builder methodBuilder = MethodDeclaration.methodBuilder(name)
+//                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+//                .returns(void.class)
+//                .addParameter(ClassName.bestGuess(classSpecToLink.name), "inputClass")
+//                .addStatement("inputClass." + methodsSpecs.get(2).name + "()");
+//
+//        return methodBuilder.build();
+//    }
 }
