@@ -1,0 +1,27 @@
+plugins {
+    id 'java'
+    id 'maven-publish'
+    id 'application'
+}
+
+repositories {
+    mavenLocal()
+    maven {
+        url = uri('https://repo.maven.apache.org/maven2/')
+    }
+}
+
+dependencies {
+    implementation 'com.squareup:javapoet:1.13.0'
+}
+//
+group = 'groupId'
+version = '1.0-SNAPSHOT'
+description = 'code_generation'
+java.sourceCompatibility = JavaVersion.VERSION_1_8
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+mainClassName = 'com.github.octavelarose.codegenerator.CodeGenerator'
