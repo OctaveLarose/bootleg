@@ -1,7 +1,5 @@
-package com.github.octavelarose.codegenerator;
+package com.github.octavelarose.codegenerator.javapoet;
 
-import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
@@ -11,19 +9,18 @@ import java.util.List;
 import java.util.Random;
 
 public class ClassBuilder {
-    ClassOrInterfaceDeclaration outputClass;
+    TypeSpec.Builder outputClass;
 
-    ClassBuilder(String name, int methodsNbr, CompilationUnit cu) {
-        this.outputClass = cu.addClass(name);
-        this.outputClass.setPublic(true);
+    ClassBuilder(String name, int methodsNbr) {
+        this.outputClass = TypeSpec.classBuilder(name)
+                .addModifiers(Modifier.PUBLIC, Modifier.FINAL);
 
         for (int i = 0; i < methodsNbr; i++)
-            this.outputClass.addField(int.class, generateRandomName(i + 5));
-//            outputClass.addMethod(this.generateBasicMethod(generateRandomName(i + 5)));
+            outputClass.addMethod(this.generateBasicMethod(generateRandomName(i + 5)));
     }
 
-    public ClassOrInterfaceDeclaration build() {
-        return this.outputClass;
+    public TypeSpec build() {
+        return outputClass.build();
     }
 
     private String generateRandomName(int nbrCharacters) {
@@ -38,7 +35,7 @@ public class ClassBuilder {
     }
 
     public void addLinkedMethod(TypeSpec classSpecToLink) {
-//        outputClass.addMethod(this.generateLinkedMethod(generateRandomName(10), classSpecToLink));
+        outputClass.addMethod(this.generateLinkedMethod(generateRandomName(10), classSpecToLink));
     }
 
     private MethodSpec generateBasicMethod(String name) {
