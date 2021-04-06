@@ -1,6 +1,7 @@
 package com.github.octavelarose.codegenerator;
 
 import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.ImportDeclaration;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
@@ -16,8 +17,10 @@ import java.util.Random;
 
 public class ClassBuilder {
     ClassOrInterfaceDeclaration outputClass;
+    CompilationUnit cu;
 
     ClassBuilder(String name, int methodsNbr, CompilationUnit cu) {
+        this.cu = cu;
         this.outputClass = cu.addClass(name);
         this.outputClass.setPublic(true);
 
@@ -52,6 +55,7 @@ public class ClassBuilder {
         method.setType(int.class);
 
         NodeList<Parameter> parameters = new NodeList<>();
+        // TODO declare type in constructor, there's got to be a way.
         Parameter parameter = new Parameter();
         parameter.setType(String[].class);
         parameter.setName("args");
@@ -64,7 +68,6 @@ public class ClassBuilder {
         MethodDeclaration method = this.outputClass.addMethod(name);
 
         method.setModifiers(PUBLIC, STATIC);
-        List<MethodDeclaration> methodsSpecs = classToLink.getMethods();
 
         method.setType(void.class);
 
@@ -78,5 +81,13 @@ public class ClassBuilder {
         BlockStmt methodBody = new BlockStmt();
         methodBody.addStatement("inputClass." + classToLink.getMethods().get(2).getName() + "();");
         method.setBody(methodBody);
+
+        // TODO get package declaration from class compilation unit instead
+        cu.addImport("com." + classToLink.getName().asString());
+        cu.addImport("java.util.List");
+    }
+
+    public void setPackageDeclaration(String pkgDeclaration) {
+        this.cu.setPackageDeclaration(pkgDeclaration);
     }
 }

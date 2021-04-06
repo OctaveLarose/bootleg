@@ -1,19 +1,27 @@
 package com.github.octavelarose.codegenerator;
 
-import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.PackageDeclaration;
+
+import java.nio.file.Path;
 
 public class ClassExporter {
-    ClassOrInterfaceDeclaration classToExport;
+    CompilationUnit cuToExport;
+    Path outputPath = null;
 
-    ClassExporter(String pkgName, ClassOrInterfaceDeclaration classToExport) {
-        this.classToExport = classToExport;
+    ClassExporter(CompilationUnit cuToExport) {
+        this.cuToExport = cuToExport;
+    }
+
+    ClassExporter(CompilationUnit cuToExport, String outputPath) {
+        this.cuToExport = cuToExport;
     }
 
     public void exportToStdout() {
-        System.out.println(classToExport.toString());
+        System.out.println(cuToExport.toString());
     }
 
     public void exportToFile() {
-        // TODO.
+        System.out.println(cuToExport.toString());
     }
 }
