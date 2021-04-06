@@ -1,13 +1,14 @@
 package com.github.octavelarose.codegenerator;
 
 import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.ast.PackageDeclaration;
 
-import java.nio.file.Path;
+import java.io.*;
 
 public class ClassExporter {
     CompilationUnit cuToExport;
-    Path outputPath = null;
+    String outputPath = ClassExporter.DEFAULT_OUTPUT_PATH;
+
+    static String DEFAULT_OUTPUT_PATH = ".";
 
     ClassExporter(CompilationUnit cuToExport) {
         this.cuToExport = cuToExport;
@@ -15,6 +16,7 @@ public class ClassExporter {
 
     ClassExporter(CompilationUnit cuToExport, String outputPath) {
         this.cuToExport = cuToExport;
+        this.outputPath = outputPath;
     }
 
     public void exportToStdout() {
@@ -22,6 +24,17 @@ public class ClassExporter {
     }
 
     public void exportToFile() {
-        System.out.println(cuToExport.toString());
+        // TODO make it use the package name
+        // TODO generate the package dirs
+        File newTextFile = new File(DEFAULT_OUTPUT_PATH, cuToExport.getClass().getName() + ".java");
+
+        FileWriter fw;
+        try {
+            fw = new FileWriter(newTextFile);
+            fw.write(cuToExport.toString());
+            fw.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

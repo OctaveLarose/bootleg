@@ -16,14 +16,15 @@ public class CodeGenerator {
         ClassBuilder testClassBuilder = new ClassBuilder("TestClass", 5, cuTestClass);
         testClassBuilder.setPackageDeclaration("com.test.testClass");
 
-
         CompilationUnit cuHelperClass = new CompilationUnit();
         ClassBuilder helperClassBuilder = new ClassBuilder("HelperClass", 5, cuHelperClass);
+        testClassBuilder.setPackageDeclaration("com.test.testClass");
         ClassOrInterfaceDeclaration HelperClass = helperClassBuilder.build();
 //
         testClassBuilder.addBasicLinkedMethod("linkedMethodTest", HelperClass);
 
         ClassExporter classExporter = new ClassExporter(cuTestClass, ".");
-        classExporter.exportToStdout();
+//        classExporter.exportToStdout();
+        classExporter.exportToFile();
     }
 }
