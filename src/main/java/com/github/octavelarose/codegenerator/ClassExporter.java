@@ -4,14 +4,17 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.PackageDeclaration;
 
 import java.io.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Optional;
 
 public class ClassExporter {
     CompilationUnit cuToExport;
-    String outputPath = ClassExporter.DEFAULT_OUTPUT_PATH;
+    String outputPath = ClassExporter.DEFAULT_PKG_OUTPUT_PATH;
 
-    static String DEFAULT_OUTPUT_PATH = ".";
+    static String DEFAULT_PKG_OUTPUT_PATH = "./code_output";
 
     ClassExporter(CompilationUnit cuToExport) {
         this.cuToExport = cuToExport;
@@ -27,21 +30,36 @@ public class ClassExporter {
     }
 
     public void exportToFile() {
-        // TODO generate the package dirs
         Optional<PackageDeclaration> pkgDeclarationOptional = cuToExport.getPackageDeclaration();
 
-        if (pkgDeclarationOptional.isEmpty()) {
+        String pkgDeclarationStr;
+        if (pkgDeclarationOptional.isPresent()) {
+            pkgDeclarationStr = pkgDeclarationOptional.get().toString();
+        } else {
             System.err.println("No package declaration, cannot export file");
             return;
         }
 
-        String pkgDeclarationStr = cuToExport.getPackageDeclaration().get().toString();
         // 8 is the length of "package " ; and we remove the newlines and ; at the end
         pkgDeclarationStr = pkgDeclarationStr.substring(8, pkgDeclarationStr.length() - 3);
-        String[] pkgDeclarationSplit = pkgDeclarationStr.split("\\.");
-        System.out.println(Arrays.toString(pkgDeclarationSplit));
+        ArrayList<String> pkgDeclarationSplit = new ArrayList<>(Arrays.asList(pkgDeclarationStr.split("\\.")));
+        String className = pkgDeclarationSplit.remove(pkgDeclarationSplit.size() - 1);
 
-        File newTextFile = new File(DEFAULT_OUTPUT_PATH, pkgDeclarationSplit[pkgDeclarationSplit.length - 1] + ".java");
+        Path dirsPath = Paths.get(
+                DEFAULT_PKG_OUTPUT_PATH,
+                String.join("/", pkgDeclarationSplit));
+
+        File dirs = new File(String.valueOf(dirsPath));
+        if (!dirs.exists()) {
+            boolean dirCreationResult = dirs.mkdirs();
+            if (!dirCreationResult)
+                System.out.println("Directory creation failed.");
+        }
+
+        File newTextFile = new File(
+                String.valueOf(dirsPath),
+                className.substring(0, 1).toUpperCase() + className.substring(1) + ".java"
+        );
 
         FileWriter fw;
         try {

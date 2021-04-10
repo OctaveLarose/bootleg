@@ -3,11 +3,6 @@ package com.github.octavelarose.codegenerator;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-
-import static com.github.javaparser.ast.Modifier.Keyword.*;
-
 
 public class CodeGenerator {
     public static void main(String[] args) {
