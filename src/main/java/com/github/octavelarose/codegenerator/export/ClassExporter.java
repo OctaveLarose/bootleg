@@ -46,9 +46,13 @@ public class ClassExporter {
 
     public void exportToFile() throws ExportFailedException {
         ArrayList<String> pkgDeclarationSplit = this.getPkgDeclarationSplit();
-        String className = pkgDeclarationSplit.remove(pkgDeclarationSplit.size() - 1);
+        String className = this.getClassName();
         Path dirsPath = this.createPkgDirs(pkgDeclarationSplit);
         this.exportClassFile(dirsPath, className);
+    }
+
+    private String getClassName() {
+        return cuToExport.getType(0).getName().toString();
     }
 
     private void exportClassFile(Path dirsPath, String className) throws ExportFailedException {

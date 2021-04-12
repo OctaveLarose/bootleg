@@ -12,11 +12,11 @@ public class CodeGenerator {
         // CompilationUnit cu = StaticJavaParser.parse(new File("src/main/java/com/github/octavelarose/codegenerator/samples/ReversePolishNotation.java"));
         CompilationUnit cuTestClass = new CompilationUnit();
         ClassBuilder testClassBuilder = new ClassBuilder("TestClass", 5, cuTestClass);
-        testClassBuilder.setPackageDeclaration("com.test.testClass");
+        testClassBuilder.setPackageDeclaration("com.test.random");
 
         CompilationUnit cuHelperClass = new CompilationUnit();
         ClassBuilder helperClassBuilder = new ClassBuilder("HelperClass", 5, cuHelperClass);
-        helperClassBuilder.setPackageDeclaration("com.test.helperClass");
+        helperClassBuilder.setPackageDeclaration("com.test.random");
         ClassOrInterfaceDeclaration HelperClass = helperClassBuilder.build();
 
         testClassBuilder.addBasicLinkedMethod("linkedMethodTest", HelperClass);
