@@ -2,6 +2,7 @@ package com.github.octavelarose.codegenerator;
 
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.octavelarose.codegenerator.builders.BuildFailedException;
 import com.github.octavelarose.codegenerator.builders.ClassBuilder;
 import com.github.octavelarose.codegenerator.export.ClassExporter;
 import com.github.octavelarose.codegenerator.export.ExportFailedException;
@@ -12,14 +13,17 @@ public class CodeGenerator {
         // CompilationUnit cu = StaticJavaParser.parse(new File("src/main/java/com/github/octavelarose/codegenerator/samples/ReversePolishNotation.java"));
         CompilationUnit cuTestClass = new CompilationUnit();
         ClassBuilder testClassBuilder = new ClassBuilder("TestClass", 5, cuTestClass);
-        testClassBuilder.setPackageDeclaration("com.test.random");
+        testClassBuilder.setPackageDeclaration("com.abc.random");
 
         CompilationUnit cuHelperClass = new CompilationUnit();
         ClassBuilder helperClassBuilder = new ClassBuilder("HelperClass", 5, cuHelperClass);
-        helperClassBuilder.setPackageDeclaration("com.test.random");
-        ClassOrInterfaceDeclaration HelperClass = helperClassBuilder.build();
+        helperClassBuilder.setPackageDeclaration("com.abc.random");
 
-        testClassBuilder.addBasicLinkedMethod("linkedMethodTest", HelperClass);
+        try {
+            testClassBuilder.addBasicLinkedMethod("linkedMethodTest", cuHelperClass);
+        } catch (BuildFailedException e) {
+            System.err.println("Creating a linked method failed: " + e.getMessage());
+        }
 
         ClassExporter testClassExporter = new ClassExporter(cuTestClass);
         ClassExporter helperClassExporter = new ClassExporter(cuHelperClass);

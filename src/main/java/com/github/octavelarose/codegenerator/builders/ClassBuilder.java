@@ -2,13 +2,19 @@ package com.github.octavelarose.codegenerator.builders;
 
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.NodeList;
+import com.github.javaparser.ast.PackageDeclaration;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.stmt.BlockStmt;
+import com.github.javaparser.ast.visitor.VoidVisitor;
+import com.github.octavelarose.codegenerator.builders.code_visitors.ClassNameCollector;
 
 import static com.github.javaparser.ast.Modifier.Keyword.*;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 
 
@@ -57,8 +63,18 @@ public class ClassBuilder {
         method.setParameters(parameters);
     }
 
-    public void addBasicLinkedMethod(String name, ClassOrInterfaceDeclaration classToLink) {
+    public void addBasicLinkedMethod(String name, CompilationUnit cuClassToLink) throws BuildFailedException {
         MethodDeclaration method = this.outputClass.addMethod(name, PUBLIC);
+
+        List<String> classNames = new ArrayList<>();
+        VoidVisitor<List<String>> classNameVisitor = new ClassNameCollector();
+        classNameVisitor.visit(cuClassToLink, classNames);
+        String className = classNames.get(0);
+
+        Optional<ClassOrInterfaceDeclaration> classToLinkOptional = cuClassToLink.getClassByName(className);
+        if (classToLinkOptional.isEmpty())
+            throw new BuildFailedException("Cannot find class to link in linked method input CU");
+        ClassOrInterfaceDeclaration classToLink = classToLinkOptional.get();
 
         method.setType(void.class);
 
@@ -69,11 +85,17 @@ public class ClassBuilder {
         method.setParameters(parameters);
 
         BlockStmt methodBody = new BlockStmt();
-        methodBody.addStatement("inputClass." + classToLink.getMethods().get(2).getName() + "();");
+        methodBody.addStatement("inputClass." + classToLink.getMethods().get(2).getName() + "(3);");
         method.setBody(methodBody);
 
-        // TODO get package declaration from class compilation unit instead
-        cu.addImport("com." + classToLink.getName().asString());
+        Optional<PackageDeclaration> pkgDeclaration = cuClassToLink.getPackageDeclaration();
+        if (pkgDeclaration.isPresent()) {
+            // TODO: It should be the first but it doesn't like it for some reason.
+            // String importDeclaration = pkgDeclaration.get().getNameAsString() + "." + className;
+            String importDeclaration = "random." + className;
+            this.cu.addImport(importDeclaration);
+        } else
+            throw new BuildFailedException("Attempted to create a linked method with a class with no pkg declaration.");
     }
 
     public void setPackageDeclaration(String pkgDeclaration) {
