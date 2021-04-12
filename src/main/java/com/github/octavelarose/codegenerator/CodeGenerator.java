@@ -2,6 +2,9 @@ package com.github.octavelarose.codegenerator;
 
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.octavelarose.codegenerator.build.ClassBuilder;
+import com.github.octavelarose.codegenerator.export.ClassExporter;
+import com.github.octavelarose.codegenerator.export.ExportFailedException;
 
 
 public class CodeGenerator {
@@ -13,13 +16,20 @@ public class CodeGenerator {
 
         CompilationUnit cuHelperClass = new CompilationUnit();
         ClassBuilder helperClassBuilder = new ClassBuilder("HelperClass", 5, cuHelperClass);
-        testClassBuilder.setPackageDeclaration("com.test.testClass");
+        helperClassBuilder.setPackageDeclaration("com.test.helperClass");
         ClassOrInterfaceDeclaration HelperClass = helperClassBuilder.build();
-//
+
         testClassBuilder.addBasicLinkedMethod("linkedMethodTest", HelperClass);
 
-        ClassExporter classExporter = new ClassExporter(cuTestClass, ".");
+        ClassExporter testClassExporter = new ClassExporter(cuTestClass);
+        ClassExporter helperClassExporter = new ClassExporter(cuHelperClass);
 //        classExporter.exportToStdout();
-        classExporter.exportToFile();
+
+        try {
+            testClassExporter.exportToFile();
+            helperClassExporter.exportToFile();
+        } catch (ExportFailedException e) {
+            System.err.println("Export failed: " + e.getMessage());
+        }
     }
 }
