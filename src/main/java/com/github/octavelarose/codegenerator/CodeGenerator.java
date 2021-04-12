@@ -2,7 +2,7 @@ package com.github.octavelarose.codegenerator;
 
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import com.github.octavelarose.codegenerator.build.ClassBuilder;
+import com.github.octavelarose.codegenerator.builders.ClassBuilder;
 import com.github.octavelarose.codegenerator.export.ClassExporter;
 import com.github.octavelarose.codegenerator.export.ExportFailedException;
 
