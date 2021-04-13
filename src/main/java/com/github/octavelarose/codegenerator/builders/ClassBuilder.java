@@ -10,20 +10,20 @@ import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.visitor.VoidVisitor;
 import com.github.octavelarose.codegenerator.builders.code_visitors.ClassNameCollector;
 
-import static com.github.javaparser.ast.Modifier.Keyword.*;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+
+import static com.github.javaparser.ast.Modifier.Keyword.PUBLIC;
 
 
 public class ClassBuilder {
     ClassOrInterfaceDeclaration outputClass;
     CompilationUnit cu;
 
-    public ClassBuilder(String name, int methodsNbr, CompilationUnit cu) {
-        this.cu = cu;
+    public ClassBuilder(String name, int methodsNbr) {
+        this.cu = new CompilationUnit();
         this.outputClass = cu.addClass(name);
         this.outputClass.setPublic(true);
 
@@ -63,8 +63,9 @@ public class ClassBuilder {
         method.setParameters(parameters);
     }
 
-    public void addBasicLinkedMethod(String name, CompilationUnit cuClassToLink) throws BuildFailedException {
+    public void addBasicLinkedMethod(String name, ClassBuilder classBuilderToLink) throws BuildFailedException {
         MethodDeclaration method = this.outputClass.addMethod(name, PUBLIC);
+        CompilationUnit cuClassToLink = classBuilderToLink.getCompilationUnit();
 
         List<String> classNames = new ArrayList<>();
         VoidVisitor<List<String>> classNameVisitor = new ClassNameCollector();
@@ -90,9 +91,8 @@ public class ClassBuilder {
 
         Optional<PackageDeclaration> pkgDeclaration = cuClassToLink.getPackageDeclaration();
         if (pkgDeclaration.isPresent()) {
-            // TODO: It should be the first but it doesn't like it for some reason.
-            // String importDeclaration = pkgDeclaration.get().getNameAsString() + "." + className;
-            String importDeclaration = "random." + className;
+            // TODO: It doesn't like it since it's the same pkg in my test case (I believe)
+            String importDeclaration = pkgDeclaration.get().getNameAsString() + "." + className;
             this.cu.addImport(importDeclaration);
         } else
             throw new BuildFailedException("Attempted to create a linked method with a class with no pkg declaration.");
@@ -100,5 +100,9 @@ public class ClassBuilder {
 
     public void setPackageDeclaration(String pkgDeclaration) {
         this.cu.setPackageDeclaration(pkgDeclaration);
+    }
+
+    public CompilationUnit getCompilationUnit() {
+        return this.cu;
     }
 }

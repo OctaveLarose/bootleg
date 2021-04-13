@@ -2,8 +2,11 @@ package com.github.octavelarose.codegenerator.export;
 
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.PackageDeclaration;
+import com.github.octavelarose.codegenerator.builders.ClassBuilder;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -14,10 +17,10 @@ public class ClassExporter {
     CompilationUnit cuToExport;
     String outputPath = ClassExporter.DEFAULT_PKG_OUTPUT_PATH;
 
-    static String DEFAULT_PKG_OUTPUT_PATH = "./code_output";
+    static String DEFAULT_PKG_OUTPUT_PATH = "./code_output/main/src/main/java";
 
-    public ClassExporter(CompilationUnit cuToExport) {
-        this.cuToExport = cuToExport;
+    public ClassExporter(ClassBuilder classBuilderToExport) {
+        this.cuToExport = classBuilderToExport.getCompilationUnit();
     }
 
     public ClassExporter(CompilationUnit cuToExport, String outputPath) {

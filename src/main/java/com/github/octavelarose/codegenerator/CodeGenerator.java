@@ -1,7 +1,5 @@
 package com.github.octavelarose.codegenerator;
 
-import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.octavelarose.codegenerator.builders.BuildFailedException;
 import com.github.octavelarose.codegenerator.builders.ClassBuilder;
 import com.github.octavelarose.codegenerator.export.ClassExporter;
@@ -10,28 +8,25 @@ import com.github.octavelarose.codegenerator.export.ExportFailedException;
 
 public class CodeGenerator {
     public static void main(String[] args) {
-        // CompilationUnit cu = StaticJavaParser.parse(new File("src/main/java/com/github/octavelarose/codegenerator/samples/ReversePolishNotation.java"));
-        CompilationUnit cuTestClass = new CompilationUnit();
-        ClassBuilder testClassBuilder = new ClassBuilder("TestClass", 5, cuTestClass);
+        ClassBuilder testClassBuilder = new ClassBuilder("TestClass", 5);
         testClassBuilder.setPackageDeclaration("com.abc.random");
 
-        CompilationUnit cuHelperClass = new CompilationUnit();
-        ClassBuilder helperClassBuilder = new ClassBuilder("HelperClass", 5, cuHelperClass);
+        ClassBuilder helperClassBuilder = new ClassBuilder("HelperClass", 5);
         helperClassBuilder.setPackageDeclaration("com.abc.random");
 
         try {
-            testClassBuilder.addBasicLinkedMethod("linkedMethodTest", cuHelperClass);
+            testClassBuilder.addBasicLinkedMethod("linkedMethodTest", helperClassBuilder);
         } catch (BuildFailedException e) {
             System.err.println("Creating a linked method failed: " + e.getMessage());
         }
 
-        ClassExporter testClassExporter = new ClassExporter(cuTestClass);
-        ClassExporter helperClassExporter = new ClassExporter(cuHelperClass);
-//        classExporter.exportToStdout();
+        ClassExporter testClassExporter = new ClassExporter(testClassBuilder);
+        ClassExporter helperClassExporter = new ClassExporter(helperClassBuilder);
 
         try {
             testClassExporter.exportToFile();
             helperClassExporter.exportToFile();
+            // testClassExporter.exportToStdout();
         } catch (ExportFailedException e) {
             System.err.println("Export failed: " + e.getMessage());
         }
