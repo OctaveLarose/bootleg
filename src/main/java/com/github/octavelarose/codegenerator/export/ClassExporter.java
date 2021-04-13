@@ -13,25 +13,60 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Optional;
 
+/**
+ * Takes in a class we generated and exports it, either to a file or standard output.
+ */
 public class ClassExporter {
     CompilationUnit cuToExport;
     String outputPath = ClassExporter.DEFAULT_PKG_OUTPUT_PATH;
 
     static String DEFAULT_PKG_OUTPUT_PATH = "./code_output/main/src/main/java";
 
+    /**
+     * The class constructor.
+     *
+     * @param classBuilderToExport The class builder that contains all the class info.
+     */
     public ClassExporter(ClassBuilder classBuilderToExport) {
         this.cuToExport = classBuilderToExport.getCompilationUnit();
     }
 
-    public ClassExporter(CompilationUnit cuToExport, String outputPath) {
-        this.cuToExport = cuToExport;
+    /**
+     * The class constructor.
+     *
+     * @param classBuilderToExport The class builder that contains all the class info.
+     * @param outputPath           The file output path when building the package.
+     */
+    public ClassExporter(ClassBuilder classBuilderToExport, String outputPath) {
+        this.cuToExport = classBuilderToExport.getCompilationUnit();
         this.outputPath = outputPath;
     }
 
+    /**
+     * Exports the class to stdout, printing its contents.
+     */
     public void exportToStdout() {
         System.out.println(cuToExport.toString());
     }
 
+    /**
+     * Export the class to a file. Takes the package of the class into account and generates these dirs as well.
+     *
+     * @throws ExportFailedException Thrown if the export goes wrong.
+     */
+    public void exportToFile() throws ExportFailedException {
+        ArrayList<String> pkgDeclarationSplit = this.getPkgDeclarationSplit();
+        String className = this.getClassName();
+        Path dirsPath = this.createPkgDirs(pkgDeclarationSplit);
+        this.exportClassFile(dirsPath, className);
+    }
+
+    /**
+     * Returns the split package declaration. Used for generating the package directories.
+     *
+     * @return An array containing the package declaration separated into all its subelements.
+     * @throws ExportFailedException Thrown if there's no package declaration.
+     */
     private ArrayList<String> getPkgDeclarationSplit() throws ExportFailedException {
         Optional<PackageDeclaration> pkgDeclarationOptional = cuToExport.getPackageDeclaration();
 
@@ -47,17 +82,20 @@ public class ClassExporter {
         return new ArrayList<>(Arrays.asList(pkgDeclarationStr.split("\\.")));
     }
 
-    public void exportToFile() throws ExportFailedException {
-        ArrayList<String> pkgDeclarationSplit = this.getPkgDeclarationSplit();
-        String className = this.getClassName();
-        Path dirsPath = this.createPkgDirs(pkgDeclarationSplit);
-        this.exportClassFile(dirsPath, className);
-    }
-
+    /**
+     * @return The class' name.
+     */
     private String getClassName() {
         return cuToExport.getType(0).getName().toString();
     }
 
+    /**
+     * Exports the actual class (and only the class file, no pkg dirs) to a file.
+     *
+     * @param dirsPath  The path where the class should be exported, taking into account the package subdirs.
+     * @param className The name of the class, and so name of the file.
+     * @throws ExportFailedException Thrown if the class can't be written to a file.
+     */
     private void exportClassFile(Path dirsPath, String className) throws ExportFailedException {
         File newTextFile = new File(
                 String.valueOf(dirsPath),
@@ -74,6 +112,13 @@ public class ClassExporter {
         }
     }
 
+    /**
+     * Generates the class' package directories.
+     *
+     * @param pkgDeclarationSplit The list of directory names.
+     * @return A path to the deepest part of the directories.
+     * @throws ExportFailedException Thrown if creating directories goes wrong.
+     */
     private Path createPkgDirs(ArrayList<String> pkgDeclarationSplit) throws ExportFailedException {
         Path dirsPath = Paths.get(
                 outputPath,

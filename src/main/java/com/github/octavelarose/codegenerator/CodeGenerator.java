@@ -6,7 +6,15 @@ import com.github.octavelarose.codegenerator.export.ClassExporter;
 import com.github.octavelarose.codegenerator.export.ExportFailedException;
 
 
+/**
+ * Main class for the code generator program.
+ */
 public class CodeGenerator {
+    /**
+     * Main function to generate a codebase.
+     *
+     * @param args Unused args.
+     */
     public static void main(String[] args) {
         ClassBuilder testClassBuilder = new ClassBuilder("TestClass", 5);
         testClassBuilder.setPackageDeclaration("com.abc.random");

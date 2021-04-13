@@ -18,10 +18,20 @@ import java.util.Random;
 import static com.github.javaparser.ast.Modifier.Keyword.PUBLIC;
 
 
+/**
+ * Builds a class: returns a JavaParser CompilationUnit that contains the class itself.
+ * Currently builds a simple class, no interfaces/subclasses/etc.
+ */
 public class ClassBuilder {
     ClassOrInterfaceDeclaration outputClass;
     CompilationUnit cu;
 
+    /**
+     * Constructor for the ClassBuilder class. Needs to allow a lot more options in the future.
+     *
+     * @param name       The name of the class.
+     * @param methodsNbr The number of methods.
+     */
     public ClassBuilder(String name, int methodsNbr) {
         this.cu = new CompilationUnit();
         this.outputClass = cu.addClass(name);
@@ -34,10 +44,12 @@ public class ClassBuilder {
             this.addBasicMethod(generateRandomName(i + 5));
     }
 
-    public ClassOrInterfaceDeclaration build() {
-        return this.outputClass;
-    }
-
+    /**
+     * Generates a random name. Used to name methods, among others. May need to be moved to a "Utils" class.
+     *
+     * @param nbrCharacters Number of characters of the output string.
+     * @return A string made up of nbrCharacters random characters.
+     */
     private String generateRandomName(int nbrCharacters) {
         Random random = new Random();
         StringBuilder buffer = new StringBuilder(nbrCharacters);
@@ -49,6 +61,11 @@ public class ClassBuilder {
         return buffer.toString();
     }
 
+    /**
+     * Adds a basic method that just contains a basic print operation.
+     *
+     * @param name The name of the method.
+     */
     public void addBasicMethod(String name) {
         MethodDeclaration method = this.outputClass.addMethod(name, PUBLIC);
 
@@ -63,6 +80,13 @@ public class ClassBuilder {
         method.setParameters(parameters);
     }
 
+    /**
+     * Adds a basic method that takes as input another class, and calls a random method of this class.
+     *
+     * @param name               The name of the method.
+     * @param classBuilderToLink The ClassBuilder that contains the method parameter class.
+     * @throws BuildFailedException To be thrown if the build fails (invalid input class, mostly)
+     */
     public void addBasicLinkedMethod(String name, ClassBuilder classBuilderToLink) throws BuildFailedException {
         MethodDeclaration method = this.outputClass.addMethod(name, PUBLIC);
         CompilationUnit cuClassToLink = classBuilderToLink.getCompilationUnit();
@@ -85,6 +109,7 @@ public class ClassBuilder {
         NodeList<Parameter> parameters = new NodeList<>(parameter);
         method.setParameters(parameters);
 
+        // TODO only call public methods... or protected if same package. A bit of a hassle and a job for future me
         BlockStmt methodBody = new BlockStmt();
         methodBody.addStatement("inputClass." + classToLink.getMethods().get(2).getName() + "(3);");
         method.setBody(methodBody);
@@ -98,10 +123,18 @@ public class ClassBuilder {
             throw new BuildFailedException("Attempted to create a linked method with a class with no pkg declaration.");
     }
 
+    /**
+     * Sets the package declaration.
+     *
+     * @param pkgDeclaration The package declaration.
+     */
     public void setPackageDeclaration(String pkgDeclaration) {
         this.cu.setPackageDeclaration(pkgDeclaration);
     }
 
+    /**
+     * @return The CompilationUnit object that contains all the class information.
+     */
     public CompilationUnit getCompilationUnit() {
         return this.cu;
     }

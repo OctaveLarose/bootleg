@@ -5,6 +5,10 @@ import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 
 import java.util.List;
 
+/**
+ * A JavaParser visitor to get the name of the classes in a CompilationUnit.
+ * Shamelessly stolen off SO, and could probably be simplified if not removed altogether.
+ */
 public class ClassNameCollector extends VoidVisitorAdapter<List<String>>
 {
     @Override
