@@ -1,7 +1,7 @@
 package com.github.octavelarose.codegenerator;
 
 import com.github.octavelarose.codegenerator.builders.BuildFailedException;
-import com.github.octavelarose.codegenerator.builders.ClassBuilder;
+import com.github.octavelarose.codegenerator.builders.classes.BasicClassBuilder;
 import com.github.octavelarose.codegenerator.export.ClassExporter;
 import com.github.octavelarose.codegenerator.export.ExportFailedException;
 
@@ -16,10 +16,10 @@ public class CodeGenerator {
      * @param args Unused args.
      */
     public static void main(String[] args) {
-        ClassBuilder testClassBuilder = new ClassBuilder("TestClass", 5);
+        BasicClassBuilder testClassBuilder = new BasicClassBuilder("TestClass", 5);
         testClassBuilder.setPackageDeclaration("com.abc.random");
 
-        ClassBuilder helperClassBuilder = new ClassBuilder("HelperClass", 5);
+        BasicClassBuilder helperClassBuilder = new BasicClassBuilder("HelperClass", 5);
         helperClassBuilder.setPackageDeclaration("com.abc.random");
 
         try {

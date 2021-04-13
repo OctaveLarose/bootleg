@@ -1,14 +1,17 @@
-package com.github.octavelarose.codegenerator.builders;
+package com.github.octavelarose.codegenerator.builders.classes;
 
 import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.PackageDeclaration;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.stmt.BlockStmt;
+import com.github.javaparser.ast.type.VoidType;
 import com.github.javaparser.ast.visitor.VoidVisitor;
-import com.github.octavelarose.codegenerator.builders.code_visitors.ClassNameCollector;
+import com.github.octavelarose.codegenerator.builders.BuildFailedException;
+import com.github.octavelarose.codegenerator.builders.ast_visitors.ClassNameCollector;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,23 +25,18 @@ import static com.github.javaparser.ast.Modifier.Keyword.PUBLIC;
  * Builds a class: returns a JavaParser CompilationUnit that contains the class itself.
  * Currently builds a simple class, no interfaces/subclasses/etc.
  */
-public class ClassBuilder {
-    ClassOrInterfaceDeclaration outputClass;
-    CompilationUnit cu;
-
+public class BasicClassBuilder extends ClassBuilder {
     /**
      * Constructor for the ClassBuilder class. Needs to allow a lot more options in the future.
      *
      * @param name       The name of the class.
      * @param methodsNbr The number of methods.
      */
-    public ClassBuilder(String name, int methodsNbr) {
-        this.cu = new CompilationUnit();
-        this.outputClass = cu.addClass(name);
-        this.outputClass.setPublic(true);
+    public BasicClassBuilder(String name, int methodsNbr) {
+        super(name);
 
-        // Basic, completely empty constructor
-        this.outputClass.addConstructor();
+        this.setModifiers(new NodeList<>(Modifier.publicModifier()));
+        this.addConstructor();
 
         for (int i = 0; i < methodsNbr; i++)
             this.addBasicMethod(generateRandomName(i + 5));
@@ -63,21 +61,20 @@ public class ClassBuilder {
 
     /**
      * Adds a basic method that just contains a basic print operation.
-     *
      * @param name The name of the method.
      */
     public void addBasicMethod(String name) {
-        MethodDeclaration method = this.outputClass.addMethod(name, PUBLIC);
+        NodeList<Modifier> modifiers = new NodeList<>(Modifier.publicModifier());
 
         BlockStmt methodBody = new BlockStmt();
         methodBody.addStatement("System.out.println(\"" + generateRandomName(6) + "\");");
-        method.setBody(methodBody);
-
-        method.setType(void.class);
 
         Parameter parameter = new Parameter().setType(int.class).setName("args");
         NodeList<Parameter> parameters = new NodeList<>(parameter);
-        method.setParameters(parameters);
+
+        VoidType returnType = new VoidType();
+
+        this.addMethod(name, returnType, parameters, methodBody, modifiers);
     }
 
     /**
@@ -87,7 +84,7 @@ public class ClassBuilder {
      * @param classBuilderToLink The ClassBuilder that contains the method parameter class.
      * @throws BuildFailedException To be thrown if the build fails (invalid input class, mostly)
      */
-    public void addBasicLinkedMethod(String name, ClassBuilder classBuilderToLink) throws BuildFailedException {
+    public void addBasicLinkedMethod(String name, BasicClassBuilder classBuilderToLink) throws BuildFailedException {
         MethodDeclaration method = this.outputClass.addMethod(name, PUBLIC);
         CompilationUnit cuClassToLink = classBuilderToLink.getCompilationUnit();
 
@@ -121,21 +118,5 @@ public class ClassBuilder {
             this.cu.addImport(importDeclaration);
         } else
             throw new BuildFailedException("Attempted to create a linked method with a class with no pkg declaration.");
-    }
-
-    /**
-     * Sets the package declaration.
-     *
-     * @param pkgDeclaration The package declaration.
-     */
-    public void setPackageDeclaration(String pkgDeclaration) {
-        this.cu.setPackageDeclaration(pkgDeclaration);
-    }
-
-    /**
-     * @return The CompilationUnit object that contains all the class information.
-     */
-    public CompilationUnit getCompilationUnit() {
-        return this.cu;
     }
 }

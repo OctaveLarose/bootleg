@@ -2,7 +2,7 @@ package com.github.octavelarose.codegenerator.export;
 
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.PackageDeclaration;
-import com.github.octavelarose.codegenerator.builders.ClassBuilder;
+import com.github.octavelarose.codegenerator.builders.classes.ClassBuilder;
 
 import java.io.File;
 import java.io.FileWriter;
