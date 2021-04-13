@@ -5,7 +5,6 @@ import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.PackageDeclaration;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.type.VoidType;
@@ -18,20 +17,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 
-import static com.github.javaparser.ast.Modifier.Keyword.PUBLIC;
-
-
 /**
- * Builds a class: returns a JavaParser CompilationUnit that contains the class itself.
- * Currently builds a simple class, no interfaces/subclasses/etc.
+ * Builds a basic class, mostly to try out the API and generate basic codebases.
  */
 public class BasicClassBuilder extends ClassBuilder {
-    /**
-     * Constructor for the ClassBuilder class. Needs to allow a lot more options in the future.
-     *
-     * @param name       The name of the class.
-     * @param methodsNbr The number of methods.
-     */
+
     public BasicClassBuilder(String name, int methodsNbr) {
         super(name);
 
@@ -80,14 +70,14 @@ public class BasicClassBuilder extends ClassBuilder {
     /**
      * Adds a basic method that takes as input another class, and calls a random method of this class.
      *
-     * @param name               The name of the method.
+     * @param methodName         The name of the method.
      * @param classBuilderToLink The ClassBuilder that contains the method parameter class.
      * @throws BuildFailedException To be thrown if the build fails (invalid input class, mostly)
      */
-    public void addBasicLinkedMethod(String name, BasicClassBuilder classBuilderToLink) throws BuildFailedException {
-        MethodDeclaration method = this.outputClass.addMethod(name, PUBLIC);
+    public void addBasicLinkedMethod(String methodName, BasicClassBuilder classBuilderToLink) throws BuildFailedException {
         CompilationUnit cuClassToLink = classBuilderToLink.getCompilationUnit();
 
+        // TODO: come on, we can make that bit cleaner. We're big boys
         List<String> classNames = new ArrayList<>();
         VoidVisitor<List<String>> classNameVisitor = new ClassNameCollector();
         classNameVisitor.visit(cuClassToLink, classNames);
@@ -98,24 +88,28 @@ public class BasicClassBuilder extends ClassBuilder {
             throw new BuildFailedException("Cannot find class to link in linked method input CU");
         ClassOrInterfaceDeclaration classToLink = classToLinkOptional.get();
 
-        method.setType(void.class);
-
         Parameter parameter = new Parameter()
                 .setType(String.valueOf(classToLink.getName()))
                 .setName("inputClass");
         NodeList<Parameter> parameters = new NodeList<>(parameter);
-        method.setParameters(parameters);
 
         // TODO only call public methods... or protected if same package. A bit of a hassle and a job for future me
-        BlockStmt methodBody = new BlockStmt();
-        methodBody.addStatement("inputClass." + classToLink.getMethods().get(2).getName() + "(3);");
-        method.setBody(methodBody);
+        BlockStmt methodBody = new BlockStmt()
+                .addStatement("inputClass." + classToLink.getMethods().get(2).getName() + "(3);");
+
+        this.addMethod(
+                methodName,
+                new VoidType(),
+                parameters,
+                methodBody,
+                new NodeList<>(Modifier.publicModifier())
+        );
 
         Optional<PackageDeclaration> pkgDeclaration = cuClassToLink.getPackageDeclaration();
         if (pkgDeclaration.isPresent()) {
-            // TODO: It doesn't like it since it's the same pkg in my test case (I believe)
+            // TODO: It doesn't use it since it's the same pkg in my test case (I believe). Need to make sure
             String importDeclaration = pkgDeclaration.get().getNameAsString() + "." + className;
-            this.cu.addImport(importDeclaration);
+            this.addImport(importDeclaration);
         } else
             throw new BuildFailedException("Attempted to create a linked method with a class with no pkg declaration.");
     }

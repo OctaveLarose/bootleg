@@ -10,9 +10,12 @@ import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.type.Type;
 
 
+/**
+ * Builds a class: returns a JavaParser CompilationUnit that contains the class itself.
+ */
 public abstract class ClassBuilder {
-    CompilationUnit cu;
-    ClassOrInterfaceDeclaration outputClass;
+    private final CompilationUnit cu;
+    private final ClassOrInterfaceDeclaration outputClass;
 
     public ClassBuilder(String name) {
         this.cu = new CompilationUnit();
@@ -28,6 +31,15 @@ public abstract class ClassBuilder {
         this.outputClass.setModifiers(modifiers);
     }
 
+    /**
+     * Adds a method to the class.
+     *
+     * @param name       The method's name.
+     * @param returnType The method's return value type.
+     * @param parameters The method's parameters
+     * @param methodBody The method's body, i.e content, i.e code.
+     * @param modifiers  The method's modifiers (public, protected, static...)
+     */
     public void addMethod(String name,
                           Type returnType,
                           NodeList<Parameter> parameters,
@@ -43,6 +55,16 @@ public abstract class ClassBuilder {
     public void addField() {
         // Currently unused.
         // FieldDeclaration field = this.outputClass.addField(...);
+    }
+
+    /**
+     * Adds an import statement to the CU.
+     * Since a class may rely on other classes, it may not compile if the CU doesn't take care of the right imports.
+     *
+     * @param importStr The value of the import statement, minus the "import " and end semicolon.
+     */
+    public void addImport(String importStr) {
+        this.cu.addImport(importStr);
     }
 
     /**
