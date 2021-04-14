@@ -10,6 +10,8 @@ import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.type.Type;
 
+import java.util.List;
+
 
 /**
  * Builds a class: returns a JavaParser CompilationUnit that contains the class itself.
@@ -52,6 +54,10 @@ public abstract class ClassBuilder {
         method.setBody(methodBody);
         method.setType(returnType);
         method.setParameters(parameters);
+    }
+
+    public List<MethodDeclaration> getMethods() {
+        return this.outputClass.getMethods();
     }
 
     public void addField() {

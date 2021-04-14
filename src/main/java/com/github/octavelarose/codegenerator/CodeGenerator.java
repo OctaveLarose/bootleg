@@ -41,18 +41,18 @@ public class CodeGenerator {
                 "com.abc.random")
         );
 
-        classBuilders.put("Main", new EntryPointBuilder(
-                "Main",
-                "com.abc",
-                new ArrayList<>(Arrays.asList(classBuilders.get("TestClass"), classBuilders.get("HelperClass")))
-        ));
-
         try {
             BasicClassBuilder testClass = (BasicClassBuilder) classBuilders.get("TestClass");
             testClass.addBasicLinkedMethod("linkedMethodTest", classBuilders.get("HelperClass"));
         } catch (BuildFailedException e) {
             System.err.println("Creating a linked method failed: " + e.getMessage());
         }
+
+        classBuilders.put("Main", new EntryPointBuilder(
+                "Main",
+                "com.abc",
+                new ArrayList<>(Arrays.asList(classBuilders.get("TestClass"), classBuilders.get("HelperClass")))
+        ));
 
         return classBuilders;
     }

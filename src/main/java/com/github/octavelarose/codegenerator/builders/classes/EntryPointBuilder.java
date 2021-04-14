@@ -3,6 +3,7 @@ package com.github.octavelarose.codegenerator.builders.classes;
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.NodeList;
+import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.type.ArrayType;
@@ -52,7 +53,26 @@ public class EntryPointBuilder extends ClassBuilder {
                 .addStatement("TestClass testClass = new TestClass();")
                 .addStatement("HelperClass helperClass = new HelperClass();");
 
-        mainFunctionBody.addStatement("System.out.println(\"Runs correctly\");");
+        mainFunctionBody.addStatement("System.out.println(\"START OF GENERATED CODE.\");");
+
+
+        List<MethodDeclaration> methodsTest = classesToInvoke.get(0).getMethods();
+        List<MethodDeclaration> methodsHelper = classesToInvoke.get(1).getMethods();
+
+        for (MethodDeclaration md : methodsHelper) {
+            String statement = "helperClass" + "." + md.getNameAsString() + "(" + "3" + ");";
+            mainFunctionBody.addStatement(statement);
+        }
+
+        for (MethodDeclaration md : methodsTest) {
+            if (md.getParameters().get(0).getName().asString().equals("inputClass")) {
+                mainFunctionBody.addStatement("testClass" + "." + md.getNameAsString() + "(" + "helperClass" + ");");
+            } else {
+                mainFunctionBody.addStatement("testClass" + "." + md.getNameAsString() + "(" + "3" + ");");
+            }
+        }
+
+        mainFunctionBody.addStatement("System.out.println(\"END OF GENERATED CODE.\");");
 
         return mainFunctionBody;
     }
