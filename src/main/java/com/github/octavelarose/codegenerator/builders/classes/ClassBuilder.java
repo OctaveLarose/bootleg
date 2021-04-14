@@ -4,6 +4,7 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.ConstructorDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.stmt.BlockStmt;
@@ -22,9 +23,10 @@ public abstract class ClassBuilder {
         this.outputClass = cu.addClass(name);
     }
 
-    public void addConstructor() {
+    public void addConstructor(NodeList<Modifier> modifiers) {
         // Needs to take in parameters in the future.
-        this.outputClass.addConstructor();
+        ConstructorDeclaration cs = this.outputClass.addConstructor();
+        cs.setModifiers(modifiers);
     }
 
     public void setModifiers(NodeList<Modifier> modifiers) {
@@ -65,6 +67,17 @@ public abstract class ClassBuilder {
      */
     public void addImport(String importStr) {
         this.cu.addImport(importStr);
+    }
+
+
+    /**
+     * @return The class' package declaration.
+     */
+    public String getImportStr() {
+        if (this.cu.getPackageDeclaration().isPresent())
+            return this.cu.getPackageDeclaration().get().getNameAsString() + "." + this.outputClass.getName();
+        else
+            return null; // Should throw instead, but... it's unreachable, so
     }
 
     /**

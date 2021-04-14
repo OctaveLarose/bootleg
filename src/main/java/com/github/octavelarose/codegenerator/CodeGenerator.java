@@ -8,6 +8,7 @@ import com.github.octavelarose.codegenerator.export.ClassExporter;
 import com.github.octavelarose.codegenerator.export.ExportFailedException;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 
 
@@ -21,6 +22,11 @@ public class CodeGenerator {
      * @param args Unused args.
      */
     public static void main(String[] args) {
+        HashMap<String, ClassBuilder> builders = CodeGenerator.build();
+        CodeGenerator.export(builders);
+    }
+
+    private static HashMap<String, ClassBuilder> build() {
         HashMap<String, ClassBuilder> classBuilders = new HashMap<>();
 
         classBuilders.put("TestClass", new BasicClassBuilder(
@@ -35,7 +41,11 @@ public class CodeGenerator {
                 "com.abc.random")
         );
 
-        classBuilders.put("Main", new EntryPointBuilder("Main", "com.abc"));
+        classBuilders.put("Main", new EntryPointBuilder(
+                "Main",
+                "com.abc",
+                new ArrayList<>(Arrays.asList(classBuilders.get("TestClass"), classBuilders.get("HelperClass")))
+        ));
 
         try {
             BasicClassBuilder testClass = (BasicClassBuilder) classBuilders.get("TestClass");
@@ -44,6 +54,10 @@ public class CodeGenerator {
             System.err.println("Creating a linked method failed: " + e.getMessage());
         }
 
+        return classBuilders;
+    }
+
+    private static void export(HashMap<String, ClassBuilder> classBuilders) {
         ArrayList<ClassExporter> classExporters = new ArrayList<>();
         for (ClassBuilder builder : classBuilders.values()) {
             classExporters.add(new ClassExporter(builder));

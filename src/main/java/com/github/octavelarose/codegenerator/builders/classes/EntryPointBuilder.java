@@ -6,15 +6,20 @@ import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.type.ArrayType;
-import com.github.javaparser.ast.type.PrimitiveType;
+import com.github.javaparser.ast.type.VoidType;
+
+import java.util.List;
 
 /**
  * The program entry point, i.e main class that contains the main function.
  */
 public class EntryPointBuilder extends ClassBuilder {
+    List<ClassBuilder> classesToInvoke;
 
-    public EntryPointBuilder(String name, String pkgDeclarationStr) {
+    public EntryPointBuilder(String name, String pkgDeclarationStr, List<ClassBuilder> classesToInvoke) {
         super(name);
+        this.classesToInvoke = classesToInvoke;
+
         this.setPackageDeclaration(pkgDeclarationStr);
         this.generateEntryPointFunction();
     }
@@ -31,15 +36,25 @@ public class EntryPointBuilder extends ClassBuilder {
 
         this.addMethod(
                 "main",
-                new PrimitiveType(PrimitiveType.Primitive.INT),
+                new VoidType(),
                 parameters,
                 methodBody,
-                new NodeList<>(Modifier.publicModifier())
+                new NodeList<>(Modifier.publicModifier(), Modifier.staticModifier())
         );
+
+        for (ClassBuilder cb : this.classesToInvoke) {
+            this.addImport(cb.getImportStr());
+        }
     }
 
     private BlockStmt getMainFunctionBody() {
-        return new BlockStmt().addStatement("return (0);");
+        BlockStmt mainFunctionBody = new BlockStmt()
+                .addStatement("TestClass testClass = new TestClass();")
+                .addStatement("HelperClass helperClass = new HelperClass();");
+
+        mainFunctionBody.addStatement("System.out.println(\"Runs correctly\");");
+
+        return mainFunctionBody;
     }
 
 }

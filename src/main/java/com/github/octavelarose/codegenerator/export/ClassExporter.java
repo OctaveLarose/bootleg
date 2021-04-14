@@ -20,7 +20,7 @@ public class ClassExporter {
     CompilationUnit cuToExport;
     String outputPath = ClassExporter.DEFAULT_PKG_OUTPUT_PATH;
 
-    static String DEFAULT_PKG_OUTPUT_PATH = "./code_output/main/src/main/java";
+    static String DEFAULT_PKG_OUTPUT_PATH = "./code_output/src/main/java";
 
     /**
      * The class constructor.
