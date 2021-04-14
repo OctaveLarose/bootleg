@@ -22,12 +22,13 @@ import java.util.Random;
  */
 public class BasicClassBuilder extends ClassBuilder {
 
-    public BasicClassBuilder(String name, int methodsNbr) {
+    public BasicClassBuilder(String name, int methodsNbr, String pkgDeclaration) {
         super(name);
 
         this.setModifiers(new NodeList<>(Modifier.publicModifier()));
-        this.addConstructor();
+        this.setPackageDeclaration(pkgDeclaration);
 
+        this.addConstructor();
         for (int i = 0; i < methodsNbr; i++)
             this.addBasicMethod(generateRandomName(i + 5));
     }
@@ -74,7 +75,7 @@ public class BasicClassBuilder extends ClassBuilder {
      * @param classBuilderToLink The ClassBuilder that contains the method parameter class.
      * @throws BuildFailedException To be thrown if the build fails (invalid input class, mostly)
      */
-    public void addBasicLinkedMethod(String methodName, BasicClassBuilder classBuilderToLink) throws BuildFailedException {
+    public void addBasicLinkedMethod(String methodName, ClassBuilder classBuilderToLink) throws BuildFailedException {
         CompilationUnit cuClassToLink = classBuilderToLink.getCompilationUnit();
 
         // TODO: come on, we can make that bit cleaner. We're big boys
