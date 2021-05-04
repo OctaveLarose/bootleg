@@ -7,6 +7,7 @@ import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.ConstructorDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.Parameter;
+import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.type.Type;
 
@@ -66,6 +67,13 @@ public abstract class ClassBuilder {
         this.outputClass.addField(fieldType, name, modifiers);
     }
 
+    public void addField(String name,
+                         Type fieldType,
+                         Expression initializer,
+                         Modifier.Keyword... modifiers) {
+        this.outputClass.addFieldWithInitializer(fieldType, name, initializer, modifiers);
+    }
+
     /**
      * Adds an import statement to the CU.
      * Since a class may rely on other classes, it may not compile if the CU doesn't take care of the right imports.
@@ -89,7 +97,6 @@ public abstract class ClassBuilder {
 
     /**
      * Sets the package declaration.
-     *
      * @param pkgDeclaration The package declaration.
      */
     public void setPackageDeclaration(String pkgDeclaration) {

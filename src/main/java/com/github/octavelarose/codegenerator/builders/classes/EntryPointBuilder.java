@@ -53,7 +53,7 @@ public class EntryPointBuilder extends ClassBuilder {
                 .addStatement("TestClass testClass = new TestClass();")
                 .addStatement("HelperClass helperClass = new HelperClass();");
 
-        mainFunctionBody.addStatement("System.out.println(\"START OF GENERATED CODE.\");");
+        mainFunctionBody.addStatement("System.out.println(\"START OF GENERATED CODE OUTPUT.\");");
 
 
         List<MethodDeclaration> methodsTest = classesToInvoke.get(0).getMethods();
@@ -72,7 +72,7 @@ public class EntryPointBuilder extends ClassBuilder {
             }
         }
 
-        mainFunctionBody.addStatement("System.out.println(\"END OF GENERATED CODE.\");");
+        mainFunctionBody.addStatement("System.out.println(\"END OF GENERATED CODE OUTPUT.\");");
 
         return mainFunctionBody;
     }
