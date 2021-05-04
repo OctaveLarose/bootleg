@@ -9,7 +9,6 @@ import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.expr.AssignExpr;
 import com.github.javaparser.ast.expr.FieldAccessExpr;
-import com.github.javaparser.ast.expr.IntegerLiteralExpr;
 import com.github.javaparser.ast.expr.ThisExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.type.PrimitiveType;
@@ -61,17 +60,18 @@ public class BasicClassBuilder extends ClassBuilder {
 
     /**
      * Adds a basic, private field of a random primitive type.
-     *
      * @param name The name of the field.
      */
     public void addBasicField(String name) {
-        PrimitiveType fieldType = new PrimitiveType(PrimitiveType.Primitive.INT);
-        this.addField(name, fieldType, new IntegerLiteralExpr("0"), Modifier.Keyword.PRIVATE);
+        PrimitiveType.Primitive[] primitives = PrimitiveType.Primitive.values();
+        PrimitiveType fieldType = new PrimitiveType(primitives[new Random().nextInt(primitives.length)]);
+
+        this.addField(name, fieldType, Modifier.Keyword.PRIVATE);
+//        this.addField(name, fieldType, new IntegerLiteralExpr("0"), Modifier.Keyword.PRIVATE);
     }
 
     /**
      * Adds a basic, public method that just contains a basic print operation / basic field operations.
-     *
      * @param name The name of the method.
      */
     public void addBasicMethod(String name) {
