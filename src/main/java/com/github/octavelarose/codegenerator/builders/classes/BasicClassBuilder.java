@@ -5,12 +5,18 @@ import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.PackageDeclaration;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.Parameter;
+import com.github.javaparser.ast.expr.AssignExpr;
+import com.github.javaparser.ast.expr.FieldAccessExpr;
+import com.github.javaparser.ast.expr.ThisExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
+import com.github.javaparser.ast.type.PrimitiveType;
 import com.github.javaparser.ast.type.VoidType;
 import com.github.javaparser.ast.visitor.VoidVisitor;
 import com.github.octavelarose.codegenerator.builders.BuildFailedException;
 import com.github.octavelarose.codegenerator.builders.ast_visitors.ClassNameCollector;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,13 +28,15 @@ import java.util.Random;
  */
 public class BasicClassBuilder extends ClassBuilder {
 
-    public BasicClassBuilder(String name, int methodsNbr, String pkgDeclaration) {
+    public BasicClassBuilder(String name, int methodsNbr, int fieldsNbr, String pkgDeclaration) {
         super(name);
 
         this.setModifiers(new NodeList<>(Modifier.publicModifier()));
         this.setPackageDeclaration(pkgDeclaration);
 
         this.addConstructor(new NodeList<>(Modifier.publicModifier()));
+        for (int i = 0; i < fieldsNbr; i++)
+            this.addBasicField(generateRandomName(i + 5));
         for (int i = 0; i < methodsNbr; i++)
             this.addBasicMethod(generateRandomName(i + 5));
     }
@@ -51,13 +59,34 @@ public class BasicClassBuilder extends ClassBuilder {
     }
 
     /**
-     * Adds a basic method that just contains a basic print operation.
+     * Adds a basic, private field of a random primitive type.
+     *
+     * @param name The name of the field.
+     */
+    public void addBasicField(String name) {
+        PrimitiveType fieldType = new PrimitiveType(PrimitiveType.Primitive.INT);
+        this.addField(name, fieldType, Modifier.Keyword.PRIVATE);
+    }
+
+    /**
+     * Adds a basic, public method that just contains a basic print operation.
+     *
      * @param name The name of the method.
      */
     public void addBasicMethod(String name) {
         NodeList<Modifier> modifiers = new NodeList<>(Modifier.publicModifier());
-
         BlockStmt methodBody = new BlockStmt();
+
+        List<FieldDeclaration> classFields = this.outputClass.getFields();
+        if (classFields.size() > 0) {
+            // Gets a FieldDeclaration ("private int abcd") and gets the variable name.
+            int randomFieldId = new Random().nextInt(classFields.size());
+            String randomFieldName = StringUtils.removeEnd(classFields.get(randomFieldId).toString().split(" ")[2], ";");
+            FieldAccessExpr fieldAccessExpr = new FieldAccessExpr(new ThisExpr(), randomFieldName);
+            AssignExpr fieldModifyExpr = new AssignExpr(fieldAccessExpr, fieldAccessExpr, AssignExpr.Operator.PLUS);
+            methodBody.addStatement(fieldModifyExpr);
+        }
+
         methodBody.addStatement("System.out.println(\"" + generateRandomName(6) + "\");");
 
         Parameter parameter = new Parameter().setType(int.class).setName("args");

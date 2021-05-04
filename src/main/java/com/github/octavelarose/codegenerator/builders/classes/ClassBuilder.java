@@ -17,8 +17,8 @@ import java.util.List;
  * Builds a class: returns a JavaParser CompilationUnit that contains the class itself.
  */
 public abstract class ClassBuilder {
-    private final CompilationUnit cu;
-    private final ClassOrInterfaceDeclaration outputClass;
+    protected final CompilationUnit cu;
+    protected final ClassOrInterfaceDeclaration outputClass;
 
     public ClassBuilder(String name) {
         this.cu = new CompilationUnit();
@@ -60,9 +60,10 @@ public abstract class ClassBuilder {
         return this.outputClass.getMethods();
     }
 
-    public void addField() {
-        // Currently unused.
-        // FieldDeclaration field = this.outputClass.addField(...);
+    public void addField(String name,
+                         Type fieldType,
+                         Modifier.Keyword... modifiers) {
+        this.outputClass.addField(fieldType, name, modifiers);
     }
 
     /**

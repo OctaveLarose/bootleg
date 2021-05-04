@@ -32,12 +32,14 @@ public class CodeGenerator {
         classBuilders.put("TestClass", new BasicClassBuilder(
                 "TestClass",
                 5,
+                5,
                 "com.abc.random")
         );
 
         classBuilders.put("HelperClass", new BasicClassBuilder(
                 "HelperClass",
                 5,
+                0,
                 "com.abc.random")
         );
 
