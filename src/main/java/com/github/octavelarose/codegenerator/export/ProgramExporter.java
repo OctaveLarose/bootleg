@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class ProgramExporter {
-    public static void export(HashMap<String, ClassBuilder> classBuilders) {
+    public void export(HashMap<String, ClassBuilder> classBuilders) {
         ArrayList<ClassExporter> classExporters = new ArrayList<>();
         for (ClassBuilder builder : classBuilders.values()) {
             classExporters.add(new ClassExporter(builder));
@@ -15,7 +15,7 @@ public class ProgramExporter {
         try {
             for (ClassExporter exporter : classExporters) {
                 exporter.exportToFile();
-                // testClassExporter.exportToStdout();
+                // exporter.exportToStdout();
             }
         } catch (ExportFailedException e) {
             System.err.println("Export failed: " + e.getMessage());

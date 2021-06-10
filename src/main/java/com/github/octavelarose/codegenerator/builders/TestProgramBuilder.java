@@ -8,8 +8,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 
+/**
+ * Builds a test program, a PoC for my system.
+ */
 public class TestProgramBuilder implements ProgramBuilder {
-    public static HashMap<String, ClassBuilder> build() {
+    public HashMap<String, ClassBuilder> build() throws BuildFailedException {
         HashMap<String, ClassBuilder> classBuilders = new HashMap<>();
 
         classBuilders.put("TestClass", new BasicClassBuilder(
@@ -30,7 +33,7 @@ public class TestProgramBuilder implements ProgramBuilder {
             BasicClassBuilder testClass = (BasicClassBuilder) classBuilders.get("TestClass");
             testClass.addBasicLinkedMethod("linkedMethodTest", classBuilders.get("HelperClass"));
         } catch (BuildFailedException e) {
-            System.err.println("Creating a linked method failed: " + e.getMessage());
+            throw new BuildFailedException("Creating a linked method failed: " + e.getMessage());
         }
 
         classBuilders.put("Main", new EntryPointBuilder(
