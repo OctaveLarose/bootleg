@@ -34,7 +34,6 @@ public class BasicClassBuilder extends ClassBuilder {
         this.setModifiers(new NodeList<>(Modifier.publicModifier()));
         this.setPackageDeclaration(pkgDeclaration);
 
-        this.addConstructor(new NodeList<>(Modifier.publicModifier()));
         for (int i = 0; i < fieldsNbr; i++)
             this.addBasicField(generateRandomName(i + 5));
         for (int i = 0; i < methodsNbr; i++)

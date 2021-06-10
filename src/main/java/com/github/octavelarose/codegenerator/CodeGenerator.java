@@ -1,8 +1,9 @@
 package com.github.octavelarose.codegenerator;
 
 import com.github.octavelarose.codegenerator.builders.BuildFailedException;
-import com.github.octavelarose.codegenerator.builders.CTParserProgramBuilder;
 import com.github.octavelarose.codegenerator.builders.classes.ClassBuilder;
+import com.github.octavelarose.codegenerator.builders.programs.CTParserProgramBuilder;
+import com.github.octavelarose.codegenerator.export.ProgramExporter;
 
 import java.util.HashMap;
 
@@ -12,7 +13,7 @@ import java.util.HashMap;
 public class CodeGenerator {
     /**
      * Main function to generate a codebase.
-     * @param args Unused args.
+     * @param args Unused args for now.
      */
     public static void main(String[] args) {
         HashMap<String, ClassBuilder> builders;
@@ -22,8 +23,9 @@ public class CodeGenerator {
             builders = new CTParserProgramBuilder().build();
         } catch (BuildFailedException e) {
             e.printStackTrace();
+            return;
         }
 
-//        new ProgramExporter().export(builders);
+        new ProgramExporter().export(builders);
     }
 }

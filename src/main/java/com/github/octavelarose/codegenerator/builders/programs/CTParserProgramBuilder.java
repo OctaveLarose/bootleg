@@ -1,5 +1,10 @@
-package com.github.octavelarose.codegenerator.builders;
+package com.github.octavelarose.codegenerator.builders.programs;
 
+import com.github.javaparser.ast.NodeList;
+import com.github.javaparser.ast.stmt.BlockStmt;
+import com.github.javaparser.ast.type.VoidType;
+import com.github.octavelarose.codegenerator.builders.BuildFailedException;
+import com.github.octavelarose.codegenerator.builders.classes.BasicClassBuilder;
 import com.github.octavelarose.codegenerator.builders.classes.ClassBuilder;
 
 import java.io.BufferedReader;
@@ -47,8 +52,26 @@ public class CTParserProgramBuilder implements ProgramBuilder {
         List<List<String>> fileLines = this.getFileLines(filename);
 
         for (List<String> methodArr: fileLines) {
-//            System.out.println(methodArr);
-            System.out.println(methodArr.get(FULLNAME));
+            String[] splitFullName = methodArr.get(FULLNAME).split("\\.");
+            String className = splitFullName[0];
+            String methodName = splitFullName[1];
+
+            ClassBuilder classCb;
+            if (!classBuilders.containsKey(className)) {
+                classCb = new BasicClassBuilder(className, 0, 0, "com.abc.random");
+                classBuilders.put(className, classCb);
+            } else {
+                classCb = classBuilders.get(className);
+            }
+
+            if(!classCb.hasMethod(methodName)) {
+                BlockStmt methodBody = new BlockStmt();
+                // TODO: Can take access modifiers into account.
+                // TODO: Can take return value/parameters into account. (a hassle, need to figure out the syntax used by DiSL, i.e "(LBenchmark;)V")
+                classCb.addMethod(methodName, new VoidType(), new NodeList<>(), methodBody, new NodeList<>());
+            }
+
+//            System.out.println(className + " " + methodName);
         }
 
         return classBuilders;

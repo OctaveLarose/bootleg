@@ -10,6 +10,7 @@ import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.type.Type;
+import com.github.octavelarose.codegenerator.builders.BuildConstants;
 
 import java.util.List;
 
@@ -26,11 +27,15 @@ public abstract class ClassBuilder {
         this.outputClass = cu.addClass(name);
     }
 
-    public void addConstructor(NodeList<Modifier> modifiers) {
-        // Needs to take in parameters in the future.
+    public void addConstructor(NodeList<Parameter> parameters,
+                               BlockStmt methodBody,
+                               NodeList<Modifier> modifiers) {
         ConstructorDeclaration cs = this.outputClass.addConstructor();
         cs.setModifiers(modifiers);
+        cs.setBody(methodBody);
+        cs.setParameters(parameters);
     }
+
 
     public void setModifiers(NodeList<Modifier> modifiers) {
         this.outputClass.setModifiers(modifiers);
@@ -50,6 +55,10 @@ public abstract class ClassBuilder {
                           NodeList<Parameter> parameters,
                           BlockStmt methodBody,
                           NodeList<Modifier> modifiers) {
+        if (name.equals(BuildConstants.CONSTRUCTOR_NAME)) {
+            this.addConstructor(parameters, methodBody, modifiers);
+            return;
+        }
         MethodDeclaration method = this.outputClass.addMethod(name);
         method.setModifiers(modifiers);
         method.setBody(methodBody);
@@ -92,7 +101,7 @@ public abstract class ClassBuilder {
         if (this.cu.getPackageDeclaration().isPresent())
             return this.cu.getPackageDeclaration().get().getNameAsString() + "." + this.outputClass.getName();
         else
-            return null; // Should throw instead, but... it's unreachable, so
+            return null; // Should throw instead, but it's unreachable, so whatever
     }
 
     /**
@@ -108,5 +117,22 @@ public abstract class ClassBuilder {
      */
     public CompilationUnit getCompilationUnit() {
         return this.cu;
+    }
+
+    /**
+     * @param methodName The name of the method to look for.
+     * @return true if the method is present in the class, false otherwise.
+     */
+    public boolean hasMethod(String methodName) {
+        // TODO: In practice, we'd need to check the method name + the parameters, to account for overloading
+        // Which makes me think.. If we find the format used by DiSL, we can feed it to this function as a string and have it parse it? maybe?
+        if (methodName.equals(BuildConstants.CONSTRUCTOR_NAME))
+            return !this.outputClass.getConstructors().isEmpty();
+
+        for (MethodDeclaration m: this.outputClass.getMethods()) {
+            if (m.getName().asString().equals(methodName))
+                return true;
+        }
+        return false;
     }
 }
