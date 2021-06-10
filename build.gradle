@@ -17,7 +17,7 @@ dependencies {
     implementation group: 'com.github.javaparser', name: 'javaparser-symbol-solver-core', version: '3.20.2'
     implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.12.0'
 }
-//
+
 group = 'groupId'
 version = '1.0-SNAPSHOT'
 description = 'code_generation'
