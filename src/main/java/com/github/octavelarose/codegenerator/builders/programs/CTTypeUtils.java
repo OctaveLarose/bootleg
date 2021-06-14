@@ -4,6 +4,8 @@ import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.type.*;
 import com.github.octavelarose.codegenerator.builders.BuildFailedException;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class CTTypeUtils {
@@ -26,45 +28,41 @@ public class CTTypeUtils {
             isArrayType = true;
         }
 
-        switch (typeChar) {
-            case 'B':
-                returnType = PrimitiveType.byteType();
-                break;
-            case 'C':
-                returnType = PrimitiveType.charType();
-                break;
-            case 'D':
-                returnType = PrimitiveType.doubleType();
-                break;
-            case 'F':
-                returnType = PrimitiveType.floatType();
-                break;
-            case 'I':
-                returnType = PrimitiveType.intType();
-                break;
-            case 'J':
-                returnType = PrimitiveType.longType();
-                break;
-            case 'S':
-                returnType = PrimitiveType.shortType();
-                break;
-            case 'V':
-                returnType = new VoidType();
-                break;
-            case 'Z':
-                returnType = new PrimitiveType(PrimitiveType.Primitive.BOOLEAN);
-                break;
-            case 'L':
-                returnType = getClassTypeFromStr(typeStr);
-                break;
-            default:
-                throw new BuildFailedException("Unknown type: " + typeStr);
+        if (typeChar == 'L') {
+            returnType = getClassTypeFromStr(typeStr);
+        } else {
+            returnType = getPrimitiveTypeFromChar(typeChar);
         }
 
         if (isArrayType)
             returnType = new ArrayType(returnType);
 
         return returnType;
+    }
+
+    static Type getPrimitiveTypeFromChar(char typeChar) throws BuildFailedException {
+        switch (typeChar) {
+            case 'B':
+                return PrimitiveType.byteType();
+            case 'C':
+                return PrimitiveType.charType();
+            case 'D':
+                return PrimitiveType.doubleType();
+            case 'F':
+                return PrimitiveType.floatType();
+            case 'I':
+                return PrimitiveType.intType();
+            case 'J':
+                return PrimitiveType.longType();
+            case 'S':
+                return PrimitiveType.shortType();
+            case 'V':
+                return new VoidType();
+            case 'Z':
+                return new PrimitiveType(PrimitiveType.Primitive.BOOLEAN);
+            default:
+                throw new BuildFailedException("Unknown type: " + typeChar);
+        }
     }
 
     static private Type getClassTypeFromStr(String typeStr) throws BuildFailedException {
@@ -83,4 +81,68 @@ public class CTTypeUtils {
 
         return classWithName.get();
     }
+
+    // (ILjava/lang/String;I[DF)
+    static public List<Type> getTypesFromParametersStr(String paramsDescriptor) throws BuildFailedException {
+        List<Type> typeArr = new ArrayList<>();
+        char[] argsBuf = paramsDescriptor.toCharArray();
+        boolean isArrayType;
+        String PRIMITIVE_REPRES = "VZCBSIFJD";
+
+        for (int i = 0; i < paramsDescriptor.length(); i++) {
+            Type newParam;
+
+            if (argsBuf[i] == '[') {
+                isArrayType = true;
+                i++;
+            } else {
+                isArrayType = false;
+            }
+
+            if (PRIMITIVE_REPRES.indexOf(argsBuf[i]) != -1) {
+                newParam = getPrimitiveTypeFromChar(argsBuf[i]);
+            } else if (argsBuf[i] == 'L') {
+                String objectSubStr = paramsDescriptor.substring(i, paramsDescriptor.indexOf(";", i));
+                newParam = getTypeFromStr(objectSubStr);
+                i += objectSubStr.length();
+            } else {
+                System.out.println(argsBuf[i]);
+                throw new BuildFailedException("Parsing of parameters data failed.");
+            }
+
+            if (isArrayType)
+                newParam = new ArrayType(newParam);
+
+            typeArr.add(newParam);
+        }
+        return typeArr;
+    }
+
+    // --- Some example from the ASM lib ---
+/*    public static Type[] getArgumentTypes(final String methodDescriptor) throws BuildFailedException {
+        char[] buf = methodDescriptor.toCharArray();
+        int off = 1;
+        int size = 0;
+        while (true) {
+            char car = buf[off++];
+            if (car == ')') {
+                break;
+            } else if (car == 'L') {
+                while (buf[off++] != ';') {
+                }
+                ++size;
+            } else if (car != '[') {
+                ++size;
+            }
+        }
+        Type[] args = new Type[size];
+        off = 1;
+        size = 0;
+        while (buf[off] != ')') {
+            args[size] = getTypeFromStr(methodDescriptor.substring(off));
+            off += 1;
+            size += 1;
+        }
+        return args;
+    }*/
 }

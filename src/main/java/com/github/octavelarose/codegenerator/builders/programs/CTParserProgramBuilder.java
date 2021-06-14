@@ -70,17 +70,20 @@ public class CTParserProgramBuilder implements ProgramBuilder {
         String descriptor = methodArr.get(DESCRIPTOR);
         String[] splitDescriptor = descriptor.split("\\)");
 
-        String parameterStr = splitDescriptor[0].substring(1);
+        String paramsStr = splitDescriptor[0].substring(1);
         String returnValueStr = splitDescriptor[1];
 
 //        System.out.println("Parameters, retval: " + parameterStr + ", " + returnValueStr);
 
         Type returnType = CTTypeUtils.getTypeFromStr(returnValueStr);
 
-        // Will need to be fetched from the descriptor as well.
         NodeList<Parameter> parameters = new NodeList<>();
 
-//        System.out.println(Arrays.toString(Type.(methodArr.get(DESCRIPTOR))));
+        for (Type paramType: CTTypeUtils.getTypesFromParametersStr(paramsStr)) {
+            String paramName = "abc"; // TODO: randomize parameter names
+            parameters.add(new Parameter(paramType, paramName));
+        }
+
         classCb.addMethod(methodName, returnType, parameters, methodBody, modifiers);
     }
 
