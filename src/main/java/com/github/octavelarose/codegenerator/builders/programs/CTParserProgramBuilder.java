@@ -8,6 +8,7 @@ import com.github.javaparser.ast.type.Type;
 import com.github.octavelarose.codegenerator.builders.BuildFailedException;
 import com.github.octavelarose.codegenerator.builders.classes.BasicClassBuilder;
 import com.github.octavelarose.codegenerator.builders.classes.ClassBuilder;
+import com.github.octavelarose.codegenerator.builders.programs.asm_types.CTTypeUtils;
 import com.github.octavelarose.codegenerator.builders.programs.filereader.CTFileReader;
 
 import java.util.HashMap;

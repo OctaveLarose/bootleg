@@ -1,8 +1,7 @@
-package com.github.octavelarose.codegenerator.builders.programs;
+package com.github.octavelarose.codegenerator.builders.programs.asm_types;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.type.*;
-import com.github.octavelarose.codegenerator.builders.BuildFailedException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,9 +13,9 @@ public class CTTypeUtils {
      * https://asm.ow2.io/faq.html#Q7
      * @param typeStr The string defining the type.
      * @return A corresponding Type object.
-     * @throws BuildFailedException If the input string isn't correct.
+     * @throws ASMParsingException If the input string isn't correct.
      */
-    static Type getTypeFromStr(String typeStr) throws BuildFailedException {
+    public static Type getTypeFromStr(String typeStr) throws ASMParsingException {
         Type returnType;
         char typeChar = typeStr.charAt(0);
         boolean isArrayType = false;
@@ -44,9 +43,9 @@ public class CTTypeUtils {
      * Returns a type from a char that defines a primitive type in the ASM specification.
      * @param typeChar The char corresponding to a primitive type.
      * @return The type associated with the input char.
-     * @throws BuildFailedException If the char doesn't correspond to any primitive type.
+     * @throws ASMParsingException If the char doesn't correspond to any primitive type.
      */
-    static Type getPrimitiveTypeFromChar(char typeChar) throws BuildFailedException {
+    static Type getPrimitiveTypeFromChar(char typeChar) throws ASMParsingException {
         switch (typeChar) {
             case 'B':
                 return PrimitiveType.byteType();
@@ -67,7 +66,7 @@ public class CTTypeUtils {
             case 'Z':
                 return new PrimitiveType(PrimitiveType.Primitive.BOOLEAN);
             default:
-                throw new BuildFailedException("Unknown type: " + typeChar);
+                throw new ASMParsingException("Unknown type: " + typeChar);
         }
     }
 
@@ -75,9 +74,9 @@ public class CTTypeUtils {
      * Parses a string that defines a class/object, like "Ljava/lang/String".
      * @param typeStr The string that defines the class.
      * @return The type of the class.
-     * @throws BuildFailedException If the class is unknown
+     * @throws ASMParsingException If the class is unknown
      */
-    static private Type getClassTypeFromStr(String typeStr) throws BuildFailedException {
+    static private Type getClassTypeFromStr(String typeStr) throws ASMParsingException {
         String className = typeStr.substring(1, typeStr.length() - 1); // Removing the L and the final ;
 
         // Note: for <Class extends XXX>, I don't get the info about the XXX class, so it's just Class for now...
@@ -92,7 +91,7 @@ public class CTTypeUtils {
                 .getResult();
 
         if (classWithName.isEmpty())
-            throw new BuildFailedException("Unknown class: " + typeStr.substring(1));
+            throw new ASMParsingException("Unknown class: " + typeStr.substring(1));
 
         return classWithName.get();
     }
@@ -101,9 +100,9 @@ public class CTTypeUtils {
      * Parses the parameters descriptor part of a method descriptor, like "ILjava/lang/String;I[DF"
      * @param paramsDescriptor The parameters descriptor string.
      * @return A list of all the types.
-     * @throws BuildFailedException If the parsing fails.
+     * @throws ASMParsingException If the parsing fails.
      */
-    static public List<Type> getTypesFromParametersStr(String paramsDescriptor) throws BuildFailedException {
+    static public List<Type> getTypesFromParametersStr(String paramsDescriptor) throws ASMParsingException {
         List<Type> typeArr = new ArrayList<>();
         char[] argsBuf = paramsDescriptor.toCharArray();
         boolean isArrayType;
@@ -127,7 +126,7 @@ public class CTTypeUtils {
                 i += objectSubStr.length();
             } else {
                 // TODO: don't know where to put this but the parsing needs its own exception class
-                throw new BuildFailedException("Parsing of parameters data failed for character " + argsBuf[i]);
+                throw new ASMParsingException("Parsing of parameters data failed for character " + argsBuf[i]);
             }
 
             if (isArrayType)
@@ -139,7 +138,7 @@ public class CTTypeUtils {
     }
 
     // --- Some example from the ASM lib ---
-/*    public static Type[] getArgumentTypes(final String methodDescriptor) throws BuildFailedException {
+/*    public static Type[] getArgumentTypes(final String methodDescriptor) throws ASMParsingException {
         char[] buf = methodDescriptor.toCharArray();
         int off = 1;
         int size = 0;
