@@ -40,6 +40,12 @@ public class CTTypeUtils {
         return returnType;
     }
 
+    /**
+     * Returns a type from a char that defines a primitive type in the ASM specification.
+     * @param typeChar The char corresponding to a primitive type.
+     * @return The type associated with the input char.
+     * @throws BuildFailedException If the char doesn't correspond to any primitive type.
+     */
     static Type getPrimitiveTypeFromChar(char typeChar) throws BuildFailedException {
         switch (typeChar) {
             case 'B':
@@ -65,12 +71,21 @@ public class CTTypeUtils {
         }
     }
 
+    /**
+     * Parses a string that defines a class/object, like "Ljava/lang/String".
+     * @param typeStr The string that defines the class.
+     * @return The type of the class.
+     * @throws BuildFailedException If the class is unknown
+     */
     static private Type getClassTypeFromStr(String typeStr) throws BuildFailedException {
         String className = typeStr.substring(1, typeStr.length() - 1); // Removing the L and the final ;
 
-        // Cheating for now since I don't get the info in the form <Class extends XXX>
-        if (className.equals("java/lang/Class"))
-            className = "Object";
+        // Note: for <Class extends XXX>, I don't get the info about the XXX class, so it's just Class for now...
+
+        // TODO: needs to only show the class name, not path, and add an import (how though)...
+        // If it's a class definition, it contains slashes, but JavaParser prefers dots.
+        if (className.contains("/"))
+            className = className.replace("/", ".");
 
         Optional<ClassOrInterfaceType> classWithName = new JavaParser()
                 .parseClassOrInterfaceType(className)
@@ -82,7 +97,12 @@ public class CTTypeUtils {
         return classWithName.get();
     }
 
-    // (ILjava/lang/String;I[DF)
+    /**
+     * Parses the parameters descriptor part of a method descriptor, like "ILjava/lang/String;I[DF"
+     * @param paramsDescriptor The parameters descriptor string.
+     * @return A list of all the types.
+     * @throws BuildFailedException If the parsing fails.
+     */
     static public List<Type> getTypesFromParametersStr(String paramsDescriptor) throws BuildFailedException {
         List<Type> typeArr = new ArrayList<>();
         char[] argsBuf = paramsDescriptor.toCharArray();
@@ -102,12 +122,12 @@ public class CTTypeUtils {
             if (PRIMITIVE_REPRES.indexOf(argsBuf[i]) != -1) {
                 newParam = getPrimitiveTypeFromChar(argsBuf[i]);
             } else if (argsBuf[i] == 'L') {
-                String objectSubStr = paramsDescriptor.substring(i, paramsDescriptor.indexOf(";", i));
+                String objectSubStr = paramsDescriptor.substring(i, paramsDescriptor.indexOf(";", i) + 1);
                 newParam = getTypeFromStr(objectSubStr);
                 i += objectSubStr.length();
             } else {
-                System.out.println(argsBuf[i]);
-                throw new BuildFailedException("Parsing of parameters data failed.");
+                // TODO: don't know where to put this but the parsing needs its own exception class
+                throw new BuildFailedException("Parsing of parameters data failed for character " + argsBuf[i]);
             }
 
             if (isArrayType)
