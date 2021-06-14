@@ -61,10 +61,10 @@ public class CTTypeUtils {
                 return PrimitiveType.longType();
             case 'S':
                 return PrimitiveType.shortType();
-            case 'V':
-                return new VoidType();
             case 'Z':
-                return new PrimitiveType(PrimitiveType.Primitive.BOOLEAN);
+                return PrimitiveType.booleanType();
+            case 'V': // Technically not a primitive type, but the ASM specification calls it one, so I win
+                return new VoidType();
             default:
                 throw new ASMParsingException("Unknown type: " + typeChar);
         }
