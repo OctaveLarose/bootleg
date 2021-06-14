@@ -5,17 +5,11 @@ import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.type.Type;
-import com.github.javaparser.ast.type.VoidType;
 import com.github.octavelarose.codegenerator.builders.BuildFailedException;
 import com.github.octavelarose.codegenerator.builders.classes.BasicClassBuilder;
 import com.github.octavelarose.codegenerator.builders.classes.ClassBuilder;
+import com.github.octavelarose.codegenerator.builders.programs.filereader.CTFileReader;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -30,30 +24,13 @@ public class CTParserProgramBuilder implements ProgramBuilder {
     public static int FULLNAME = 3;
     public static int TIME = 4;
 
-    private List<List<String>> getFileLines(String filename) throws BuildFailedException {
-        try {
-            File ctFile = new File(filename);
-            BufferedReader br = new BufferedReader(new FileReader(ctFile));
-
-            List<List<String>> fileLines = new ArrayList<>();
-
-            String line;
-            while ((line = br.readLine()) != null)
-                fileLines.add(Arrays.asList(line.split(" ")));
-
-            return fileLines;
-        } catch (IOException e) {
-            throw new BuildFailedException("Couldn't read file content: " + e.getMessage());
-        }
-    }
-
     public HashMap<String, ClassBuilder> build() throws BuildFailedException {
         HashMap<String, ClassBuilder> classBuilders = new HashMap<>();
         String PKG_NAME = "com.abc.random";
 
         // Using a hardcoded calltrace for now, should be input arg in the future
         String filename = "./input_data/calltrace_Mandelbrot.txt";
-        List<List<String>> fileLines = this.getFileLines(filename);
+        List<List<String>> fileLines = CTFileReader.getFileLines(filename);
 
         for (List<String> methodArr: fileLines) {
             String[] splitFullName = methodArr.get(FULLNAME).split("\\.");
@@ -68,7 +45,7 @@ public class CTParserProgramBuilder implements ProgramBuilder {
                 classCb = classBuilders.get(className);
             }
 
-            if(!classCb.hasMethod(methodName))
+            if (!classCb.hasMethod(methodName))
                 this.addNewMethodToClass(methodName, methodArr, classCb);
 
 //            System.out.println(className + " " + methodName);
@@ -83,20 +60,27 @@ public class CTParserProgramBuilder implements ProgramBuilder {
      * @param methodArr Info about the method in general.
      * @param classCb The class(builder) to which it needs to be added.
      */
-    private void addNewMethodToClass(String methodName, List<String> methodArr, ClassBuilder classCb) {
+    private void addNewMethodToClass(String methodName, List<String> methodArr, ClassBuilder classCb) throws BuildFailedException {
         NodeList<Modifier> modifiers = this.getModifiersListFromScope(methodArr.get(SCOPE));
 
         // In the future, will need to contain info ; probably just a sleep() operation at first
         BlockStmt methodBody = new BlockStmt();
 
-        // Will need to be fetched from the descriptor.
-        // ..."Type.getArgumentTypes(desc)" could be useful, it's what the ASM lib uses internally at some point.
-        // https://asm.ow2.io/faq.html#Q7 The explanation for the syntax
-        Type returnType = new VoidType();
+//        System.out.println(methodArr.get(FULLNAME) + ", " + methodArr.get(DESCRIPTOR));
+        String descriptor = methodArr.get(DESCRIPTOR);
+        String[] splitDescriptor = descriptor.split("\\)");
+
+        String parameterStr = splitDescriptor[0].substring(1);
+        String returnValueStr = splitDescriptor[1];
+
+//        System.out.println("Parameters, retval: " + parameterStr + ", " + returnValueStr);
+
+        Type returnType = CTTypeUtils.getTypeFromStr(returnValueStr);
 
         // Will need to be fetched from the descriptor as well.
         NodeList<Parameter> parameters = new NodeList<>();
 
+//        System.out.println(Arrays.toString(Type.(methodArr.get(DESCRIPTOR))));
         classCb.addMethod(methodName, returnType, parameters, methodBody, modifiers);
     }
 
