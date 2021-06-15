@@ -2,9 +2,12 @@ package com.github.octavelarose.codegenerator.builders.programs;
 
 import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.NodeList;
+import com.github.javaparser.ast.body.CallableDeclaration;
+import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.type.Type;
+import com.github.octavelarose.codegenerator.builders.BuildConstants;
 import com.github.octavelarose.codegenerator.builders.BuildFailedException;
 import com.github.octavelarose.codegenerator.builders.classes.BasicClassBuilder;
 import com.github.octavelarose.codegenerator.builders.classes.ClassBuilder;
@@ -39,20 +42,17 @@ public class CTParserProgramBuilder implements ProgramBuilder {
         String filename = "./input_data/calltrace_Mandelbrot.txt";
         List<List<String>> fileLines = CTFileReader.getFileLines(filename);
 
-        Stack<String> callStack = new Stack<>();
+        Stack<CallableDeclaration<?>> callStack = new Stack<>();
 
         for (List<String> methodArr: fileLines) {
             if (!this.isFunctionEntry(methodArr.get(DIRECTION))) {
                 callStack.pop();
-                System.out.println(callStack);
                 continue;
             }
 
             String[] splitFullName = methodArr.get(FULLNAME).split("\\.");
             String className = splitFullName[0];
             String methodName = splitFullName[1];
-
-            callStack.push(methodArr.get(FULLNAME));
 
             ClassBuilder classCb;
             if (!classBuilders.containsKey(className)) {
@@ -62,10 +62,14 @@ public class CTParserProgramBuilder implements ProgramBuilder {
                 classCb = classBuilders.get(className);
             }
 
-            if (!classCb.hasMethod(methodName))
-                this.addNewMethodToClass(methodName, methodArr, classCb);
-
-            System.out.println(callStack);
+            if (!classCb.hasMethod(methodName)) {
+                CallableDeclaration<?> methodNode = this.addNewMethodToClass(methodName, methodArr, classCb);
+                if (callStack.empty())
+                    ; // System.out.println("First method call: " + methodNode.getName());
+                else
+                    addCallToMethodInMethod(callStack.lastElement(), methodNode);
+                callStack.push(methodNode);
+            }
         }
 
         return classBuilders;
@@ -77,7 +81,9 @@ public class CTParserProgramBuilder implements ProgramBuilder {
      * @param methodArr Info about the method in general.
      * @param classCb The class(builder) to which it needs to be added.
      */
-    private void addNewMethodToClass(String methodName, List<String> methodArr, ClassBuilder classCb) throws BuildFailedException {
+    private CallableDeclaration<?> addNewMethodToClass(String methodName,
+                                                    List<String> methodArr,
+                                                    ClassBuilder classCb) throws BuildFailedException {
         NodeList<Modifier> modifiers = this.getModifiersListFromScope(methodArr.get(SCOPE));
 
         // In the future, will need to contain info ; probably just a sleep() operation at first
@@ -99,7 +105,28 @@ public class CTParserProgramBuilder implements ProgramBuilder {
             parameters.add(new Parameter(paramType, paramName));
         }
 
-        classCb.addMethod(methodName, returnType, parameters, methodBody, modifiers);
+        if (methodName.equals(BuildConstants.CONSTRUCTOR_NAME))
+            return classCb.addConstructor(parameters, methodBody, modifiers);
+        else
+            return classCb.addMethod(methodName, returnType, parameters, methodBody, modifiers);
+    }
+
+    private void addCallToMethodInMethod(CallableDeclaration<?> callerMethod, CallableDeclaration<?> calleeMethod) {
+//        System.out.println(callerMethod.getName() + " calls " + calleeMethod.getName());
+
+        if (callerMethod instanceof MethodDeclaration) {
+            MethodDeclaration md = (MethodDeclaration) callerMethod;
+            BlockStmt body;
+            if (md.getBody().isPresent())
+                body = md.getBody().get();
+            else
+                body = new BlockStmt();
+
+//            String methodCallStatementStr = calleeMethod.getSignature().asString() + ";";
+            String methodCallStatementStr = calleeMethod.getName().asString() + "()" + ";";
+//            System.out.println(methodCallStatementStr);
+            body.addStatement(methodCallStatementStr);
+        }
     }
 
     /**

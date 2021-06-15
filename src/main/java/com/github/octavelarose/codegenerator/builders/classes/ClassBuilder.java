@@ -27,43 +27,47 @@ public abstract class ClassBuilder {
         this.outputClass = cu.addClass(name);
     }
 
-    public void addConstructor(NodeList<Parameter> parameters,
-                               BlockStmt methodBody,
-                               NodeList<Modifier> modifiers) {
+    /**
+     * Adds a constructor to the class. We consider constructors to be separate from methods.
+     * @param parameters The constructor's parameters
+     * @param methodBody The constructor's body, i.e content, i.e code.
+     * @param modifiers  The constructor's modifiers (public, protected, static...)
+     * @return The constructor object.
+     */
+    public ConstructorDeclaration addConstructor(NodeList<Parameter> parameters,
+                                                 BlockStmt methodBody,
+                                                 NodeList<Modifier> modifiers) {
         ConstructorDeclaration cs = this.outputClass.addConstructor();
         cs.setModifiers(modifiers);
         cs.setBody(methodBody);
         cs.setParameters(parameters);
-    }
-
-
-    public void setModifiers(NodeList<Modifier> modifiers) {
-        this.outputClass.setModifiers(modifiers);
+        return cs;
     }
 
     /**
      * Adds a method to the class.
-     *
-     * @param name       The method's name.
+     *  @param name       The method's name.
      * @param returnType The method's return value type.
      * @param parameters The method's parameters
      * @param methodBody The method's body, i.e content, i.e code.
      * @param modifiers  The method's modifiers (public, protected, static...)
+     * @return The method object.
      */
-    public void addMethod(String name,
-                          Type returnType,
-                          NodeList<Parameter> parameters,
-                          BlockStmt methodBody,
-                          NodeList<Modifier> modifiers) {
-        if (name.equals(BuildConstants.CONSTRUCTOR_NAME)) {
-            this.addConstructor(parameters, methodBody, modifiers);
-            return;
-        }
+    public MethodDeclaration addMethod(String name,
+                                         Type returnType,
+                                         NodeList<Parameter> parameters,
+                                         BlockStmt methodBody,
+                                         NodeList<Modifier> modifiers) {
         MethodDeclaration method = this.outputClass.addMethod(name);
         method.setModifiers(modifiers);
         method.setBody(methodBody);
         method.setType(returnType);
         method.setParameters(parameters);
+        return method;
+    }
+
+    public void setModifiers(NodeList<Modifier> modifiers) {
+        this.outputClass.setModifiers(modifiers);
     }
 
     public List<MethodDeclaration> getMethods() {
@@ -86,7 +90,6 @@ public abstract class ClassBuilder {
     /**
      * Adds an import statement to the CU.
      * Since a class may rely on other classes, it may not compile if the CU doesn't take care of the right imports.
-     *
      * @param importStr The value of the import statement, minus the "import " and end semicolon.
      */
     public void addImport(String importStr) {
