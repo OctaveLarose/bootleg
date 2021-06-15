@@ -15,7 +15,8 @@ import com.github.javaparser.ast.type.PrimitiveType;
 import com.github.javaparser.ast.type.VoidType;
 import com.github.javaparser.ast.visitor.VoidVisitor;
 import com.github.octavelarose.codegenerator.builders.BuildFailedException;
-import com.github.octavelarose.codegenerator.builders.ast_visitors.ClassNameCollector;
+import com.github.octavelarose.codegenerator.builders.classes.ast_visitors.ClassNameCollector;
+import com.github.octavelarose.codegenerator.builders.utils.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
@@ -35,26 +36,9 @@ public class BasicClassBuilder extends ClassBuilder {
         this.setPackageDeclaration(pkgDeclaration);
 
         for (int i = 0; i < fieldsNbr; i++)
-            this.addBasicField(generateRandomName(i + 5));
+            this.addBasicField(RandomUtils.generateRandomName(i + 5));
         for (int i = 0; i < methodsNbr; i++)
-            this.addBasicMethod(generateRandomName(i + 5));
-    }
-
-    /**
-     * Generates a random name. Used to name methods, among others. May need to be moved to a "Utils" class.
-     *
-     * @param nbrCharacters Number of characters of the output string.
-     * @return A string made up of nbrCharacters random characters.
-     */
-    private String generateRandomName(int nbrCharacters) {
-        Random random = new Random();
-        StringBuilder buffer = new StringBuilder(nbrCharacters);
-        for (int i = 0; i < nbrCharacters; i++) {
-            int randomLimitedInt = 'a' + (int) (random.nextFloat() * ('z' - 'a' + 1));
-            buffer.append((char) randomLimitedInt);
-        }
-
-        return buffer.toString();
+            this.addBasicMethod(RandomUtils.generateRandomName(i + 5));
     }
 
     /**
@@ -87,7 +71,7 @@ public class BasicClassBuilder extends ClassBuilder {
             methodBody.addStatement(fieldModifyExpr);
         }
 
-        methodBody.addStatement("System.out.println(\"" + generateRandomName(6) + "\");");
+        methodBody.addStatement("System.out.println(\"" + RandomUtils.generateRandomName(6) + "\");");
 
         Parameter parameter = new Parameter().setType(int.class).setName("args");
         NodeList<Parameter> parameters = new NodeList<>(parameter);

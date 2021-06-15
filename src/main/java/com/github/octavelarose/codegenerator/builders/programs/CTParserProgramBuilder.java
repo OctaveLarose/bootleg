@@ -10,6 +10,7 @@ import com.github.octavelarose.codegenerator.builders.classes.BasicClassBuilder;
 import com.github.octavelarose.codegenerator.builders.classes.ClassBuilder;
 import com.github.octavelarose.codegenerator.builders.programs.asm_types.CTTypeUtils;
 import com.github.octavelarose.codegenerator.builders.programs.filereader.CTFileReader;
+import com.github.octavelarose.codegenerator.builders.utils.RandomUtils;
 
 import java.util.HashMap;
 import java.util.List;
@@ -81,7 +82,8 @@ public class CTParserProgramBuilder implements ProgramBuilder {
         NodeList<Parameter> parameters = new NodeList<>();
 
         for (Type paramType: CTTypeUtils.getTypesFromParametersStr(paramsStr)) {
-            String paramName = "abc"; // TODO: randomize parameter names
+            // TODO: check for duplicate param names, just in case (more of a hassle than it seems)
+            String paramName = RandomUtils.generateRandomName(3);
             parameters.add(new Parameter(paramType, paramName));
         }
 

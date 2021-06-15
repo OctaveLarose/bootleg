@@ -1,4 +1,4 @@
-package com.github.octavelarose.codegenerator.builders.ast_visitors;
+package com.github.octavelarose.codegenerator.builders.classes.ast_visitors;
 
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
