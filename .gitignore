@@ -4,6 +4,3 @@ target/
 gradle/
 build/
 gradlew*
-
-#input_data/
-code_output/
