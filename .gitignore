@@ -5,5 +5,5 @@ gradle/
 build/
 gradlew*
 
-input_data/
+#input_data/
 code_output/

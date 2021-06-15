@@ -14,6 +14,7 @@ import com.github.octavelarose.codegenerator.builders.utils.RandomUtils;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Stack;
 
 /**
  * CallTrace Parser Program Builder.
@@ -26,6 +27,10 @@ public class CTParserProgramBuilder implements ProgramBuilder {
     public static int FULLNAME = 3;
     public static int TIME = 4;
 
+    private boolean isFunctionEntry(String dirStr) {
+        return dirStr.equals(">");
+    }
+
     public HashMap<String, ClassBuilder> build() throws BuildFailedException {
         HashMap<String, ClassBuilder> classBuilders = new HashMap<>();
         String PKG_NAME = "com.abc.random";
@@ -34,10 +39,20 @@ public class CTParserProgramBuilder implements ProgramBuilder {
         String filename = "./input_data/calltrace_Mandelbrot.txt";
         List<List<String>> fileLines = CTFileReader.getFileLines(filename);
 
+        Stack<String> callStack = new Stack<>();
+
         for (List<String> methodArr: fileLines) {
+            if (!this.isFunctionEntry(methodArr.get(DIRECTION))) {
+                callStack.pop();
+                System.out.println(callStack);
+                continue;
+            }
+
             String[] splitFullName = methodArr.get(FULLNAME).split("\\.");
             String className = splitFullName[0];
             String methodName = splitFullName[1];
+
+            callStack.push(methodArr.get(FULLNAME));
 
             ClassBuilder classCb;
             if (!classBuilders.containsKey(className)) {
@@ -50,7 +65,7 @@ public class CTParserProgramBuilder implements ProgramBuilder {
             if (!classCb.hasMethod(methodName))
                 this.addNewMethodToClass(methodName, methodArr, classCb);
 
-//            System.out.println(className + " " + methodName);
+            System.out.println(callStack);
         }
 
         return classBuilders;
@@ -68,14 +83,11 @@ public class CTParserProgramBuilder implements ProgramBuilder {
         // In the future, will need to contain info ; probably just a sleep() operation at first
         BlockStmt methodBody = new BlockStmt();
 
-//        System.out.println(methodArr.get(FULLNAME) + ", " + methodArr.get(DESCRIPTOR));
         String descriptor = methodArr.get(DESCRIPTOR);
         String[] splitDescriptor = descriptor.split("\\)");
 
         String paramsStr = splitDescriptor[0].substring(1);
         String returnValueStr = splitDescriptor[1];
-
-//        System.out.println("Parameters, retval: " + parameterStr + ", " + returnValueStr);
 
         Type returnType = CTTypeUtils.getTypeFromStr(returnValueStr);
 
