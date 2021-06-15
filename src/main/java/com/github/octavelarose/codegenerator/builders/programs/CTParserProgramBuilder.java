@@ -3,6 +3,7 @@ package com.github.octavelarose.codegenerator.builders.programs;
 import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.CallableDeclaration;
+import com.github.javaparser.ast.body.ConstructorDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.stmt.BlockStmt;
@@ -111,22 +112,28 @@ public class CTParserProgramBuilder implements ProgramBuilder {
             return classCb.addMethod(methodName, returnType, parameters, methodBody, modifiers);
     }
 
-    private void addCallToMethodInMethod(CallableDeclaration<?> callerMethod, CallableDeclaration<?> calleeMethod) {
-//        System.out.println(callerMethod.getName() + " calls " + calleeMethod.getName());
+    private void addCallToMethodInMethod(CallableDeclaration<?> callerMethod, CallableDeclaration<?> calleeMethod) throws BuildFailedException {
+        BlockStmt methodBody;
+
+        // System.out.println(callerMethod.getName() + " calls " + calleeMethod.getName());
 
         if (callerMethod instanceof MethodDeclaration) {
-            MethodDeclaration md = (MethodDeclaration) callerMethod;
-            BlockStmt body;
-            if (md.getBody().isPresent())
-                body = md.getBody().get();
-            else
-                body = new BlockStmt();
+            MethodDeclaration md = ((MethodDeclaration) callerMethod);
+            if (md.getBody().isEmpty()) {
+                methodBody = new BlockStmt();
+                md.setBody(methodBody);
+            } else {
+                methodBody = md.getBody().get();
+            }
+        } else if (callerMethod instanceof ConstructorDeclaration)
+            methodBody = ((ConstructorDeclaration) callerMethod).getBody();
+        else
+            throw new BuildFailedException("Method is neither a classic method nor a constructor");
 
-//            String methodCallStatementStr = calleeMethod.getSignature().asString() + ";";
-            String methodCallStatementStr = calleeMethod.getName().asString() + "()" + ";";
-//            System.out.println(methodCallStatementStr);
-            body.addStatement(methodCallStatementStr);
-        }
+        // String methodCallStatementStr = calleeMethod.getSignature().asString() + ";";
+        String methodCallStatementStr = calleeMethod.getName().asString() + "()" + ";";
+        // System.out.println(methodCallStatementStr);
+        methodBody.addStatement(methodCallStatementStr);
     }
 
     /**
