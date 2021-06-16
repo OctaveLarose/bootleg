@@ -20,8 +20,15 @@ public class RandomUtils {
         return buffer.toString();
     }
 
+    public static int generateRandomInt() {
+        return new Random().nextInt(Integer.MAX_VALUE);
+    }
+
     public static int generateRandomInt(int maxValue) {
-        Random rn = new Random();
-        return rn.nextInt(maxValue + 1);
+        return new Random().nextInt(maxValue);
+    }
+
+    public static boolean generateRandomBool() {
+        return new Random().nextBoolean();
     }
 }

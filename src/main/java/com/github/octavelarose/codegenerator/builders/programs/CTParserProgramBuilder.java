@@ -6,12 +6,13 @@ import com.github.javaparser.ast.body.CallableDeclaration;
 import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.type.Type;
+import com.github.javaparser.utils.Pair;
 import com.github.octavelarose.codegenerator.builders.BuildConstants;
 import com.github.octavelarose.codegenerator.builders.BuildFailedException;
 import com.github.octavelarose.codegenerator.builders.classes.BasicClassBuilder;
 import com.github.octavelarose.codegenerator.builders.classes.ClassBuilder;
 import com.github.octavelarose.codegenerator.builders.classes.instructions.MethodCallInstructionWriter;
-import com.github.octavelarose.codegenerator.builders.programs.asm_types.CTTypeUtils;
+import com.github.octavelarose.codegenerator.builders.programs.asm_types.ASMTypeParsingUtils;
 import com.github.octavelarose.codegenerator.builders.programs.filereader.CTFileReader;
 import com.github.octavelarose.codegenerator.builders.utils.RandomUtils;
 
@@ -42,7 +43,7 @@ public class CTParserProgramBuilder implements ProgramBuilder {
         String filename = "./input_data/calltrace_Mandelbrot.txt";
         List<List<String>> fileLines = CTFileReader.getFileLines(filename);
 
-        Stack<CallableDeclaration<?>> callStack = new Stack<>();
+        Stack<Pair<ClassBuilder, CallableDeclaration.Signature>> callStack = new Stack<>();
 
         for (List<String> methodArr: fileLines) {
             if (!this.isFunctionEntry(methodArr.get(DIRECTION))) {
@@ -67,11 +68,13 @@ public class CTParserProgramBuilder implements ProgramBuilder {
                 if (callStack.empty()) {
                     System.out.println("Entry point: " + methodArr.get(FULLNAME));
                 } else {
-                    MethodCallInstructionWriter mciw = new MethodCallInstructionWriter(callStack.lastElement(), methodNode);
+                    MethodCallInstructionWriter mciw = new MethodCallInstructionWriter(
+                            callStack.lastElement().a, callStack.lastElement().b,
+                            classCb, methodNode.getSignature());
                     mciw.writeMethodCallInCaller();
                 }
 
-                callStack.push(methodNode);
+                callStack.push(new Pair<>(classCb, methodNode.getSignature()));
             }
         }
 
@@ -98,11 +101,11 @@ public class CTParserProgramBuilder implements ProgramBuilder {
         String paramsStr = splitDescriptor[0].substring(1);
         String returnValueStr = splitDescriptor[1];
 
-        Type returnType = CTTypeUtils.getTypeFromStr(returnValueStr);
+        Type returnType = ASMTypeParsingUtils.getTypeFromStr(returnValueStr);
 
         NodeList<Parameter> parameters = new NodeList<>();
 
-        for (Type paramType: CTTypeUtils.getTypesFromParametersStr(paramsStr)) {
+        for (Type paramType: ASMTypeParsingUtils.getTypesFromParametersStr(paramsStr)) {
             // TODO: check for duplicate param names, just in case (more of a hassle than it seems)
             String paramName = RandomUtils.generateRandomName(3);
             parameters.add(new Parameter(paramType, paramName));

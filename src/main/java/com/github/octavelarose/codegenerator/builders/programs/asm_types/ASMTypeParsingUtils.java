@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class CTTypeUtils {
+public class ASMTypeParsingUtils {
     /**
      * Returns a JavaParser Type object from an input string with an ASM format.
      * https://asm.ow2.io/faq.html#Q7

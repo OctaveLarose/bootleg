@@ -3,8 +3,11 @@ package com.github.octavelarose.codegenerator.builders.classes.instructions;
 import com.github.javaparser.ast.body.CallableDeclaration;
 import com.github.javaparser.ast.body.ConstructorDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.expr.MethodCallExpr;
+import com.github.javaparser.ast.expr.NameExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.octavelarose.codegenerator.builders.BuildFailedException;
+import com.github.octavelarose.codegenerator.builders.classes.ClassBuilder;
 import com.github.octavelarose.codegenerator.builders.utils.RandomUtils;
 
 import java.util.ArrayList;
@@ -16,12 +19,24 @@ import java.util.List;
  * TODO: needs to take classes into account, currently only method names and no classes are mentioned/instantiated.
  */
 public class MethodCallInstructionWriter {
+    ClassBuilder callerClass;
+    ClassBuilder calleeClass;
     CallableDeclaration<?> callerMethod;
     CallableDeclaration<?> calleeMethod;
 
-    public MethodCallInstructionWriter(CallableDeclaration<?> callerMethod, CallableDeclaration<?> calleeMethod) {
-        this.callerMethod = callerMethod;
-        this.calleeMethod = calleeMethod;
+//    public MethodCallInstructionWriter(CallableDeclaration<?> callerMethod, CallableDeclaration<?> calleeMethod) {
+//        this.callerMethod = callerMethod;
+//        this.calleeMethod = calleeMethod;
+//    }
+
+    public MethodCallInstructionWriter(ClassBuilder callerClass, CallableDeclaration.Signature callerMethodSignature,
+                                       ClassBuilder calleeClass, CallableDeclaration.Signature calleeMethodSignature) {
+        this.callerMethod = callerClass.getMethodFromSignature(callerMethodSignature); // TODO use Signature object
+        this.calleeMethod = calleeClass.getMethodFromSignature(calleeMethodSignature);
+        if (this.callerMethod == null || this.calleeMethod == null)
+            System.out.println("olala keskisspass " + callerMethodSignature.asString() + ", " + calleeMethodSignature.asString());
+        this.callerClass = callerClass;
+        this.calleeClass = calleeClass;
     }
 
     public void writeMethodCallInCaller() throws BuildFailedException {
@@ -44,7 +59,9 @@ public class MethodCallInstructionWriter {
 
         String methodCallStatementStr = getMethodSignatureWithValues(calleeMethod.getSignature().asString());
 //        System.out.println(methodCallStatementStr);
-        methodBody.addStatement(methodCallStatementStr);
+//        methodBody.addStatement(methodCallStatementStr);
+
+        methodBody.addStatement(new MethodCallExpr(new NameExpr(callerClass.getName()), calleeMethod.getName()));
     }
 
     private String getMethodSignatureWithValues(String methodCallSigStr) {
@@ -74,10 +91,12 @@ public class MethodCallInstructionWriter {
         switch (typeStr) {
             case "":
                 return "";
+            case "boolean":
+                return String.valueOf(RandomUtils.generateRandomBool());
             case "int":
-            case "short":
             case "long":
-                return String.valueOf(RandomUtils.generateRandomInt(25000));
+            case "short":
+                return String.valueOf(RandomUtils.generateRandomInt(10000));
             default: // We assume it's an object
                 return "null";
         }

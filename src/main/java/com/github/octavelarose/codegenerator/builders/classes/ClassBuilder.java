@@ -3,10 +3,7 @@ package com.github.octavelarose.codegenerator.builders.classes;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.NodeList;
-import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import com.github.javaparser.ast.body.ConstructorDeclaration;
-import com.github.javaparser.ast.body.MethodDeclaration;
-import com.github.javaparser.ast.body.Parameter;
+import com.github.javaparser.ast.body.*;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.type.Type;
@@ -122,6 +119,8 @@ public abstract class ClassBuilder {
         return this.cu;
     }
 
+    public String getName() {return this.outputClass.getName().asString();}
+
     /**
      * @param methodName The name of the method to look for.
      * @return true if the method is present in the class, false otherwise.
@@ -137,5 +136,31 @@ public abstract class ClassBuilder {
                 return true;
         }
         return false;
+    }
+
+    // TODO description
+    public CallableDeclaration<?> getMethodFromSignature(CallableDeclaration.Signature sig) {
+        for (ConstructorDeclaration m: this.outputClass.getConstructors()) {
+//            if (m.getSignature() == sig)
+            if (m.getSignature().asString().equals(sig.asString()))
+                return m;
+        }
+        for (MethodDeclaration m: this.outputClass.getMethods()) {
+//            if (m.getSignature() == sig)
+            if (m.getSignature().asString().equals(sig.asString()))
+                return m;
+        }
+        // TODO figure out whatever is going on there with the signature objects not matching
+/*        System.out.println("AAAA");
+//        System.out.println(this.outputClass.getMethods());
+        System.out.println(this.outputClass.getMethods().get(1).getSignature());
+        System.out.println(sig);
+        System.out.println("Are they the same: " + (sig == this.outputClass.getMethods().get(1).getSignature()));
+        System.out.println("Same class? " + (sig.getClass() == this.outputClass.getMethods().get(1).getSignature().getClass()));
+        System.out.println("Same name? " + (sig.getName().equals(this.outputClass.getMethods().get(1).getSignature().getName())));
+//        System.out.println(sig.getParameterTypes() + " " + this.outputClass.getMethods().get(1).getSignature().getParameterTypes());
+        System.out.println("Same parameter types ? " + (sig.getParameterTypes().equals(this.outputClass.getMethods().get(1).getSignature().getParameterTypes())));
+        System.out.println("AAAA");*/
+        return null;
     }
 }
