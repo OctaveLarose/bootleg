@@ -5,6 +5,7 @@ import com.github.javaparser.ast.body.ConstructorDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.octavelarose.codegenerator.builders.BuildFailedException;
+import com.github.octavelarose.codegenerator.builders.utils.RandomUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -76,7 +77,7 @@ public class MethodCallInstructionWriter {
             case "int":
             case "short":
             case "long":
-                return "3";
+                return String.valueOf(RandomUtils.generateRandomInt(25000));
             default: // We assume it's an object
                 return "null";
         }
