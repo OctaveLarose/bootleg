@@ -1,10 +1,8 @@
 package com.github.octavelarose.codegenerator.builders.classes.instructions;
 
 import com.github.javaparser.JavaParser;
-import com.github.javaparser.ast.body.CallableDeclaration;
-import com.github.javaparser.ast.body.ConstructorDeclaration;
-import com.github.javaparser.ast.body.MethodDeclaration;
-import com.github.javaparser.ast.body.VariableDeclarator;
+import com.github.javaparser.ast.NodeList;
+import com.github.javaparser.ast.body.*;
 import com.github.javaparser.ast.expr.*;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.Statement;
@@ -13,9 +11,6 @@ import com.github.octavelarose.codegenerator.builders.BuildFailedException;
 import com.github.octavelarose.codegenerator.builders.classes.ClassBuilder;
 import com.github.octavelarose.codegenerator.builders.utils.RandomUtils;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -39,8 +34,6 @@ public class MethodCallInstructionWriter {
     public void writeMethodCallInCaller() throws BuildFailedException {
         BlockStmt methodBody;
 
-        // System.out.println(callerMethod.getName() + " calls " + calleeMethod.getName());
-
         if (callerMethod instanceof MethodDeclaration) {
             MethodDeclaration md = ((MethodDeclaration) callerMethod);
             if (md.getBody().isEmpty()) { // Should never happen since methods are always instantiated with an empty block
@@ -54,7 +47,7 @@ public class MethodCallInstructionWriter {
         else
             throw new BuildFailedException("Method is neither a classic method nor a constructor");
 
-        String methodCallStatementStr = getMethodSignatureWithValues(calleeMethod.getSignature().asString());
+        NodeList<Expression> dummyParamVals = getDummyParameterValues(calleeMethod.getParameters());
 
         // TODO make this a method call to a class since it's duplicated a few times here and there in my codebase
         Optional<ClassOrInterfaceType> classWithName = new JavaParser()
@@ -69,23 +62,24 @@ public class MethodCallInstructionWriter {
             methodBody.addStatement(
                     new MethodCallExpr(
                             new ThisExpr(),
-                            calleeMethod.getName())
+                            calleeMethod.getName(),
+                            dummyParamVals)
             );
         } else {
-//            System.out.println(callerClass.getName() + ":" + callerMethod.getName() + ", "
-//                    + calleeClass.getName() + ":" + calleeMethod.getName());
-
             if (calleeMethod instanceof ConstructorDeclaration) {
                 // TODO add import statement else it won't run
                 methodBody.addStatement(0, new VariableDeclarationExpr(
                         new VariableDeclarator(classWithName.get(), calleeClass.getName().toLowerCase(),
-                                new ObjectCreationExpr().setType(classWithName.get())))
+                                new ObjectCreationExpr()
+                                        .setType(classWithName.get()).setArguments(dummyParamVals))
+                        )
                 );
             } else {
                 methodBody.addStatement(
                         new MethodCallExpr(
                                 new NameExpr(calleeClass.getName().toLowerCase()),
-                                calleeMethod.getName())
+                                calleeMethod.getName(),
+                                dummyParamVals)
                 );
             }
 
@@ -94,7 +88,7 @@ public class MethodCallInstructionWriter {
             if (!isClassInstantiationInMethod(methodBody, calleeClass.getName())) {
                 methodBody.addStatement(0, new VariableDeclarationExpr(
                         new VariableDeclarator(classWithName.get(), calleeClass.getName().toLowerCase(),
-                                new ObjectCreationExpr().setType(classWithName.get())))
+                                new ObjectCreationExpr().setType(classWithName.get()).setArguments(dummyParamVals)))
                 );
             }
         }
@@ -119,27 +113,24 @@ public class MethodCallInstructionWriter {
         return false;
     }
 
-    private String getMethodSignatureWithValues(String methodCallSigStr) {
-        String paramTypes = methodCallSigStr.substring(
-                methodCallSigStr.indexOf("(") + 1,
-                methodCallSigStr.length() - 1);
-        List<String> splitParamTypes = Arrays.asList(paramTypes.split(", "));
-        List<String> paramVals = new ArrayList<>();
+    /**
+     * @param parameters The parameters to get their types from.
+     * @return A list of Expression objects containing dummy values, like random integers as input.
+     */
+    private NodeList<Expression> getDummyParameterValues(NodeList<Parameter> parameters) {
+        NodeList<Expression> dummyParamVals = new NodeList<>();
 
-        if (splitParamTypes.isEmpty())
-            return "";
-
-        for (String paramType: splitParamTypes)
-            paramVals.add(getParamValueStrFromType(paramType));
-
-        return methodCallSigStr.substring(0, methodCallSigStr.indexOf("("))
-                + "("
-                + String.join(", ", paramVals)
-                + ")"
-                + ";";
+        for (Parameter param: parameters) {
+            dummyParamVals.add(new NameExpr(getDummyParamValueFromTypeStr(param.getTypeAsString())));
+        }
+        return dummyParamVals;
     }
 
-    private String getParamValueStrFromType(String typeStr) {
+    /**
+     * @param typeStr The name of the type to get a dummy type from.
+     * @return A string representing a dummy value.
+     */
+    private String getDummyParamValueFromTypeStr(String typeStr) {
         if (typeStr.endsWith("[]"))
             return "new " + typeStr.substring(0, typeStr.length() - 2) + "[]{}";
 
