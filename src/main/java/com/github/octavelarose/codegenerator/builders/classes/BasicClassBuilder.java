@@ -13,13 +13,10 @@ import com.github.javaparser.ast.expr.ThisExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.type.PrimitiveType;
 import com.github.javaparser.ast.type.VoidType;
-import com.github.javaparser.ast.visitor.VoidVisitor;
 import com.github.octavelarose.codegenerator.builders.BuildFailedException;
-import com.github.octavelarose.codegenerator.builders.classes.ast_visitors.ClassNameCollector;
 import com.github.octavelarose.codegenerator.builders.utils.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -91,23 +88,14 @@ public class BasicClassBuilder extends ClassBuilder {
     public void addBasicLinkedMethod(String methodName, ClassBuilder classBuilderToLink) throws BuildFailedException {
         CompilationUnit cuClassToLink = classBuilderToLink.getCompilationUnit();
 
-        // TODO: come on, we can make that bit cleaner. We're big boys
-        List<String> classNames = new ArrayList<>();
-        VoidVisitor<List<String>> classNameVisitor = new ClassNameCollector();
-        classNameVisitor.visit(cuClassToLink, classNames);
-        String className = classNames.get(0);
-
-        Optional<ClassOrInterfaceDeclaration> classToLinkOptional = cuClassToLink.getClassByName(className);
-        if (classToLinkOptional.isEmpty())
-            throw new BuildFailedException("Cannot find class to link in linked method input CU");
-        ClassOrInterfaceDeclaration classToLink = classToLinkOptional.get();
+        ClassOrInterfaceDeclaration classToLink = (ClassOrInterfaceDeclaration) cuClassToLink.getChildNodes().get(0);
+        String className = classToLink.getNameAsString();
 
         Parameter parameter = new Parameter()
                 .setType(String.valueOf(classToLink.getName()))
                 .setName("inputClass");
         NodeList<Parameter> parameters = new NodeList<>(parameter);
 
-        // TODO only call public methods... or protected if same package. A bit of a hassle and a job for future me
         BlockStmt methodBody = new BlockStmt()
                 .addStatement("inputClass." + classToLink.getMethods().get(2).getName() + "(3);");
 
