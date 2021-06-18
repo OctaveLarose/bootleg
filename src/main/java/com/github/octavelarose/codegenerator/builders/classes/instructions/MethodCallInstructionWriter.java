@@ -2,14 +2,16 @@ package com.github.octavelarose.codegenerator.builders.classes.instructions;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.NodeList;
-import com.github.javaparser.ast.body.*;
+import com.github.javaparser.ast.body.CallableDeclaration;
+import com.github.javaparser.ast.body.ConstructorDeclaration;
+import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.expr.*;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.Statement;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.octavelarose.codegenerator.builders.BuildFailedException;
 import com.github.octavelarose.codegenerator.builders.classes.ClassBuilder;
-import com.github.octavelarose.codegenerator.builders.utils.RandomUtils;
 
 import java.util.Optional;
 
@@ -38,7 +40,7 @@ public class MethodCallInstructionWriter {
      */
     public void writeMethodCallInCaller() throws BuildFailedException {
         BlockStmt methodBody = this.getCallerMethodBody();
-        NodeList<Expression> dummyParamVals = getDummyParameterValues(calleeMethod.getParameters());
+        NodeList<Expression> dummyParamVals = DummyValueCreator.getDummyParameterValues(calleeMethod.getParameters());
 
         if (callerClass == calleeClass) {
             this.addLocalMethodCall(methodBody, dummyParamVals);
@@ -148,40 +150,5 @@ public class MethodCallInstructionWriter {
                     return true;
         }
         return false;
-    }
-
-    /**
-     * @param parameters The parameters to get their types from.
-     * @return A list of Expression objects containing dummy values, like random integers as input.
-     */
-    private NodeList<Expression> getDummyParameterValues(NodeList<Parameter> parameters) {
-        NodeList<Expression> dummyParamVals = new NodeList<>();
-
-        for (Parameter param: parameters) {
-            dummyParamVals.add(new NameExpr(getDummyParamValueFromTypeStr(param.getTypeAsString())));
-        }
-        return dummyParamVals;
-    }
-
-    /**
-     * @param typeStr The name of the type to get a dummy type from.
-     * @return A string representing a dummy value.
-     */
-    private String getDummyParamValueFromTypeStr(String typeStr) {
-        if (typeStr.endsWith("[]"))
-            return "new " + typeStr.substring(0, typeStr.length() - 2) + "[]{}";
-
-        switch (typeStr) {
-            case "":
-                return "";
-            case "boolean":
-                return String.valueOf(RandomUtils.generateRandomBool());
-            case "int":
-            case "long":
-            case "short":
-                return String.valueOf(RandomUtils.generateRandomInt(10000));
-            default: // We assume it's an object
-                return "null";
-        }
     }
 }

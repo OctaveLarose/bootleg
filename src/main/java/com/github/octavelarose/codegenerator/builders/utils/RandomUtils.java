@@ -31,4 +31,8 @@ public class RandomUtils {
     public static boolean generateRandomBool() {
         return new Random().nextBoolean();
     }
+
+    public static float generateRandomFloat() {
+        return new Random().nextFloat();
+    }
 }
