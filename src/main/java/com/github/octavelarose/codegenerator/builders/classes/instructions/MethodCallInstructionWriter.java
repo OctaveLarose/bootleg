@@ -31,7 +31,36 @@ public class MethodCallInstructionWriter {
         this.calleeClass = calleeClass;
     }
 
+    /**
+     * Modifies the caller's method to add a call to a callee method, and all that entails for it to run.
+     * (all that entails being import statements, callee class instantiations, for instance).
+     * @throws BuildFailedException Accessing a method/class failed, or modifying its contents failed.
+     */
     public void writeMethodCallInCaller() throws BuildFailedException {
+        BlockStmt methodBody = this.getCallerMethodBody();
+        NodeList<Expression> dummyParamVals = getDummyParameterValues(calleeMethod.getParameters());
+
+        if (callerClass == calleeClass) {
+            this.addLocalMethodCall(methodBody, dummyParamVals);
+        } else {
+            if (calleeMethod instanceof ConstructorDeclaration)
+                this.addCalleeClassConstructorCall(methodBody, dummyParamVals);
+            else {
+                this.addForeignMethodCall(methodBody, dummyParamVals);
+
+                // Ugly safeguard. If an object is returned from a method call, or if it's in a field, it can't be detected
+                // So for now I'll just create a new instance of it in every method that needs it. TODO improve, but how?
+                if (!isClassInstantiationInMethod(methodBody, calleeClass.getName()))
+                    this.addCalleeClassConstructorCall(methodBody, dummyParamVals);
+            }
+        }
+    }
+
+    /**
+     * @return The caller method's body, containing the method instructions.
+     * @throws BuildFailedException If the method's type can't be inferred (i.e it isn't a method/constructor)
+     */
+    private BlockStmt getCallerMethodBody() throws BuildFailedException {
         BlockStmt methodBody;
 
         if (callerMethod instanceof MethodDeclaration) {
@@ -45,10 +74,46 @@ public class MethodCallInstructionWriter {
         } else if (callerMethod instanceof ConstructorDeclaration)
             methodBody = ((ConstructorDeclaration) callerMethod).getBody();
         else
-            throw new BuildFailedException("Method is neither a classic method nor a constructor");
+            throw new BuildFailedException("Couldn't find method body, as this is neither a classic method nor a constructor");
 
-        NodeList<Expression> dummyParamVals = getDummyParameterValues(calleeMethod.getParameters());
+        return methodBody;
+    }
 
+    /**
+     * Adds a call to a method from another class to the given method body.
+     * @param methodBody The body of the method to be appended.
+     * @param dummyParamVals Dummy values for the method parameters.
+     */
+    private void addForeignMethodCall(BlockStmt methodBody, NodeList<Expression> dummyParamVals) {
+        methodBody.addStatement(
+                new MethodCallExpr(
+                        new NameExpr(calleeClass.getName().toLowerCase()),
+                        calleeMethod.getName(),
+                        dummyParamVals)
+        );
+    }
+
+    /**
+     * Add a call to a method in the same class, so with a "this.(...)" statement.
+     * @param methodBody The body of the method to be appended.
+     * @param dummyParamVals Dummy values for the method parameters.
+     */
+    private void addLocalMethodCall(BlockStmt methodBody, NodeList<Expression> dummyParamVals) {
+        methodBody.addStatement(
+                new MethodCallExpr(
+                        new ThisExpr(),
+                        calleeMethod.getName(),
+                        dummyParamVals)
+        );
+    }
+
+    /**
+     * Adds a call to a constructor, i.e instantiates the callee class and puts it in a new local variable.
+     * @param methodBody The body of the method to be appended.
+     * @param dummyParamVals Dummy values for the method parameters.
+     * @throws BuildFailedException If the class with the given name couldn't be accessed.
+     */
+    private void addCalleeClassConstructorCall(BlockStmt methodBody, NodeList<Expression> dummyParamVals) throws BuildFailedException {
         // TODO make this a method call to a class since it's duplicated a few times here and there in my codebase
         Optional<ClassOrInterfaceType> classWithName = new JavaParser()
                 .parseClassOrInterfaceType(calleeClass.getName())
@@ -57,41 +122,13 @@ public class MethodCallInstructionWriter {
         if (classWithName.isEmpty())
             throw new BuildFailedException("Couldn't parse class " + classWithName);
 
-        // TODO argument handling, also for the constructor call.
-        if (callerClass == calleeClass) {
-            methodBody.addStatement(
-                    new MethodCallExpr(
-                            new ThisExpr(),
-                            calleeMethod.getName(),
-                            dummyParamVals)
-            );
-        } else {
-            if (calleeMethod instanceof ConstructorDeclaration) {
-                // TODO add import statement else it won't run
-                methodBody.addStatement(0, new VariableDeclarationExpr(
+        // TODO add import statement else the generated code won't run
+        methodBody.addStatement(0, new VariableDeclarationExpr(
                         new VariableDeclarator(classWithName.get(), calleeClass.getName().toLowerCase(),
                                 new ObjectCreationExpr()
                                         .setType(classWithName.get()).setArguments(dummyParamVals))
-                        )
-                );
-            } else {
-                methodBody.addStatement(
-                        new MethodCallExpr(
-                                new NameExpr(calleeClass.getName().toLowerCase()),
-                                calleeMethod.getName(),
-                                dummyParamVals)
-                );
-            }
-
-            // Ugly safeguard. If an object is returned from a method call, or if it's in a field, it can't be detected
-            // So for now I'll just create a new instance of it in every method that needs it. TODO improve, but how?
-            if (!isClassInstantiationInMethod(methodBody, calleeClass.getName())) {
-                methodBody.addStatement(0, new VariableDeclarationExpr(
-                        new VariableDeclarator(classWithName.get(), calleeClass.getName().toLowerCase(),
-                                new ObjectCreationExpr().setType(classWithName.get()).setArguments(dummyParamVals)))
-                );
-            }
-        }
+                )
+        );
     }
 
     /**
