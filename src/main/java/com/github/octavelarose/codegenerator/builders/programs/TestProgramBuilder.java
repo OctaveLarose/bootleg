@@ -14,6 +14,8 @@ import java.util.HashMap;
  */
 public class TestProgramBuilder implements ProgramBuilder {
     public HashMap<String, ClassBuilder> build() throws BuildFailedException {
+        System.out.println("Generating a test, proof of concept program.");
+
         HashMap<String, ClassBuilder> classBuilders = new HashMap<>();
 
         classBuilders.put("TestClass", new BasicClassBuilder(

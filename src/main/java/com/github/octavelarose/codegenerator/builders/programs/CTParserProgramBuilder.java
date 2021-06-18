@@ -31,17 +31,23 @@ public class CTParserProgramBuilder implements ProgramBuilder {
     public static int FULLNAME = 3;
     public static int TIME = 4;
 
+    private final String ctFileName;
+
+    public CTParserProgramBuilder(String ctFileName) {
+        this.ctFileName = ctFileName;
+    }
+
     private boolean isFunctionEntry(String dirStr) {
         return dirStr.equals(">");
     }
 
     public HashMap<String, ClassBuilder> build() throws BuildFailedException {
+        System.out.println("Generating a program from the calltrace file: " + this.ctFileName);
+
         HashMap<String, ClassBuilder> classBuilders = new HashMap<>();
         String PKG_NAME = "com.abc.random";
 
-        // Using a hardcoded calltrace for now, should be input arg in the future
-        String filename = "./input_data/calltrace_Mandelbrot.txt";
-        List<List<String>> fileLines = CTFileReader.getFileLines(filename);
+        List<List<String>> fileLines = CTFileReader.getFileLines(ctFileName);
 
         Stack<Pair<ClassBuilder, CallableDeclaration.Signature>> callStack = new Stack<>();
 
