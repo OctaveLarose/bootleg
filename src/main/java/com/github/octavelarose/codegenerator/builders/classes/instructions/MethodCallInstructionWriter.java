@@ -1,11 +1,17 @@
 package com.github.octavelarose.codegenerator.builders.classes.instructions;
 
+import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.body.CallableDeclaration;
 import com.github.javaparser.ast.body.ConstructorDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.NameExpr;
+import com.github.javaparser.ast.expr.ObjectCreationExpr;
+import com.github.javaparser.ast.expr.VariableDeclarationExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
+import com.github.javaparser.ast.stmt.Statement;
+import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.octavelarose.codegenerator.builders.BuildFailedException;
 import com.github.octavelarose.codegenerator.builders.classes.ClassBuilder;
 import com.github.octavelarose.codegenerator.builders.utils.RandomUtils;
@@ -13,6 +19,7 @@ import com.github.octavelarose.codegenerator.builders.utils.RandomUtils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Writes a call to one method in another, i.e "methodName(3, "hello", 1.2);"
@@ -61,7 +68,47 @@ public class MethodCallInstructionWriter {
 //        System.out.println(methodCallStatementStr);
 //        methodBody.addStatement(methodCallStatementStr);
 
-        methodBody.addStatement(new MethodCallExpr(new NameExpr(callerClass.getName()), calleeMethod.getName()));
+        // TODO make this a method call to a class since it's duplicated a few times here and there
+        Optional<ClassOrInterfaceType> classWithName = new JavaParser()
+                .parseClassOrInterfaceType(callerClass.getName())
+                .getResult();
+
+        if (classWithName.isEmpty())
+            throw new BuildFailedException("Couldn't parse class " + classWithName);
+
+        if (!isClassInstantiationInMethod(methodBody, callerClass.getName())) {
+            // TODO import statement
+            methodBody.addStatement(0, new VariableDeclarationExpr(
+                    new VariableDeclarator(classWithName.get(), callerClass.getName().toLowerCase(),
+                            new ObjectCreationExpr().setType(classWithName.get())))
+            );
+        }
+
+        // TODO argument handling, also for the constructor call.
+        methodBody.addStatement(
+                new MethodCallExpr(
+                        new NameExpr(callerClass.getName().toLowerCase()),
+                        calleeMethod.getName())
+        );
+    }
+
+    /**
+     * Is there a local variable in the method that corresponds to an instantiation of a given class?
+     * @param methodBody The body of the method.
+     * @param className The name of the class.
+     * @return true if a variable was instantiated with the type className, false otherwise.
+     */
+    private boolean isClassInstantiationInMethod(BlockStmt methodBody, String className) {
+        for (Statement methodLine: methodBody.getStatements()) {
+            if (!(methodLine.asExpressionStmt().getExpression() instanceof VariableDeclarationExpr))
+                continue;
+
+            VariableDeclarationExpr varDecExpr = (VariableDeclarationExpr) methodLine.asExpressionStmt().getExpression();
+            for (VariableDeclarator varDec: varDecExpr.getVariables())
+                if (className.equals(varDec.getType().asString()))
+                    return true;
+        }
+        return false;
     }
 
     private String getMethodSignatureWithValues(String methodCallSigStr) {
