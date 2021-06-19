@@ -52,8 +52,10 @@ public class MethodCallInstructionWriter {
 
                 // Ugly safeguard. If an object is returned from a method call, or if it's in a field, it can't be detected
                 // So for now I'll just create a new instance of it in every method that needs it. TODO improve, but how?
-                if (!isClassInstantiationInMethod(methodBody, calleeClass.getName()))
+                if (!isClassInstantiationInMethod(methodBody, calleeClass.getName())) {
+                    dummyParamVals = DummyValueCreator.getDummyParameterValues(calleeClass.getConstructors().get(0).getParameters());
                     this.addCalleeClassConstructorCall(methodBody, dummyParamVals);
+                }
             }
         }
     }

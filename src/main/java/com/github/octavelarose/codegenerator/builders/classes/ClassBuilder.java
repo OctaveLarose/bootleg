@@ -138,8 +138,17 @@ public abstract class ClassBuilder {
         return false;
     }
 
+    /**
+     * @return The class' constructors.
+     */
+    public List<ConstructorDeclaration> getConstructors() {
+        return this.outputClass.getConstructors();
+    }
+
     // TODO description
     public CallableDeclaration<?> getMethodFromSignature(CallableDeclaration.Signature sig) {
+        // TODO figure out whatever is going on there with the signature objects not matching
+        // Basically matching signature objects doesn't always work even when they seem virtually identical, so I compare the string versions instead
         for (ConstructorDeclaration m: this.outputClass.getConstructors()) {
 //            if (m.getSignature() == sig)
             if (m.getSignature().asString().equals(sig.asString()))
@@ -150,7 +159,6 @@ public abstract class ClassBuilder {
             if (m.getSignature().asString().equals(sig.asString()))
                 return m;
         }
-        // TODO figure out whatever is going on there with the signature objects not matching
 /*        System.out.println("AAAA");
 //        System.out.println(this.outputClass.getMethods());
         System.out.println(this.outputClass.getMethods().get(1).getSignature());
