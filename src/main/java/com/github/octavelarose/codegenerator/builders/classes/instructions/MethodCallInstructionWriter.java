@@ -1,6 +1,6 @@
 package com.github.octavelarose.codegenerator.builders.classes.instructions;
 
-import com.github.javaparser.JavaParser;
+import com.github.javaparser.ParseException;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.CallableDeclaration;
 import com.github.javaparser.ast.body.ConstructorDeclaration;
@@ -12,8 +12,7 @@ import com.github.javaparser.ast.stmt.Statement;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.octavelarose.codegenerator.builders.BuildFailedException;
 import com.github.octavelarose.codegenerator.builders.classes.ClassBuilder;
-
-import java.util.Optional;
+import com.github.octavelarose.codegenerator.builders.utils.JPTypeUtils;
 
 /**
  * Writes a call to one method in another, i.e "methodName(3, "hello", 1.2);"
@@ -117,19 +116,19 @@ public class MethodCallInstructionWriter {
      * @throws BuildFailedException If the class with the given name couldn't be accessed.
      */
     private void addCalleeClassConstructorCall(BlockStmt methodBody, NodeList<Expression> dummyParamVals) throws BuildFailedException {
-        // TODO make this a method call to a class since it's duplicated a few times here and there in my codebase
-        Optional<ClassOrInterfaceType> classWithName = new JavaParser()
-                .parseClassOrInterfaceType(calleeClass.getName())
-                .getResult();
+        ClassOrInterfaceType classWithName;
 
-        if (classWithName.isEmpty())
-            throw new BuildFailedException("Couldn't parse class " + classWithName);
+        try {
+            classWithName = JPTypeUtils.getClassTypeFromName(calleeClass.getName());
+        } catch (ParseException e) {
+            throw new BuildFailedException(e.getMessage());
+        }
 
         // TODO add import statement else the generated code won't run if they're not in the same package
         methodBody.addStatement(0, new VariableDeclarationExpr(
-                        new VariableDeclarator(classWithName.get(), calleeClass.getName().toLowerCase(),
+                        new VariableDeclarator(classWithName, calleeClass.getName().toLowerCase(),
                                 new ObjectCreationExpr()
-                                        .setType(classWithName.get()).setArguments(dummyParamVals))
+                                        .setType(classWithName).setArguments(dummyParamVals))
                 )
         );
     }

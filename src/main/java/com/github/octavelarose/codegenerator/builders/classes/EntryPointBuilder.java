@@ -1,13 +1,15 @@
 package com.github.octavelarose.codegenerator.builders.classes;
 
-import com.github.javaparser.JavaParser;
+import com.github.javaparser.ParseException;
 import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.type.ArrayType;
+import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.type.VoidType;
+import com.github.octavelarose.codegenerator.builders.utils.JPTypeUtils;
 
 import java.util.List;
 
@@ -25,13 +27,19 @@ public class EntryPointBuilder extends ClassBuilder {
         this.generateEntryPointFunction();
     }
 
-    @SuppressWarnings("OptionalGetWithoutIsPresent")
     private void generateEntryPointFunction() {
         BlockStmt methodBody = getMainFunctionBody();
+        ClassOrInterfaceType stringType;
 
-        // TODO: why is it so hard to get a String class? Surely we can improve upon this
+        try {
+            stringType = JPTypeUtils.getClassTypeFromName("String");
+        } catch (ParseException e) {
+            System.err.println("Failed to get the class type for a string, which should never happen.");
+            return;
+        }
+
         Parameter parameter = new Parameter()
-                .setType(new ArrayType(new JavaParser().parseClassOrInterfaceType("String").getResult().get()))
+                .setType(new ArrayType(stringType))
                 .setName("args");
         NodeList<Parameter> parameters = new NodeList<>(parameter);
 

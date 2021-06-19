@@ -1,11 +1,14 @@
 package com.github.octavelarose.codegenerator.builders.programs.asm_types;
 
-import com.github.javaparser.JavaParser;
-import com.github.javaparser.ast.type.*;
+import com.github.javaparser.ParseException;
+import com.github.javaparser.ast.type.ArrayType;
+import com.github.javaparser.ast.type.PrimitiveType;
+import com.github.javaparser.ast.type.Type;
+import com.github.javaparser.ast.type.VoidType;
+import com.github.octavelarose.codegenerator.builders.utils.JPTypeUtils;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 public class ASMTypeParsingUtils {
     /**
@@ -85,14 +88,11 @@ public class ASMTypeParsingUtils {
         if (className.contains("/"))
             className = className.replace("/", ".");
 
-        Optional<ClassOrInterfaceType> classWithName = new JavaParser()
-                .parseClassOrInterfaceType(className)
-                .getResult();
-
-        if (classWithName.isEmpty())
-            throw new ASMParsingException("Unknown class: " + typeStr.substring(1));
-
-        return classWithName.get();
+        try {
+            return JPTypeUtils.getClassTypeFromName(className);
+        } catch (ParseException e) {
+            throw new ASMParsingException(e.getMessage());
+        }
     }
 
     /**
