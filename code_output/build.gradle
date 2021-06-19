@@ -25,5 +25,5 @@ tasks.withType(JavaCompile) {
 
 sourceSets.main.java.srcDirs = ['src/main/java']
 
-//mainClassName = 'Harness.main'
-mainClassName = 'com.abc.Main'
+mainClassName = 'com.abc.random.Harness'
+//mainClassName = 'com.abc.Main'

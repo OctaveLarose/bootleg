@@ -40,7 +40,7 @@ public class MethodCallInstructionWriter {
      */
     public void writeMethodCallInCaller() throws BuildFailedException {
         BlockStmt methodBody = this.getCallerMethodBody();
-        NodeList<Expression> dummyParamVals = DummyValueCreator.getDummyParameterValues(calleeMethod.getParameters());
+        NodeList<Expression> dummyParamVals = DummyValueCreator.getDummyParameterValuesAsExprs(calleeMethod.getParameters());
 
         if (callerClass == calleeClass) {
             this.addLocalMethodCall(methodBody, dummyParamVals);
@@ -53,7 +53,7 @@ public class MethodCallInstructionWriter {
                 // Ugly safeguard. If an object is returned from a method call, or if it's in a field, it can't be detected
                 // So for now I'll just create a new instance of it in every method that needs it. TODO improve, but how?
                 if (!isClassInstantiationInMethod(methodBody, calleeClass.getName())) {
-                    dummyParamVals = DummyValueCreator.getDummyParameterValues(calleeClass.getConstructors().get(0).getParameters());
+                    dummyParamVals = DummyValueCreator.getDummyParameterValuesAsExprs(calleeClass.getConstructors().get(0).getParameters());
                     this.addCalleeClassConstructorCall(methodBody, dummyParamVals);
                 }
             }
@@ -89,7 +89,7 @@ public class MethodCallInstructionWriter {
      * @param dummyParamVals Dummy values for the method parameters.
      */
     private void addForeignMethodCall(BlockStmt methodBody, NodeList<Expression> dummyParamVals) {
-        methodBody.addStatement(
+        methodBody.addStatement(Math.max(0, methodBody.getStatements().size() - 1),
                 new MethodCallExpr(
                         new NameExpr(calleeClass.getName().toLowerCase()),
                         calleeMethod.getName(),
@@ -103,7 +103,7 @@ public class MethodCallInstructionWriter {
      * @param dummyParamVals Dummy values for the method parameters.
      */
     private void addLocalMethodCall(BlockStmt methodBody, NodeList<Expression> dummyParamVals) {
-        methodBody.addStatement(
+        methodBody.addStatement(Math.max(0, methodBody.getStatements().size() - 1),
                 new MethodCallExpr(
                         new ThisExpr(),
                         calleeMethod.getName(),
@@ -126,7 +126,7 @@ public class MethodCallInstructionWriter {
         if (classWithName.isEmpty())
             throw new BuildFailedException("Couldn't parse class " + classWithName);
 
-        // TODO add import statement else the generated code won't run
+        // TODO add import statement else the generated code won't run if they're not in the same package
         methodBody.addStatement(0, new VariableDeclarationExpr(
                         new VariableDeclarator(classWithName.get(), calleeClass.getName().toLowerCase(),
                                 new ObjectCreationExpr()
@@ -143,6 +143,11 @@ public class MethodCallInstructionWriter {
      */
     private boolean isClassInstantiationInMethod(BlockStmt methodBody, String className) {
         for (Statement methodLine: methodBody.getStatements()) {
+            // A bit awkward. Right now we add a return stmt at the start, and those need to be ignored
+            // I guess this could be changed to "if it isn't an expression statement" instead
+            if (methodLine.isReturnStmt())
+                continue;
+
             if (!(methodLine.asExpressionStmt().getExpression() instanceof VariableDeclarationExpr))
                 continue;
 

@@ -5,12 +5,14 @@ import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.CallableDeclaration;
 import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.stmt.BlockStmt;
+import com.github.javaparser.ast.stmt.ReturnStmt;
 import com.github.javaparser.ast.type.Type;
 import com.github.javaparser.utils.Pair;
 import com.github.octavelarose.codegenerator.builders.BuildConstants;
 import com.github.octavelarose.codegenerator.builders.BuildFailedException;
 import com.github.octavelarose.codegenerator.builders.classes.BasicClassBuilder;
 import com.github.octavelarose.codegenerator.builders.classes.ClassBuilder;
+import com.github.octavelarose.codegenerator.builders.classes.instructions.DummyValueCreator;
 import com.github.octavelarose.codegenerator.builders.classes.instructions.MethodCallInstructionWriter;
 import com.github.octavelarose.codegenerator.builders.programs.asm_types.ASMTypeParsingUtils;
 import com.github.octavelarose.codegenerator.builders.programs.filereader.CTFileReader;
@@ -98,16 +100,17 @@ public class CTParserProgramBuilder implements ProgramBuilder {
                                                                  ClassBuilder classCb) throws BuildFailedException {
         NodeList<Modifier> modifiers = this.getModifiersListFromScope(methodArr.get(SCOPE));
 
-        // In the future, will need to contain info ; probably just a sleep() operation at first
-        BlockStmt methodBody = new BlockStmt();
-
         String descriptor = methodArr.get(DESCRIPTOR);
         String[] splitDescriptor = descriptor.split("\\)");
 
         String paramsStr = splitDescriptor[0].substring(1);
-        String returnValueStr = splitDescriptor[1];
+        Type returnType = ASMTypeParsingUtils.getTypeFromStr(splitDescriptor[1]);
 
-        Type returnType = ASMTypeParsingUtils.getTypeFromStr(returnValueStr);
+        // In the future, should ideally contain "advanced" operations. Needs a sleep() operation for starters
+        BlockStmt methodBody = new BlockStmt();
+
+        if (!returnType.isVoidType())
+            methodBody.addStatement(new ReturnStmt(DummyValueCreator.getDummyParamValueFromType(returnType)));
 
         NodeList<Parameter> parameters = new NodeList<>();
 

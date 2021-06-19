@@ -4,6 +4,7 @@ import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.NameExpr;
+import com.github.javaparser.ast.type.Type;
 import com.github.octavelarose.codegenerator.builders.utils.RandomUtils;
 
 /**
@@ -16,13 +17,21 @@ public class DummyValueCreator {
      * @param parameters The parameters to get their types from.
      * @return A list of Expression objects containing dummy values, like random integers as input.
      */
-    public static NodeList<Expression> getDummyParameterValues(NodeList<Parameter> parameters) {
+    public static NodeList<Expression> getDummyParameterValuesAsExprs(NodeList<Parameter> parameters) {
         NodeList<Expression> dummyParamVals = new NodeList<>();
 
         for (Parameter param: parameters)
-            dummyParamVals.add(new NameExpr(getDummyParamValueFromTypeStr(param.getTypeAsString())));
+            dummyParamVals.add(new NameExpr(getDummyParamValueFromType(param.getType())));
 
         return dummyParamVals;
+    }
+
+    /**
+     * @param t The type to get a dummy value from
+     * @return A string representing a dummy value.
+     */
+    public static String getDummyParamValueFromType(Type t) {
+        return getDummyParamValueFromTypeStr(t.toString());
     }
 
     /**
@@ -30,7 +39,7 @@ public class DummyValueCreator {
      * @param typeStr The name of the type to get a dummy type from.
      * @return A string representing a dummy value.
      */
-    public static String getDummyParamValueFromTypeStr(String typeStr) {
+    private static String getDummyParamValueFromTypeStr(String typeStr) {
         // JP can parse a NameExpr which is fed this, but it'd be better if we made it return a VariableDeclarationExpr
         if (typeStr.endsWith("[]"))
             return "new " + typeStr.substring(0, typeStr.length() - 2) + "[]{}";

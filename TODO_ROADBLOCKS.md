@@ -1,4 +1,4 @@
-# OBSTACLES TO GETTING IT TO RUN FROM A CALLTRACE FILE:
+# Obstacles to getting it to run from a calltrace file
 
 ## 1.
 Inheritance not taken into account, and can't be inferred from just a CT file.
@@ -33,3 +33,7 @@ So extra bandage solution: roadblock 1's bandage solution
 
 Possible long-term solution: ??? Probably ignoring it, I can't think of any good solutions. Oops.
 But probably yet more info about the code, but... which, and with what format?
+
+# Obstacles to a realistic program
+
+- No information about the classes' packages means they all end up in the same package.
