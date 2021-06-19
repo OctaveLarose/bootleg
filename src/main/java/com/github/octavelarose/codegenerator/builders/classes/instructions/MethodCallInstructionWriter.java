@@ -17,7 +17,6 @@ import java.util.Optional;
 
 /**
  * Writes a call to one method in another, i.e "methodName(3, "hello", 1.2);"
- * TODO: needs to take classes into account, currently only method names and no classes are mentioned/instantiated.
  */
 public class MethodCallInstructionWriter {
     ClassBuilder callerClass;

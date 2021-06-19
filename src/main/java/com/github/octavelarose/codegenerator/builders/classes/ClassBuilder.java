@@ -127,7 +127,7 @@ public abstract class ClassBuilder {
      */
     public boolean hasMethod(String methodName) {
         // TODO: In practice, we'd need to check the method name + the parameters, to account for overloading
-        // Which makes me think.. If we find the format used by DiSL, we can feed it to this function as a string and have it parse it? maybe?
+        // Might be better to feed the DiSL (ASM) method signature format to it as a string and have it parse it?
         if (methodName.equals(BuildConstants.CONSTRUCTOR_NAME))
             return !this.outputClass.getConstructors().isEmpty();
 

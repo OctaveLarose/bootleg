@@ -81,7 +81,6 @@ public class ASMTypeParsingUtils {
 
         // Note: for <Class extends XXX>, I don't get the info about the XXX class, so it's just Class for now...
 
-        // TODO: needs to only show the class name, not path, and add an import (how though)...
         // If it's a class definition, it contains slashes, but JavaParser prefers dots.
         if (className.contains("/"))
             className = className.replace("/", ".");
@@ -125,7 +124,6 @@ public class ASMTypeParsingUtils {
                 newParam = getTypeFromStr(objectSubStr);
                 i += objectSubStr.length();
             } else {
-                // TODO: don't know where to put this but the parsing needs its own exception class
                 throw new ASMParsingException("Parsing of parameters data failed for character " + argsBuf[i]);
             }
 
