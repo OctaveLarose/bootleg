@@ -12,13 +12,7 @@ repositories {
     }
 }
 
-jar {
-    manifest {
-        attributes "Main-Class": "main.Main"
-    }
-}
-
-description = 'Sample app for DISL testing purposes'
+description = 'Generated code output.'
 
 compileJava {
     sourceCompatibility = '1.8'
@@ -29,6 +23,7 @@ tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
 }
 
-sourceSets.main.java.srcDirs = ['src']
+sourceSets.main.java.srcDirs = ['src/main/java']
 
-mainClassName = 'Harness.main'
+//mainClassName = 'Harness.main'
+mainClassName = 'com.abc.Main'

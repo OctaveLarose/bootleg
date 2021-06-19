@@ -62,10 +62,12 @@ public class BasicClassBuilder extends ClassBuilder {
         if (classFields.size() > 0) {
             // Gets a FieldDeclaration ("private int abcd") and gets the variable name.
             int randomFieldId = new Random().nextInt(classFields.size());
-            String randomFieldName = StringUtils.removeEnd(classFields.get(randomFieldId).toString().split(" ")[2], ";");
-            FieldAccessExpr fieldAccessExpr = new FieldAccessExpr(new ThisExpr(), randomFieldName);
-            AssignExpr fieldModifyExpr = new AssignExpr(fieldAccessExpr, fieldAccessExpr, AssignExpr.Operator.PLUS);
-            methodBody.addStatement(fieldModifyExpr);
+            if (classFields.get(randomFieldId).getVariable(0).getType().toString().equals("int")) {
+                String randomFieldName = StringUtils.removeEnd(classFields.get(randomFieldId).toString().split(" ")[2], ";");
+                FieldAccessExpr fieldAccessExpr = new FieldAccessExpr(new ThisExpr(), randomFieldName);
+                AssignExpr fieldModifyExpr = new AssignExpr(fieldAccessExpr, fieldAccessExpr, AssignExpr.Operator.PLUS);
+                methodBody.addStatement(fieldModifyExpr);
+            }
         }
 
         methodBody.addStatement("System.out.println(\"" + RandomUtils.generateRandomName(6) + "\");");
