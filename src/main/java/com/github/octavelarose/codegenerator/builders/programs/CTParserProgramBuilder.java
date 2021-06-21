@@ -127,25 +127,26 @@ public class CTParserProgramBuilder implements ProgramBuilder {
     }
 
     /**
-     * @param scope A string defining the method's scope (public, private...)
+     * Returns modifiers given a string defining a scope.
+     * Needs a definition of the syntax I use somewhere, since it's my own standard.
+     * @param scope A string defining the method's scope (public, private...).
      * @return a NodeList of Modifier objects, corresponding to the input scope
      */
     private NodeList<Modifier> getModifiersListFromScope(String scope) {
-        NodeList<Modifier> modifiers;
+        NodeList<Modifier> modifiers = new NodeList<>();
+        String[] splitScope = scope.split("/");
 
-        switch (scope) {
-            case "pub":
-                modifiers = new NodeList<>(Modifier.publicModifier());
-                break;
-            case "pri":
-                modifiers = new NodeList<>(Modifier.privateModifier());
-                break;
-            case "pro":
-                modifiers = new NodeList<>(Modifier.protectedModifier());
-                break;
-            default:
-                modifiers = new NodeList<>();
+        for (String modStr: splitScope) {
+            if (modStr.equals("pub"))
+                modifiers.add(Modifier.publicModifier());
+            if (modStr.equals("pri"))
+                modifiers.add(Modifier.privateModifier());
+            if (modStr.equals("pro"))
+                modifiers.add(Modifier.protectedModifier());
+            if (modStr.equals("sta"))
+                modifiers.add(Modifier.staticModifier());
         }
+
         return modifiers;
     }
 }
