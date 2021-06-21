@@ -1,6 +1,7 @@
 package com.github.octavelarose.codegenerator.builders.classes.instructions;
 
 import com.github.javaparser.ParseException;
+import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.CallableDeclaration;
 import com.github.javaparser.ast.body.ConstructorDeclaration;
@@ -23,6 +24,11 @@ public class MethodCallInstructionWriter {
     CallableDeclaration<?> callerMethod;
     CallableDeclaration<?> calleeMethod;
 
+    private enum IsCalleeMethodStatic {
+        YES,
+        NO
+    }
+
     public MethodCallInstructionWriter(ClassBuilder callerClass, CallableDeclaration.Signature callerMethodSignature,
                                        ClassBuilder calleeClass, CallableDeclaration.Signature calleeMethodSignature) {
         this.callerMethod = callerClass.getMethodFromSignature(callerMethodSignature);
@@ -40,13 +46,18 @@ public class MethodCallInstructionWriter {
         BlockStmt methodBody = this.getCallerMethodBody();
         NodeList<Expression> dummyParamVals = DummyValueCreator.getDummyParameterValuesAsExprs(calleeMethod.getParameters());
 
+        IsCalleeMethodStatic isCalleeMethodStatic = calleeMethod.getModifiers()
+                .stream()
+                .anyMatch(s -> s.getKeyword() == Modifier.Keyword.STATIC)
+                ? IsCalleeMethodStatic.YES : IsCalleeMethodStatic.NO;
+
         if (callerClass == calleeClass) {
-            this.addLocalMethodCall(methodBody, dummyParamVals);
+            this.addLocalMethodCall(methodBody, dummyParamVals, isCalleeMethodStatic);
         } else {
             if (calleeMethod instanceof ConstructorDeclaration)
                 this.addCalleeClassConstructorCall(methodBody, dummyParamVals);
             else {
-                this.addForeignMethodCall(methodBody, dummyParamVals);
+                this.addForeignMethodCall(methodBody, dummyParamVals, isCalleeMethodStatic);
 
                 // Ugly safeguard. If an object is returned from a method call, or if it's in a field, it can't be detected
                 // So for now I'll just create a new instance of it in every method that needs it. TODO improve, but how?
@@ -86,10 +97,15 @@ public class MethodCallInstructionWriter {
      * @param methodBody The body of the method to be appended.
      * @param dummyParamVals Dummy values for the method parameters.
      */
-    private void addForeignMethodCall(BlockStmt methodBody, NodeList<Expression> dummyParamVals) {
+    private void addForeignMethodCall(BlockStmt methodBody,
+                                      NodeList<Expression> dummyParamVals,
+                                      IsCalleeMethodStatic isCalleeMethodStatic) {
+        Expression callerExpr = (isCalleeMethodStatic == IsCalleeMethodStatic.NO)
+                ? new NameExpr(calleeClass.getName().toLowerCase()) : new NameExpr(calleeClass.getName());
+
         methodBody.addStatement(Math.max(0, methodBody.getStatements().size() - 1),
                 new MethodCallExpr(
-                        new NameExpr(calleeClass.getName().toLowerCase()),
+                        callerExpr,
                         calleeMethod.getName(),
                         dummyParamVals)
         );
@@ -100,10 +116,15 @@ public class MethodCallInstructionWriter {
      * @param methodBody The body of the method to be appended.
      * @param dummyParamVals Dummy values for the method parameters.
      */
-    private void addLocalMethodCall(BlockStmt methodBody, NodeList<Expression> dummyParamVals) {
+    private void addLocalMethodCall(BlockStmt methodBody,
+                                    NodeList<Expression> dummyParamVals,
+                                    IsCalleeMethodStatic isCalleeMethodStatic) {
+        Expression callerExpr = (isCalleeMethodStatic == IsCalleeMethodStatic.NO)
+                ? new ThisExpr() : new NameExpr(calleeClass.getName());
+
         methodBody.addStatement(Math.max(0, methodBody.getStatements().size() - 1),
                 new MethodCallExpr(
-                        new ThisExpr(),
+                        callerExpr,
                         calleeMethod.getName(),
                         dummyParamVals)
         );
