@@ -4,6 +4,7 @@ import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.CallableDeclaration;
 import com.github.javaparser.ast.body.Parameter;
+import com.github.javaparser.ast.expr.NameExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.ReturnStmt;
 import com.github.javaparser.ast.type.Type;
@@ -109,6 +110,7 @@ public class CTParserProgramBuilder implements ProgramBuilder {
         // In the future, should ideally contain "advanced" operations. Needs a sleep() operation for starters
         BlockStmt methodBody = new BlockStmt();
 
+        methodBody.addStatement(new NameExpr("System.out.println(\"" + "Current method: " + methodArr.get(FULLNAME) + "\");"));
         if (!returnType.isVoidType())
             methodBody.addStatement(new ReturnStmt(DummyValueCreator.getDummyParamValueFromType(returnType)));
 
