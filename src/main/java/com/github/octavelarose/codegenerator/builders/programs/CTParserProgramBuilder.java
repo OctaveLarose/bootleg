@@ -110,7 +110,7 @@ public class CTParserProgramBuilder implements ProgramBuilder {
         // In the future, should ideally contain "advanced" operations. Needs a sleep() operation for starters
         BlockStmt methodBody = new BlockStmt();
 
-        methodBody.addStatement(new NameExpr("System.out.println(\"" + "Current method: " + methodArr.get(FULLNAME) + "\");"));
+        methodBody.addStatement(new NameExpr("System.out.println(\"" + "Current method: " + methodArr.get(FULLNAME) + "\")"));
         if (!returnType.isVoidType())
             methodBody.addStatement(new ReturnStmt(DummyValueCreator.getDummyParamValueFromType(returnType)));
 
