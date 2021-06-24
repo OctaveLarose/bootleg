@@ -29,12 +29,42 @@ public class MethodCallInstructionWriter {
         NO
     }
 
-    public MethodCallInstructionWriter(ClassBuilder callerClass, CallableDeclaration.Signature callerMethodSignature,
-                                       ClassBuilder calleeClass, CallableDeclaration.Signature calleeMethodSignature) {
-        this.callerMethod = callerClass.getMethodFromSignature(callerMethodSignature);
-        this.calleeMethod = calleeClass.getMethodFromSignature(calleeMethodSignature);
+    /**
+     * @param callerClass The caller class.
+     * @param callerMethodSignature The caller method signature.
+     * @return The MethodCallInstructionWriter object.
+     */
+    public MethodCallInstructionWriter setCaller(ClassBuilder callerClass, CallableDeclaration.Signature callerMethodSignature) throws BuildFailedException {
         this.callerClass = callerClass;
+
+        if (this.callerClass == null)
+            throw new BuildFailedException("Caller class is null.");
+
+        this.callerMethod = callerClass.getMethodFromSignature(callerMethodSignature);
+
+        if (this.callerMethod == null)
+            throw new BuildFailedException("Couldn't fetch caller method from caller class.");
+
+        return this;
+    }
+
+    /**
+     * @param calleeClass The callee class.
+     * @param calleeMethodSignature The callee method signature.
+     * @return The MethodCallInstructionWriter object.
+     */
+    public MethodCallInstructionWriter setCallee(ClassBuilder calleeClass, CallableDeclaration.Signature calleeMethodSignature) throws BuildFailedException {
         this.calleeClass = calleeClass;
+
+        if (this.calleeClass == null)
+            throw new BuildFailedException("Callee class is null.");
+
+        this.calleeMethod = calleeClass.getMethodFromSignature(calleeMethodSignature);
+
+        if (this.calleeMethod == null)
+            throw new BuildFailedException("Couldn't fetch callee method from callee class.");
+
+        return this;
     }
 
     /**
@@ -43,6 +73,8 @@ public class MethodCallInstructionWriter {
      * @throws BuildFailedException Accessing a method/class failed, or modifying its contents failed.
      */
     public void writeMethodCallInCaller() throws BuildFailedException {
+        checkCallerAndCalleeValues();
+
         BlockStmt methodBody = this.getCallerMethodBody();
         NodeList<Expression> dummyParamVals = DummyValueCreator.getDummyParameterValuesAsExprs(calleeMethod.getParameters());
 
@@ -67,6 +99,16 @@ public class MethodCallInstructionWriter {
                 }
             }
         }
+    }
+
+    /**
+     * @throws BuildFailedException If one of the input values (calle(r/e) classes/methods) are null.
+     */
+    private void checkCallerAndCalleeValues() throws BuildFailedException {
+        if (this.callerClass == null || this.calleeClass == null)
+            throw new BuildFailedException("Invalid caller or callee class.");
+        if (this.callerMethod == null || this.calleeMethod == null)
+            throw new BuildFailedException("Invalid caller or callee method.");
     }
 
     /**

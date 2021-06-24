@@ -46,12 +46,12 @@ public class CTParserProgramBuilder implements ProgramBuilder {
 
     public HashMap<String, ClassBuilder> build() throws BuildFailedException {
         System.out.println("Generating a program from the calltrace file: " + this.ctFileName);
-
-        HashMap<String, ClassBuilder> classBuilders = new HashMap<>();
-        String PKG_NAME = "com.abc.random";
-
         List<List<String>> fileLines = CTFileReader.getFileLines(ctFileName);
+        return buildFromCtLines(fileLines);
+    }
 
+    HashMap<String, ClassBuilder> buildFromCtLines(List<List<String>> fileLines) throws BuildFailedException {
+        HashMap<String, ClassBuilder> classBuilders = new HashMap<>();
         Stack<Pair<ClassBuilder, CallableDeclaration.Signature>> callStack = new Stack<>();
 
         for (List<String> methodArr: fileLines) {
@@ -64,31 +64,48 @@ public class CTParserProgramBuilder implements ProgramBuilder {
             String className = splitFullName[0];
             String methodName = splitFullName[1];
 
-            ClassBuilder classCb;
-            if (!classBuilders.containsKey(className)) {
-                classCb = new BasicClassBuilder(className, 0, 0, PKG_NAME);
-                classBuilders.put(className, classCb);
+            ClassBuilder classCb = getOrCreateClassBuilder(classBuilders, className);
+
+            if (classCb.hasMethod(methodName))
+                continue;
+
+            CallableDeclaration<?> methodNode = this.addNewMethodToClassFromCTInfo(methodName, methodArr, classCb);
+
+            if (callStack.empty()) {
+                System.out.println("Entry point: " + methodArr.get(FULLNAME));
             } else {
-                classCb = classBuilders.get(className);
+                MethodCallInstructionWriter mciw = new MethodCallInstructionWriter()
+                        .setCaller(callStack.lastElement().a, callStack.lastElement().b)
+                        .setCallee(classCb, methodNode.getSignature());
+                mciw.writeMethodCallInCaller();
             }
 
-            if (!classCb.hasMethod(methodName)) {
-                CallableDeclaration<?> methodNode = this.addNewMethodToClassFromCTInfo(methodName, methodArr, classCb);
-                if (callStack.empty()) {
-                    System.out.println("Entry point: " + methodArr.get(FULLNAME));
-                } else {
-                    MethodCallInstructionWriter mciw = new MethodCallInstructionWriter(
-                            callStack.lastElement().a, callStack.lastElement().b,
-                            classCb, methodNode.getSignature());
-                    mciw.writeMethodCallInCaller();
-                }
-
-                callStack.push(new Pair<>(classCb, methodNode.getSignature()));
-            }
+            callStack.push(new Pair<>(classCb, methodNode.getSignature()));
         }
 
         return classBuilders;
     }
+
+    /**
+     * Fetches a ClassBuilder with a given name from the already instantiated ClassBuilder list, or creates it accordingly
+     * @param classBuilders The HashMap containing the ClassBuilders
+     * @param className The name of the class wrapped in the ClassBuilder
+     * @return The already existing, or newly created ClassBuilder object
+     */
+    private ClassBuilder getOrCreateClassBuilder(HashMap<String, ClassBuilder> classBuilders, String className) {
+        ClassBuilder classCb;
+        String PKG_NAME = "com.abc.random";
+
+        if (classBuilders.containsKey(className)) {
+            classCb = classBuilders.get(className);
+        } else {
+            classCb = new BasicClassBuilder(className, 0, 0, PKG_NAME);
+            classBuilders.put(className, classCb);
+        }
+
+        return classCb;
+    }
+
 
     /**
      * Adds a new method to a class, setting adequate parameters beforehand.
