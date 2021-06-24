@@ -1,1 +1,0 @@
-/home/octavel/msc_thesis_shenanigans/msc_thesis_2021/output_data/disl_data/disl_awfy_calltraces/calltrace_Mandelbrot.txt

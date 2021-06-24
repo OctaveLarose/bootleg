@@ -19,6 +19,7 @@ import com.github.octavelarose.codegenerator.builders.programs.asm_types.ASMType
 import com.github.octavelarose.codegenerator.builders.programs.filereader.CTFileReader;
 import com.github.octavelarose.codegenerator.builders.utils.RandomUtils;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Stack;
@@ -99,7 +100,15 @@ public class CTParserProgramBuilder implements ProgramBuilder {
         if (classBuilders.containsKey(className)) {
             classCb = classBuilders.get(className);
         } else {
-            classCb = new BasicClassBuilder(className, 0, 0, PKG_NAME);
+            if (!className.contains("/"))
+                classCb = new BasicClassBuilder(className, 0, 0, PKG_NAME);
+            else {
+                List<String> splitClassPath = Arrays.asList(className.split("/"));
+                String pkgPath = PKG_NAME + "." + String.join(".", splitClassPath.subList(0, splitClassPath.size() - 1));
+//                System.out.println(splitClassPath.get(splitClassPath.size() - 1));
+//                System.out.println(pkgPath);
+                classCb = new BasicClassBuilder(splitClassPath.get(splitClassPath.size() - 1), 0, 0, pkgPath);
+            }
             classBuilders.put(className, classCb);
         }
 
@@ -124,7 +133,7 @@ public class CTParserProgramBuilder implements ProgramBuilder {
         String paramsStr = splitDescriptor[0].substring(1);
         Type returnType = ASMTypeParsingUtils.getTypeFromStr(splitDescriptor[1]);
 
-        // In the future, should ideally contain "advanced" operations. Needs a sleep() operation for starters
+        // In the future, should ideally contain "advanced" operations. TODO a sleep() operation for starters
         BlockStmt methodBody = new BlockStmt();
 
         methodBody.addStatement(new NameExpr("System.out.println(\"" + "Current method: " + methodArr.get(FULLNAME) + "\")"));

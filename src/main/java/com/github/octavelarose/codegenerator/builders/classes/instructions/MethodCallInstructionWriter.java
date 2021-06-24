@@ -94,6 +94,7 @@ public class MethodCallInstructionWriter {
                 // Ugly safeguard. If an object is returned from a method call, or if it's in a field, it can't be detected
                 // So for now I'll just create a new instance of it in every method that needs it. TODO improve, but how?
                 if (!isClassInstantiationInMethod(methodBody, calleeClass.getName())) {
+                    System.out.println(calleeClass.getName());
                     dummyParamVals = DummyValueCreator.getDummyParameterValuesAsExprs(calleeClass.getConstructors().get(0).getParameters());
                     this.addCalleeClassConstructorCall(methodBody, dummyParamVals);
                 }
@@ -181,19 +182,24 @@ public class MethodCallInstructionWriter {
     private void addCalleeClassConstructorCall(BlockStmt methodBody, NodeList<Expression> dummyParamVals) throws BuildFailedException {
         ClassOrInterfaceType classWithName;
 
+//        System.out.println(callerClass.getName() + ":" + callerMethod.getName() + " ; "
+//                + calleeClass.getName() + ":" + calleeMethod.getName());
+
         try {
-            classWithName = JPTypeUtils.getClassTypeFromName(calleeClass.getName());
+            classWithName = JPTypeUtils.getClassTypeFromName(calleeClass.getName().replace("/", "."));
         } catch (ParseException e) {
             throw new BuildFailedException(e.getMessage());
         }
 
-        // TODO add import statement else the generated code won't run if they're not in the same package
+//        System.out.println(calleeClass.getImportStr());
+        callerClass.addImport(calleeClass.getImportStr());
         methodBody.addStatement(0, new VariableDeclarationExpr(
                         new VariableDeclarator(classWithName, calleeClass.getName().toLowerCase(),
-                                new ObjectCreationExpr()
-                                        .setType(classWithName).setArguments(dummyParamVals))
+                                new ObjectCreationExpr().setType(classWithName).setArguments(dummyParamVals))
                 )
         );
+
+//        System.out.println(methodBody);
     }
 
     /**
