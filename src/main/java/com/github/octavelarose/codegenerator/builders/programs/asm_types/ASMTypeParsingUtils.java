@@ -122,7 +122,7 @@ public class ASMTypeParsingUtils {
             } else if (argsBuf[i] == 'L') {
                 String objectSubStr = paramsDescriptor.substring(i, paramsDescriptor.indexOf(";", i) + 1);
                 newParam = getTypeFromStr(objectSubStr);
-                i += objectSubStr.length();
+                i += (objectSubStr.length() - 1);
             } else {
                 throw new ASMParsingException("Parsing of parameters data failed for character " + argsBuf[i]);
             }
