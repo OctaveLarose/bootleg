@@ -1,4 +1,4 @@
-# Obstacles to getting it to run from a calltrace file
+# Obstacles to getting it to run with any calltrace file
 
 ## 1.
 Inheritance not taken into account, and can't be inferred from just a CT file.
@@ -33,6 +33,21 @@ So extra bandage solution: roadblock 1's bandage solution
 
 Possible long-term solution: ??? Probably ignoring it, I can't think of any good solutions. Oops.
 But probably yet more info about the code, but... which, and with what format?
+
+## 3.
+No accounting for overloaded methods. Only the method name is taken into account, not the method's full signature.
+
+- Consequence : the system probably will get confused if it encounters overloaded methods, and probably ignore one altogether
+if it doesn't straight up doesn't work. Same for several constructors.
+
+
+Solution: Frankly, it's not a hard fix, it just means modifying the system to fetch methods from ClassBuilder objects
+using more than just their names / if using just their names, returning a list of methods that all have said name.
+This means relying on their signatures instead of just their names and tweaking the system accordingly.
+
+However, that means finding a format to represent a method (most likely the ASM lib's, like `(Ljava/lang/Object;)Z Sieve.verifyResult`)
+and do a bunch of tweaking that isn't needed right now as the programs I test my system with don't use
+overloaded methods. That's more a TODO for later than an actual complex question.
 
 # Obstacles to a realistic program
 

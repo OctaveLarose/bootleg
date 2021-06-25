@@ -41,10 +41,6 @@ public class CTParserProgramBuilder implements ProgramBuilder {
         this.ctFileName = ctFileName;
     }
 
-    private boolean isFunctionEntry(String dirStr) {
-        return dirStr.equals(">");
-    }
-
     public HashMap<String, ClassBuilder> build() throws BuildFailedException {
         System.out.println("Generating a program from the calltrace file: " + this.ctFileName);
         List<List<String>> fileLines = CTFileReader.getFileLines(ctFileName);
@@ -54,10 +50,18 @@ public class CTParserProgramBuilder implements ProgramBuilder {
     HashMap<String, ClassBuilder> buildFromCtLines(List<List<String>> fileLines) throws BuildFailedException {
         HashMap<String, ClassBuilder> classBuilders = new HashMap<>();
         Stack<Pair<ClassBuilder, CallableDeclaration.Signature>> callStack = new Stack<>();
+//        Stack<String> debugCallStack = new Stack<>(); // TODO
 
         for (List<String> methodArr: fileLines) {
+//            if (methodArr.get(FULLNAME).contains("Lambda") || methodArr.get(FULLNAME).contains("lambda")) {
+//                System.out.println(methodArr);
+//                continue;
+//            }
+//            System.out.println(debugCallStack);
+
             if (!this.isFunctionEntry(methodArr.get(DIRECTION))) {
                 callStack.pop();
+//                debugCallStack.pop();
                 continue;
             }
 
@@ -67,8 +71,10 @@ public class CTParserProgramBuilder implements ProgramBuilder {
 
             ClassBuilder classCb = getOrCreateClassBuilder(classBuilders, className);
 
-            if (classCb.hasMethod(methodName))
+            if (classCb.hasMethod(methodName)) {
+                callStack.push(new Pair<>(classCb, classCb.getMethodFromName(methodName).getSignature()));
                 continue;
+            }
 
             CallableDeclaration<?> methodNode = this.addNewMethodToClassFromCTInfo(methodName, methodArr, classCb);
 
@@ -82,9 +88,14 @@ public class CTParserProgramBuilder implements ProgramBuilder {
             }
 
             callStack.push(new Pair<>(classCb, methodNode.getSignature()));
+//            debugCallStack.push(methodArr.get(FULLNAME));
         }
 
         return classBuilders;
+    }
+
+    private boolean isFunctionEntry(String dirStr) {
+        return dirStr.equals(">");
     }
 
     /**
@@ -99,6 +110,14 @@ public class CTParserProgramBuilder implements ProgramBuilder {
 
         if (classBuilders.containsKey(className)) {
             classCb = classBuilders.get(className);
+//            classCb = null;
+//            for (var e: classBuilders.entrySet()) {
+//                if (e.getKey().equals(className)) {
+//                    classCb = e.getValue();
+//                    System.out.println(e.getValue());
+//                }
+//            }
+//            System.out.println("---");
         } else {
             if (!className.contains("/"))
                 classCb = new BasicClassBuilder(className, 0, 0, PKG_NAME);

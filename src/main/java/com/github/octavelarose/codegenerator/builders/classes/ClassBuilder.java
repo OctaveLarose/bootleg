@@ -171,4 +171,24 @@ public abstract class ClassBuilder {
         System.out.println("AAAA");*/
         return null;
     }
+
+    /**
+     * Returns a method given its name.
+     * TODO: this is NOT scalable as overloading exists, and so it should at best return a list of methods.
+     * @param methodName The name of the method.
+     * @return The method with the given name
+     */
+    public CallableDeclaration<?> getMethodFromName(String methodName) {
+        if (methodName.equals("<init>")) {
+            if (this.outputClass.getConstructors().isEmpty())
+                return null;
+            else
+                return this.outputClass.getConstructors().get(0);
+        }
+        for (MethodDeclaration m: this.outputClass.getMethods()) {
+            if (m.getName().asString().equals(methodName))
+                return m;
+        }
+        return null;
+    }
 }
