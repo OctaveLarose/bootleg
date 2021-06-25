@@ -47,7 +47,7 @@ public class CTParserProgramBuilder implements ProgramBuilder {
         return buildFromCtLines(fileLines);
     }
 
-    HashMap<String, ClassBuilder> buildFromCtLines(List<List<String>> fileLines) throws BuildFailedException {
+    private HashMap<String, ClassBuilder> buildFromCtLines(List<List<String>> fileLines) throws BuildFailedException {
         HashMap<String, ClassBuilder> classBuilders = new HashMap<>();
         Stack<Pair<ClassBuilder, CallableDeclaration.Signature>> callStack = new Stack<>();
 //        Stack<String> debugCallStack = new Stack<>(); // TODO
