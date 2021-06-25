@@ -50,19 +50,18 @@ public class CTParserProgramBuilder implements ProgramBuilder {
     private HashMap<String, ClassBuilder> buildFromCtLines(List<List<String>> fileLines) throws BuildFailedException {
         HashMap<String, ClassBuilder> classBuilders = new HashMap<>();
         Stack<Pair<ClassBuilder, CallableDeclaration.Signature>> callStack = new Stack<>();
-//        Stack<String> debugCallStack = new Stack<>(); // TODO
 
         for (List<String> methodArr: fileLines) {
-            // We ignore lambda calls for now.
+            // We ignore lambda calls for now. TODO: look into why some are capitalized and some aren't
             if (methodArr.get(FULLNAME).contains("Lambda") || methodArr.get(FULLNAME).contains("lambda"))
                 continue;
+            
             // <clinit> means a static initialization block, ignored as well
             if (methodArr.get(FULLNAME).contains("<clinit>"))
                 continue;
 
             if (!this.isFunctionEntry(methodArr.get(DIRECTION))) {
                 callStack.pop();
-//                debugCallStack.pop();
                 continue;
             }
 
@@ -89,12 +88,15 @@ public class CTParserProgramBuilder implements ProgramBuilder {
             }
 
             callStack.push(new Pair<>(classCb, methodNode.getSignature()));
-//            debugCallStack.push(methodArr.get(FULLNAME));
         }
 
         return classBuilders;
     }
 
+    /**
+     * @param dirStr The string defining the method entry/exit.
+     * @return true if it represents a function entry, false otherwise.
+     */
     private boolean isFunctionEntry(String dirStr) {
         return dirStr.equals(">");
     }
