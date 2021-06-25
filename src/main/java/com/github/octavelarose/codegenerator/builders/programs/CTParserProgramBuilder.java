@@ -53,11 +53,9 @@ public class CTParserProgramBuilder implements ProgramBuilder {
 //        Stack<String> debugCallStack = new Stack<>(); // TODO
 
         for (List<String> methodArr: fileLines) {
-//            if (methodArr.get(FULLNAME).contains("Lambda") || methodArr.get(FULLNAME).contains("lambda")) {
-//                System.out.println(methodArr);
-//                continue;
-//            }
-//            System.out.println(debugCallStack);
+            // We ignore lambda calls for now.
+            if (methodArr.get(FULLNAME).contains("Lambda") || methodArr.get(FULLNAME).contains("lambda"))
+                continue;
 
             if (!this.isFunctionEntry(methodArr.get(DIRECTION))) {
                 callStack.pop();
