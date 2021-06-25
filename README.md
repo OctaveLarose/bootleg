@@ -18,5 +18,5 @@ but isn't a priority as I have several features I need to implement beforehand.
 
 # Current features
 
-TODO. Well underway and can generate programs, but most can't run by default because some features are missing
-(most notably right now: handling import statements after instantiating classes)
+TODO. Well underway and can generate programs from calltrace files, but there's much to improve and implement before
+writing this list.

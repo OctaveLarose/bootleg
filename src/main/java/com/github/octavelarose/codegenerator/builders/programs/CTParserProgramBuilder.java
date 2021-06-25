@@ -56,6 +56,9 @@ public class CTParserProgramBuilder implements ProgramBuilder {
             // We ignore lambda calls for now.
             if (methodArr.get(FULLNAME).contains("Lambda") || methodArr.get(FULLNAME).contains("lambda"))
                 continue;
+            // <clinit> means a static initialization block, ignored as well
+            if (methodArr.get(FULLNAME).contains("<clinit>"))
+                continue;
 
             if (!this.isFunctionEntry(methodArr.get(DIRECTION))) {
                 callStack.pop();
