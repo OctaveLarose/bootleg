@@ -99,15 +99,18 @@ public class MethodCallInstructionWriter {
 //                    System.out.println(calleeClass.getName());
                     List<ConstructorDeclaration> constructors = calleeClass.getConstructors();
 
-//                    if (constructors.size() == 0)
+                    if (constructors.size() == 0) {
+                        calleeClass.addConstructor(new NodeList<>(), new BlockStmt(), new NodeList<>(Modifier.publicModifier()));
+                        constructors = calleeClass.getConstructors();
+                    }
 //                        throw new BuildFailedException("Can't instantiate a new instance of class "
 //                                + calleeClass.getName()
 //                                + " in our safeguard code, as it has no constructors");
-
-                    if (constructors.size() != 0) {
+//
+//                    if (constructors.size() != 0) {
                         dummyParamVals = DummyValueCreator.getDummyParameterValuesAsExprs(constructors.get(0).getParameters());
                         this.addCalleeClassConstructorCall(methodBody, dummyParamVals);
-                    }
+//                    }
                 }
             }
         }
