@@ -95,22 +95,17 @@ public class MethodCallInstructionWriter {
 
                 // Ugly safeguard. If an object is returned from a method call, or if it's in a field, it can't be detected
                 // So for now I'll just create a new instance of it in every method that needs it. TODO improve, but how?
-                if (!isClassInstantiationInMethod(methodBody, calleeClass.getName())) {
-//                    System.out.println(calleeClass.getName());
+                if (!isClassInstantiationInMethod(methodBody, calleeClass.getName())
+                        && isCalleeMethodStatic == IsCalleeMethodStatic.NO ) {
                     List<ConstructorDeclaration> constructors = calleeClass.getConstructors();
 
-                    if (constructors.size() == 0) {
-                        calleeClass.addConstructor(new NodeList<>(), new BlockStmt(), new NodeList<>(Modifier.publicModifier()));
-                        constructors = calleeClass.getConstructors();
-                    }
-//                        throw new BuildFailedException("Can't instantiate a new instance of class "
-//                                + calleeClass.getName()
-//                                + " in our safeguard code, as it has no constructors");
-//
-//                    if (constructors.size() != 0) {
-                        dummyParamVals = DummyValueCreator.getDummyParameterValuesAsExprs(constructors.get(0).getParameters());
-                        this.addCalleeClassConstructorCall(methodBody, dummyParamVals);
-//                    }
+                    if (constructors.size() == 0)
+                        throw new BuildFailedException("Can't instantiate a new instance of class "
+                                + calleeClass.getName()
+                                + " in our safeguard code, as it has no constructors");
+
+                    dummyParamVals = DummyValueCreator.getDummyParameterValuesAsExprs(constructors.get(0).getParameters());
+                    this.addCalleeClassConstructorCall(methodBody, dummyParamVals);
                 }
             }
         }
