@@ -18,14 +18,29 @@ doing basic operations.
 
 `--ct-file FILENAME` will generate a program based off the calltrace file it received as input. 
 Examples of the expected calltrace file format are present in `input_data/`, 
-and is not specified explicitly anywhere as of right now as it's subject to change.
+and is not specified explicitly anywhere as of right now as it's highly susceptible to change in the near future.
 
 The exported code is generated in the `code_output/` directory. 
 While there is a `build.gradle` file in it, it should need to be modified to be able to run the generated program. 
 Allowing it to run more easily needs to be possible in the future, 
 but isn't a priority for me right now.
 
-# Current features
+# Current features (last updated on 28/06/21)
 
-TODO. Well underway and can generate programs from calltrace files, but there's much to improve and implement before
-writing this list.
+- Can generate executable programs given a file containing a calltrace as input.
+- Method calls are handled in the same order as in the calltrace.
+- Public/private/protected modifiers, static methods and static method calls accounted for.
+- Generates dummy/random argument values depending on the primitive/object type.
+- Instantiates classes as needed to call public non-static methods.
+- Import statements are present and added to class files as needed.
+- Exports all generated classes to `.java` files.
+- Package structure is taken into account, including during the code exportation.
+
+
+# To be handled (last updated on 28/06/21)
+
+- inner classes.
+- static initializers.
+- loading existing classes from existing files and modifying them.
+- the contents of the [TODO_ROADBLOCKS.md](./TODO_ROADBLOCKS.md) file, in general.
+- ...
