@@ -15,6 +15,8 @@ import com.github.octavelarose.codegenerator.builders.BuildFailedException;
 import com.github.octavelarose.codegenerator.builders.classes.ClassBuilder;
 import com.github.octavelarose.codegenerator.builders.utils.JPTypeUtils;
 
+import java.util.List;
+
 /**
  * Writes a call to one method in another, i.e "methodName(3, "hello", 1.2);"
  */
@@ -95,8 +97,17 @@ public class MethodCallInstructionWriter {
                 // So for now I'll just create a new instance of it in every method that needs it. TODO improve, but how?
                 if (!isClassInstantiationInMethod(methodBody, calleeClass.getName())) {
 //                    System.out.println(calleeClass.getName());
-                    dummyParamVals = DummyValueCreator.getDummyParameterValuesAsExprs(calleeClass.getConstructors().get(0).getParameters());
-                    this.addCalleeClassConstructorCall(methodBody, dummyParamVals);
+                    List<ConstructorDeclaration> constructors = calleeClass.getConstructors();
+
+//                    if (constructors.size() == 0)
+//                        throw new BuildFailedException("Can't instantiate a new instance of class "
+//                                + calleeClass.getName()
+//                                + " in our safeguard code, as it has no constructors");
+
+                    if (constructors.size() != 0) {
+                        dummyParamVals = DummyValueCreator.getDummyParameterValuesAsExprs(constructors.get(0).getParameters());
+                        this.addCalleeClassConstructorCall(methodBody, dummyParamVals);
+                    }
                 }
             }
         }
