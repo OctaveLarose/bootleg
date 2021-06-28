@@ -14,6 +14,7 @@ import com.github.octavelarose.codegenerator.builders.BuildFailedException;
 import com.github.octavelarose.codegenerator.builders.classes.BasicClassBuilder;
 import com.github.octavelarose.codegenerator.builders.classes.ClassBuilder;
 import com.github.octavelarose.codegenerator.builders.classes.instructions.DummyValueCreator;
+import com.github.octavelarose.codegenerator.builders.classes.instructions.ImportStatementManager;
 import com.github.octavelarose.codegenerator.builders.classes.instructions.MethodCallInstructionWriter;
 import com.github.octavelarose.codegenerator.builders.programs.asm_types.ASMTypeParsingUtils;
 import com.github.octavelarose.codegenerator.builders.programs.filereader.CTFileReader;
@@ -50,14 +51,13 @@ public class CTParserProgramBuilder implements ProgramBuilder {
     private HashMap<String, ClassBuilder> buildFromCtLines(List<List<String>> fileLines) throws BuildFailedException {
         HashMap<String, ClassBuilder> classBuilders = new HashMap<>();
         Stack<Pair<ClassBuilder, CallableDeclaration.Signature>> callStack = new Stack<>();
+        int i = 0;
 
         for (List<String> methodArr: fileLines) {
+            i++;
+
             // We ignore lambda calls for now. TODO: look into why some are capitalized and some aren't
             if (methodArr.get(FULLNAME).contains("Lambda") || methodArr.get(FULLNAME).contains("lambda"))
-                continue;
-            
-            // <clinit> means a static initialization block, ignored as well
-            if (methodArr.get(FULLNAME).contains("<clinit>"))
                 continue;
 
             if (!this.isFunctionEntry(methodArr.get(DIRECTION))) {
@@ -65,9 +65,15 @@ public class CTParserProgramBuilder implements ProgramBuilder {
                 continue;
             }
 
+//            System.out.println(i + " : " + methodArr);
+
             String[] splitFullName = methodArr.get(FULLNAME).split("\\.");
             String className = splitFullName[0];
             String methodName = splitFullName[1];
+
+            // TODO static initializers, defined by <clinit>, are NOT handled so we pretend it's a regular method
+            if (methodName.equals("<clinit>"))
+                methodName = "staticInit";
 
             ClassBuilder classCb = getOrCreateClassBuilder(classBuilders, className);
 
@@ -113,14 +119,6 @@ public class CTParserProgramBuilder implements ProgramBuilder {
 
         if (classBuilders.containsKey(className)) {
             classCb = classBuilders.get(className);
-//            classCb = null;
-//            for (var e: classBuilders.entrySet()) {
-//                if (e.getKey().equals(className)) {
-//                    classCb = e.getValue();
-//                    System.out.println(e.getValue());
-//                }
-//            }
-//            System.out.println("---");
         } else {
             if (!className.contains("/"))
                 classCb = new BasicClassBuilder(className, 0, 0, PKG_NAME);
@@ -151,8 +149,19 @@ public class CTParserProgramBuilder implements ProgramBuilder {
 
         String descriptor = methodArr.get(DESCRIPTOR);
         String[] splitDescriptor = descriptor.split("\\)");
-
         String paramsStr = splitDescriptor[0].substring(1);
+
+        // TODO put this in a class dedicated to imports
+        if (splitDescriptor[1].contains("/")) {
+            String importStr = splitDescriptor[1].substring(1, splitDescriptor[1].length() - 1).replace("/", ".");
+
+            if (!ImportStatementManager.areBothImportsFromSamePkg(importStr, classCb.getImportStr())) {
+//                System.out.println(importStr + " added to " + classCb.getName());
+                classCb.addImport(importStr);
+            } // else
+//                System.out.println(importStr + ":::" + classCb.getImportStr() + " => Same pkg");
+        }
+
         Type returnType = ASMTypeParsingUtils.getTypeFromStr(splitDescriptor[1]);
 
         // In the future, should ideally contain "advanced" operations. TODO a sleep() operation for starters

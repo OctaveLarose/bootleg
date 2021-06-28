@@ -80,13 +80,19 @@ public class ASMTypeParsingUtils {
      * @throws ASMParsingException If the class is unknown
      */
     static private Type getClassTypeFromStr(String typeStr) throws ASMParsingException {
-        String className = typeStr.substring(1, typeStr.length() - 1); // Removing the L and the final ;
+        String classPath = typeStr.substring(1, typeStr.length() - 1); // Removing the L and the final ;
+        String className;
 
         // Note: for <Class extends XXX>, I don't get the info about the XXX class, so it's just Class for now...
 
-        // If it's a class definition, it contains slashes, but JavaParser prefers dots.
-        if (className.contains("/"))
-            className = className.replace("/", ".");
+        // If it's a class definition, it contains slashes (note: JavaParser prefers dots).
+        // NOTE: not entering the full path means importing needs to be handled, somewhere outside of this method!
+        if (classPath.contains("/")) {
+            var splitClassPath = classPath.split("/");
+            className = splitClassPath[splitClassPath.length - 1];
+        } else {
+            className = classPath;
+        }
 
         try {
             return JPTypeUtils.getClassTypeFromName(className);
