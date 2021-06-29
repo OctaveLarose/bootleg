@@ -10,4 +10,4 @@ do
     if [ $? -eq 1 ]; then ((NBR_FAILS++)); fi    
 done
 
-echo "---$NBR_FAILS total number of build/run fails---"
+echo "---$NBR_FAILS total number of build/run fails (out of `ls $AWFY_FILES | wc -l` files)---"
