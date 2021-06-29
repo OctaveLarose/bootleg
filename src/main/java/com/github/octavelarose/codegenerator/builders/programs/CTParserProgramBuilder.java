@@ -14,7 +14,6 @@ import com.github.octavelarose.codegenerator.builders.BuildFailedException;
 import com.github.octavelarose.codegenerator.builders.classes.BasicClassBuilder;
 import com.github.octavelarose.codegenerator.builders.classes.ClassBuilder;
 import com.github.octavelarose.codegenerator.builders.classes.instructions.DummyValueCreator;
-import com.github.octavelarose.codegenerator.builders.classes.instructions.ImportStatementManager;
 import com.github.octavelarose.codegenerator.builders.classes.instructions.MethodCallInstructionWriter;
 import com.github.octavelarose.codegenerator.builders.programs.asm_types.ASMTypeParsingUtils;
 import com.github.octavelarose.codegenerator.builders.programs.filereader.CTFileReader;
@@ -150,16 +149,6 @@ public class CTParserProgramBuilder implements ProgramBuilder {
         String descriptor = methodArr.get(DESCRIPTOR);
         String[] splitDescriptor = descriptor.split("\\)");
         String paramsStr = splitDescriptor[0].substring(1);
-
-        if (splitDescriptor[1].contains("/")) {
-            String importStr = ImportStatementManager.getImportStrFromClassTypeStr(splitDescriptor[1]);
-
-            if (!ImportStatementManager.areBothImportsFromSamePkg(importStr, classCb.getImportStr())) {
-//                System.out.println(importStr + " added to " + classCb.getName());
-                classCb.addImport(importStr);
-            } // else
-//                System.out.println(importStr + ":::" + classCb.getImportStr() + " => Same pkg");
-        }
 
         Type returnType = ASMTypeParsingUtils.getTypeFromStr(splitDescriptor[1]);
 
