@@ -90,10 +90,10 @@ public class MethodCallInstructionWriter {
         } else {
             if (callerClass == calleeClass)
                 this.addLocalMethodCall(methodBody, dummyParamVals, isCalleeMethodStatic);
-            else
+            else {
                 this.addForeignMethodCall(methodBody, dummyParamVals, isCalleeMethodStatic);
-
-            this.doSafeguardInstantiation(methodBody, isCalleeMethodStatic);
+                this.doSafeguardInstantiation(methodBody, isCalleeMethodStatic);
+            }
         }
     }
 
