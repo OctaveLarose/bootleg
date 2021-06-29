@@ -70,9 +70,11 @@ public class CTParserProgramBuilder implements ProgramBuilder {
             String className = splitFullName[0];
             String methodName = splitFullName[1];
 
-            // TODO static initializers, defined by <clinit>, are NOT handled so we pretend it's a regular method
-            if (methodName.equals("<clinit>"))
+            // TODO static initializers, defined by <clinit>, are NOT handled so we pretend it's a regular public method
+            if (methodName.equals("<clinit>")) {
                 methodName = "staticInit";
+                methodArr.set(SCOPE, methodArr.get(SCOPE).concat("/pub"));
+            }
 
             ClassBuilder classCb = getOrCreateClassBuilder(classBuilders, className);
 
