@@ -58,7 +58,7 @@ public class DummyValueCreator {
                 return String.valueOf(RandomUtils.generateRandomInt(10000));
             case "float":
             case "double":
-                return String.valueOf(RandomUtils.generateRandomFloat());
+                return RandomUtils.generateRandomFloat() + "f";
             default: // We assume it's an object.
                 return "null";
         }
