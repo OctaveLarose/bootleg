@@ -85,31 +85,42 @@ public class MethodCallInstructionWriter {
                 .anyMatch(s -> s.getKeyword() == Modifier.Keyword.STATIC)
                 ? IsCalleeMethodStatic.YES : IsCalleeMethodStatic.NO;
 
-        if (callerClass == calleeClass) {
-            this.addLocalMethodCall(methodBody, dummyParamVals, isCalleeMethodStatic);
+        if (calleeMethod instanceof ConstructorDeclaration) {
+            this.addCalleeClassConstructorCall(methodBody, dummyParamVals);
         } else {
-            if (calleeMethod instanceof ConstructorDeclaration)
-                this.addCalleeClassConstructorCall(methodBody, dummyParamVals);
-            else {
+            if (callerClass == calleeClass)
+                this.addLocalMethodCall(methodBody, dummyParamVals, isCalleeMethodStatic);
+            else
                 this.addForeignMethodCall(methodBody, dummyParamVals, isCalleeMethodStatic);
 
-                // Ugly safeguard. If an object is returned from a method call, or if it's in a field, it can't be detected
-                // So for now I'll just create a new instance of it in every method that needs it. TODO improve, but how?
-                if (!isClassInstantiationInMethod(methodBody, calleeClass.getName())
-                        && isCalleeMethodStatic == IsCalleeMethodStatic.NO ) {
-                    List<ConstructorDeclaration> constructors = calleeClass.getConstructors();
-
-                    if (constructors.size() == 0)
-                        throw new BuildFailedException("Can't instantiate a new instance of class "
-                                + calleeClass.getName()
-                                + " in our safeguard code, as it has no constructors");
-
-                    dummyParamVals = DummyValueCreator.getDummyParameterValuesAsExprs(constructors.get(0).getParameters());
-                    this.addCalleeClassConstructorCall(methodBody, dummyParamVals);
-                }
-            }
+            this.doSafeguardInstantiation(methodBody, isCalleeMethodStatic);
         }
     }
+
+    /**
+     * Debatable safeguard. If an object is returned from a method call, or if it's in a field, it can't be detected
+     * So for now I'll just create a new instance of it in every method that needs it. TODO improve, but how?
+     * @param methodBody The body of the method that needs a class to checked for class instantiations and possibly appended with one
+     * @param isCalleeMethodStatic Whether or not the method called is static. If it is, no instantiation is necessary.
+     * @throws BuildFailedException If the class we're trying to instantiate has no constructors, we can't do anything.
+     */
+    private void doSafeguardInstantiation(BlockStmt methodBody, IsCalleeMethodStatic isCalleeMethodStatic) throws BuildFailedException {
+        if (!isClassInstantiationInMethod(methodBody, calleeClass.getName())
+                && isCalleeMethodStatic == IsCalleeMethodStatic.NO ) {
+            List<ConstructorDeclaration> constructors = calleeClass.getConstructors();
+
+            if (constructors.size() == 0)
+                throw new BuildFailedException("Can't instantiate a new instance of class "
+                        + calleeClass.getName()
+                        + " in our safeguard code, as it has no constructors");
+
+            this.addCalleeClassConstructorCall(
+                    methodBody,
+                    DummyValueCreator.getDummyParameterValuesAsExprs(constructors.get(0).getParameters())
+            );
+        }
+    }
+
 
     /**
      * @throws BuildFailedException If one of the input values (calle(r/e) classes/methods) are null.
