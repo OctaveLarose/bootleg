@@ -151,7 +151,6 @@ public class CTParserProgramBuilder implements ProgramBuilder {
         String[] splitDescriptor = descriptor.split("\\)");
         String paramsStr = splitDescriptor[0].substring(1);
 
-        // TODO put this in a class dedicated to imports
         if (splitDescriptor[1].contains("/")) {
             String importStr = splitDescriptor[1].substring(1, splitDescriptor[1].length() - 1).replace("/", ".");
 

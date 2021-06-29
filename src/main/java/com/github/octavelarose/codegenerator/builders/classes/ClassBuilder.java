@@ -145,7 +145,10 @@ public abstract class ClassBuilder {
         return this.outputClass.getConstructors();
     }
 
-    // TODO description
+    /**
+     * @param sig The signature of the method to be fetched from the class.
+     * @return A ConstructorDeclaration or MethodDeclaration, null if nothing was found.
+     */
     public CallableDeclaration<?> getMethodFromSignature(CallableDeclaration.Signature sig) {
         // TODO figure out whatever is going on there with the signature objects not matching
         // Basically matching signature objects doesn't always work even when they seem virtually identical, so I compare the string versions instead
