@@ -16,7 +16,7 @@ import com.github.octavelarose.codegenerator.builders.classes.ClassBuilder;
 import com.github.octavelarose.codegenerator.builders.classes.instructions.DummyValueCreator;
 import com.github.octavelarose.codegenerator.builders.classes.instructions.MethodCallInstructionWriter;
 import com.github.octavelarose.codegenerator.builders.programs.asm_types.ASMTypeParsingUtils;
-import com.github.octavelarose.codegenerator.builders.programs.filereader.CTFileReader;
+import com.github.octavelarose.codegenerator.builders.programs.filereader.CTFileParser;
 import com.github.octavelarose.codegenerator.builders.utils.RandomUtils;
 
 import java.util.Arrays;
@@ -24,17 +24,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Stack;
 
+import static com.github.octavelarose.codegenerator.builders.programs.filereader.CTFileParser.*;
+
 /**
  * CallTrace Parser Program Builder.
  * Generates a program from a calltrace file of a format I defined myself.
  */
 public class CTParserProgramBuilder implements ProgramBuilder {
-    public static int DIRECTION = 0;
-    public static int SCOPE = 1;
-    public static int DESCRIPTOR = 2;
-    public static int FULLNAME = 3;
-    public static int TIME = 4;
-
     private final String ctFileName;
 
     public CTParserProgramBuilder(String ctFileName) {
@@ -43,7 +39,7 @@ public class CTParserProgramBuilder implements ProgramBuilder {
 
     public HashMap<String, ClassBuilder> build() throws BuildFailedException {
         System.out.println("Generating a program from the calltrace file: " + this.ctFileName);
-        List<List<String>> fileLines = CTFileReader.getFileLines(ctFileName);
+        List<List<String>> fileLines = new CTFileParser(ctFileName).parse().getParsedCT();
         return buildFromCtLines(fileLines);
     }
 
