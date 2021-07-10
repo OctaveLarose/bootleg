@@ -46,10 +46,10 @@ public class CTParserProgramBuilder implements ProgramBuilder {
     private HashMap<String, ClassBuilder> buildFromCtLines(List<List<String>> fileLines) throws BuildFailedException {
         HashMap<String, ClassBuilder> classBuilders = new HashMap<>();
         Stack<Pair<ClassBuilder, CallableDeclaration.Signature>> callStack = new Stack<>();
-        int i = 0;
+        int idx = 0; // Used for debugging
 
         for (List<String> methodArr: fileLines) {
-            i++;
+            idx++;
 
             // We ignore lambda calls for now. TODO: look into why some are capitalized and some aren't
             if (methodArr.get(FULLNAME).contains("Lambda") || methodArr.get(FULLNAME).contains("lambda"))
@@ -112,16 +112,15 @@ public class CTParserProgramBuilder implements ProgramBuilder {
      */
     private ClassBuilder getOrCreateClassBuilder(HashMap<String, ClassBuilder> classBuilders, String className) {
         ClassBuilder classCb;
-        String PKG_NAME = "com.abc.random";
 
         if (classBuilders.containsKey(className)) {
             classCb = classBuilders.get(className);
         } else {
             if (!className.contains("/"))
-                classCb = new BasicClassBuilder(className, 0, 0, PKG_NAME);
+                classCb = new BasicClassBuilder(className);
             else {
                 List<String> splitClassPath = Arrays.asList(className.split("/"));
-                String pkgPath = PKG_NAME + "." + String.join(".", splitClassPath.subList(0, splitClassPath.size() - 1));
+                String pkgPath = String.join(".", splitClassPath.subList(0, splitClassPath.size() - 1));
 //                System.out.println(splitClassPath.get(splitClassPath.size() - 1));
 //                System.out.println(pkgPath);
                 classCb = new BasicClassBuilder(splitClassPath.get(splitClassPath.size() - 1), 0, 0, pkgPath);

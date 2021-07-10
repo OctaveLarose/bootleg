@@ -50,18 +50,15 @@ public class ClassExporter {
 
     /**
      * Returns the split package declaration. Used for generating the package directories.
-     * @return An array containing the package declaration separated into all its subelements.
-     * @throws ExportFailedException Thrown if there's no package declaration.
+     * @return An array containing the package declaration separated into all its subelements. Empty array if no package declaration.
      */
-    private ArrayList<String> getPkgDeclarationSplit() throws ExportFailedException {
+    private ArrayList<String> getPkgDeclarationSplit() {
         Optional<PackageDeclaration> pkgDeclarationOptional = cuToExport.getPackageDeclaration();
 
-        String pkgDeclarationStr;
-        if (pkgDeclarationOptional.isPresent()) {
-            pkgDeclarationStr = pkgDeclarationOptional.get().toString();
-        } else {
-            throw new ExportFailedException("No package declaration, cannot export file");
-        }
+        if (pkgDeclarationOptional.isEmpty())
+            return new ArrayList<>();
+
+        String pkgDeclarationStr = pkgDeclarationOptional.get().toString();
 
         // 8 is the length of "package " ; and we remove the 2 newlines and 1 ; at the end
         pkgDeclarationStr = pkgDeclarationStr.substring(8, pkgDeclarationStr.length() - 3);

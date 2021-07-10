@@ -26,6 +26,11 @@ import java.util.Random;
  */
 public class BasicClassBuilder extends ClassBuilder {
 
+    public BasicClassBuilder(String name) {
+        super(name);
+        this.setModifiers(new NodeList<>(Modifier.publicModifier()));
+    }
+
     public BasicClassBuilder(String name, int methodsNbr, int fieldsNbr, String pkgDeclaration) {
         super(name);
 
