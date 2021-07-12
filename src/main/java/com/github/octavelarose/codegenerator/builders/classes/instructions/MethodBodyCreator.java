@@ -1,8 +1,10 @@
 package com.github.octavelarose.codegenerator.builders.classes.instructions;
 
+import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.NameExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.ReturnStmt;
+import com.github.javaparser.ast.stmt.Statement;
 import com.github.javaparser.ast.type.Type;
 
 /**
@@ -31,6 +33,31 @@ public class MethodBodyCreator {
      */
     public BlockStmt getMethodBody() {
         return this.methodBody;
+    }
+
+    /**
+     * @return The number of statements in the method body.
+     */
+    public int getNbrStatements() {
+        return (this.methodBody != null) ? this.methodBody.getStatements().size() : 0;
+    }
+
+    public MethodBodyCreator addStatementToStart(Statement stmt) {
+        return this.addStatement(0, stmt);
+    }
+
+    public MethodBodyCreator addStatementToStart(Expression expr) {
+        return this.addStatement(0, expr);
+    }
+
+    public MethodBodyCreator addStatement(int idx, Statement stmt) {
+        methodBody.addStatement(idx, stmt);
+        return this;
+    }
+
+    public MethodBodyCreator addStatement(int idx, Expression expr) {
+        methodBody.addStatement(idx, expr);
+        return this;
     }
 
     /**

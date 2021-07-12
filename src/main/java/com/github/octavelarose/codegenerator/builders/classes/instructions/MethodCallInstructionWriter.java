@@ -77,7 +77,8 @@ public class MethodCallInstructionWriter {
     public void writeMethodCallInCaller() throws BuildFailedException {
         checkCallerAndCalleeValues();
 
-        BlockStmt methodBody = this.getCallerMethodBody();
+
+        MethodBodyCreator mbc = new MethodBodyCreator(this.getCallerMethodBody());
         NodeList<Expression> dummyParamVals = DummyValueCreator.getDummyParameterValuesAsExprs(calleeMethod.getParameters());
 
         IsCalleeMethodStatic isCalleeMethodStatic = calleeMethod.getModifiers()
@@ -86,13 +87,13 @@ public class MethodCallInstructionWriter {
                 ? IsCalleeMethodStatic.YES : IsCalleeMethodStatic.NO;
 
         if (calleeMethod instanceof ConstructorDeclaration) {
-            this.addCalleeClassConstructorCall(methodBody, dummyParamVals);
+            this.addCalleeClassConstructorCall(mbc, dummyParamVals);
         } else {
             if (callerClass == calleeClass)
-                this.addLocalMethodCall(methodBody, dummyParamVals, isCalleeMethodStatic);
+                this.addLocalMethodCall(mbc, dummyParamVals, isCalleeMethodStatic);
             else {
-                this.addForeignMethodCall(methodBody, dummyParamVals, isCalleeMethodStatic);
-                this.doSafeguardInstantiation(methodBody, isCalleeMethodStatic);
+                this.addForeignMethodCall(mbc, dummyParamVals, isCalleeMethodStatic);
+                this.doSafeguardInstantiation(mbc, isCalleeMethodStatic);
             }
         }
     }
@@ -104,8 +105,9 @@ public class MethodCallInstructionWriter {
      * @param isCalleeMethodStatic Whether or not the method called is static. If it is, no instantiation is necessary.
      * @throws BuildFailedException If the class we're trying to instantiate has no constructors, we can't do anything.
      */
-    private void doSafeguardInstantiation(BlockStmt methodBody, IsCalleeMethodStatic isCalleeMethodStatic) throws BuildFailedException {
-        if (!isClassInstantiationInMethod(methodBody, calleeClass.getName())
+    private void doSafeguardInstantiation(MethodBodyCreator methodBody,
+                                          IsCalleeMethodStatic isCalleeMethodStatic) throws BuildFailedException {
+        if (!isClassInstantiationInMethod(methodBody.getMethodBody(), calleeClass.getName())
                 && isCalleeMethodStatic == IsCalleeMethodStatic.NO) {
             List<ConstructorDeclaration> constructors = calleeClass.getConstructors();
 
@@ -160,13 +162,13 @@ public class MethodCallInstructionWriter {
      * @param methodBody The body of the method to be appended.
      * @param dummyParamVals Dummy values for the method parameters.
      */
-    private void addForeignMethodCall(BlockStmt methodBody,
+    private void addForeignMethodCall(MethodBodyCreator methodBody,
                                       NodeList<Expression> dummyParamVals,
                                       IsCalleeMethodStatic isCalleeMethodStatic) {
         Expression callerExpr = (isCalleeMethodStatic == IsCalleeMethodStatic.NO)
                 ? new NameExpr(calleeClass.getName().toLowerCase()) : new NameExpr(calleeClass.getName());
 
-        methodBody.addStatement(Math.max(0, methodBody.getStatements().size() - 1),
+        methodBody.addStatement(Math.max(0, methodBody.getNbrStatements() - 1),
                 new MethodCallExpr(
                         callerExpr,
                         calleeMethod.getName(),
@@ -179,13 +181,13 @@ public class MethodCallInstructionWriter {
      * @param methodBody The body of the method to be appended.
      * @param dummyParamVals Dummy values for the method parameters.
      */
-    private void addLocalMethodCall(BlockStmt methodBody,
+    private void addLocalMethodCall(MethodBodyCreator methodBody,
                                     NodeList<Expression> dummyParamVals,
                                     IsCalleeMethodStatic isCalleeMethodStatic) {
         Expression callerExpr = (isCalleeMethodStatic == IsCalleeMethodStatic.NO)
                 ? new ThisExpr() : new NameExpr(calleeClass.getName());
 
-        methodBody.addStatement(Math.max(0, methodBody.getStatements().size() - 1),
+        methodBody.addStatement(Math.max(0, methodBody.getNbrStatements() - 1),
                 new MethodCallExpr(
                         callerExpr,
                         calleeMethod.getName(),
@@ -199,7 +201,8 @@ public class MethodCallInstructionWriter {
      * @param dummyParamVals Dummy values for the method parameters.
      * @throws BuildFailedException If the class with the given name couldn't be accessed.
      */
-    private void addCalleeClassConstructorCall(BlockStmt methodBody, NodeList<Expression> dummyParamVals) throws BuildFailedException {
+    private void addCalleeClassConstructorCall(MethodBodyCreator methodBody,
+                                               NodeList<Expression> dummyParamVals) throws BuildFailedException {
         ClassOrInterfaceType classWithName;
 
 //        System.out.println(callerClass.getName() + ":" + callerMethod.getName() + " ; "
@@ -213,7 +216,7 @@ public class MethodCallInstructionWriter {
 
 //        System.out.println(calleeClass.getImportStr());
         callerClass.addImport(calleeClass.getImportStr());
-        methodBody.addStatement(0, new VariableDeclarationExpr(
+        methodBody.addStatementToStart(new VariableDeclarationExpr(
                         new VariableDeclarator(classWithName, calleeClass.getName().toLowerCase(),
                                 new ObjectCreationExpr().setType(classWithName).setArguments(dummyParamVals))
                 )
