@@ -52,7 +52,8 @@ public class MethodBodyCreator {
      */
     public MethodBodyCreator addReturnStatement(Type returnType) {
         if (!returnType.isVoidType())
-            methodBody.addStatement(new ReturnStmt(DummyValueCreator.getDummyParamValueFromType(returnType)));
+            methodBody.addStatement(methodBody.getStatements().size(),
+                    new ReturnStmt(DummyValueCreator.getDummyParamValueFromType(returnType)));
         return this;
     }
 }
