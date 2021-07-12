@@ -77,7 +77,6 @@ public class MethodCallInstructionWriter {
     public void writeMethodCallInCaller() throws BuildFailedException {
         checkCallerAndCalleeValues();
 
-
         MethodBodyCreator mbc = new MethodBodyCreator(this.getCallerMethodBody());
         NodeList<Expression> dummyParamVals = DummyValueCreator.getDummyParameterValuesAsExprs(calleeMethod.getParameters());
 
@@ -96,6 +95,8 @@ public class MethodCallInstructionWriter {
                 this.doSafeguardInstantiation(mbc, isCalleeMethodStatic);
             }
         }
+
+        mbc.setBodyToCallable(this.callerMethod);
     }
 
     /**
@@ -168,12 +169,7 @@ public class MethodCallInstructionWriter {
         Expression callerExpr = (isCalleeMethodStatic == IsCalleeMethodStatic.NO)
                 ? new NameExpr(calleeClass.getName().toLowerCase()) : new NameExpr(calleeClass.getName());
 
-        methodBody.addStatement(Math.max(0, methodBody.getNbrStatements() - 1),
-                new MethodCallExpr(
-                        callerExpr,
-                        calleeMethod.getName(),
-                        dummyParamVals)
-        );
+        methodBody.addRegularStatement(new MethodCallExpr(callerExpr, calleeMethod.getName(), dummyParamVals));
     }
 
     /**
@@ -187,12 +183,7 @@ public class MethodCallInstructionWriter {
         Expression callerExpr = (isCalleeMethodStatic == IsCalleeMethodStatic.NO)
                 ? new ThisExpr() : new NameExpr(calleeClass.getName());
 
-        methodBody.addStatement(Math.max(0, methodBody.getNbrStatements() - 1),
-                new MethodCallExpr(
-                        callerExpr,
-                        calleeMethod.getName(),
-                        dummyParamVals)
-        );
+        methodBody.addRegularStatement(new MethodCallExpr(callerExpr, calleeMethod.getName(), dummyParamVals));
     }
 
     /**
@@ -216,7 +207,7 @@ public class MethodCallInstructionWriter {
 
 //        System.out.println(calleeClass.getImportStr());
         callerClass.addImport(calleeClass.getImportStr());
-        methodBody.addStatementToStart(new VariableDeclarationExpr(
+        methodBody.addVarInsnStatement(new VariableDeclarationExpr(
                         new VariableDeclarator(classWithName, calleeClass.getName().toLowerCase(),
                                 new ObjectCreationExpr().setType(classWithName).setArguments(dummyParamVals))
                 )
