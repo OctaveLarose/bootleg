@@ -5,4 +5,4 @@
 rootProject.name = 'code_generation'
 
 include 'src'
-include 'code_output'
+//include 'code_output'

@@ -106,7 +106,7 @@ public class MethodCallInstructionWriter {
      */
     private void doSafeguardInstantiation(BlockStmt methodBody, IsCalleeMethodStatic isCalleeMethodStatic) throws BuildFailedException {
         if (!isClassInstantiationInMethod(methodBody, calleeClass.getName())
-                && isCalleeMethodStatic == IsCalleeMethodStatic.NO ) {
+                && isCalleeMethodStatic == IsCalleeMethodStatic.NO) {
             List<ConstructorDeclaration> constructors = calleeClass.getConstructors();
 
             if (constructors.size() == 0)

@@ -4,16 +4,14 @@ import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.CallableDeclaration;
 import com.github.javaparser.ast.body.Parameter;
-import com.github.javaparser.ast.expr.NameExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
-import com.github.javaparser.ast.stmt.ReturnStmt;
 import com.github.javaparser.ast.type.Type;
 import com.github.javaparser.utils.Pair;
 import com.github.octavelarose.codegenerator.builders.BuildConstants;
 import com.github.octavelarose.codegenerator.builders.BuildFailedException;
 import com.github.octavelarose.codegenerator.builders.classes.BasicClassBuilder;
 import com.github.octavelarose.codegenerator.builders.classes.ClassBuilder;
-import com.github.octavelarose.codegenerator.builders.classes.instructions.DummyValueCreator;
+import com.github.octavelarose.codegenerator.builders.classes.instructions.MethodBodyCreator;
 import com.github.octavelarose.codegenerator.builders.classes.instructions.MethodCallInstructionWriter;
 import com.github.octavelarose.codegenerator.builders.programs.asm_types.ASMTypeParsingUtils;
 import com.github.octavelarose.codegenerator.builders.programs.filereader.CTFileParser;
@@ -72,6 +70,7 @@ public class CTParserProgramBuilder implements ProgramBuilder {
                 methodArr.set(SCOPE, methodArr.get(SCOPE).concat("/pub"));
             }
 
+            // so TODO: if it's part of the JDK then we don't create a class builder... or do we? one that wraps a jdk class? too tired to think, good luck monday me
             ClassBuilder classCb = getOrCreateClassBuilder(classBuilders, className);
 
             if (classCb.hasMethod(methodName)) {
@@ -149,12 +148,10 @@ public class CTParserProgramBuilder implements ProgramBuilder {
 
         Type returnType = ASMTypeParsingUtils.getTypeFromStr(splitDescriptor[1]);
 
-        // In the future, should ideally contain "advanced" operations. TODO a sleep() operation for starters
-        BlockStmt methodBody = new BlockStmt();
-
-        methodBody.addStatement(new NameExpr("System.out.println(\"" + "Current method: " + methodArr.get(FULLNAME) + "\")"));
-        if (!returnType.isVoidType())
-            methodBody.addStatement(new ReturnStmt(DummyValueCreator.getDummyParamValueFromType(returnType)));
+        BlockStmt methodBody = new MethodBodyCreator()
+                                .addDefaultStatements(methodArr.get(FULLNAME))
+                                .addReturnStatement(returnType)
+                                .getMethodBody();
 
         NodeList<Parameter> parameters = new NodeList<>();
 
