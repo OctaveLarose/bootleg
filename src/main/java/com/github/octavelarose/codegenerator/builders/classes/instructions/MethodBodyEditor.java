@@ -15,7 +15,7 @@ import com.github.javaparser.ast.type.Type;
 /**
  * Creates and manages a method body, i.e a BlockStmt object.
  */
-public class MethodBodyCreator {
+public class MethodBodyEditor {
     // We're assuming methods are divided into three parts: the instantiation of local variables, various calculations, and end return statements.
     // That's empirical but I believe this separation can be justified with some research by smarter people than me who use that as a predicate
     BlockStmt varsInsnBlock = new BlockStmt();
@@ -25,13 +25,13 @@ public class MethodBodyCreator {
     /**
      * Default constructor, creates a BlockStmt instance.
      */
-    public MethodBodyCreator() {}
+    public MethodBodyEditor() {}
 
     /**
      * A constructor that takes in an already existing method body.
      * @param methodBody The existing method body.
      */
-    public MethodBodyCreator(BlockStmt methodBody) {
+    public MethodBodyEditor(BlockStmt methodBody) {
         // Not very good, what if there's a return statement in the middle of the function?
         // Will do the job fine so far since we're assuming all methods will have this distinct var insn/calculations/return statement structure
         for (Statement stmt: methodBody.getStatements()) {
@@ -59,7 +59,7 @@ public class MethodBodyCreator {
      * @param expr The variable instantiation statement/expression. TODO make statement
      * @return A this instance.
      */
-    public MethodBodyCreator addVarInsnStatement(Expression expr) {
+    public MethodBodyEditor addVarInsnStatement(Expression expr) {
         this.varsInsnBlock.addStatement(expr);
         return this;
     }
@@ -69,7 +69,7 @@ public class MethodBodyCreator {
      * @param expr The regular operation statement/expression. TODO make statement
      * @return A this instance.
      */
-    public MethodBodyCreator addRegularStatement(Expression expr) {
+    public MethodBodyEditor addRegularStatement(Expression expr) {
         this.regularInstrsBlock.addStatement(expr);
         System.out.println(expr);
         return this;
@@ -80,7 +80,7 @@ public class MethodBodyCreator {
      * @param returnType The return type of the method.
      * @return A this instance.
      */
-    public MethodBodyCreator addReturnStatement(Type returnType) {
+    public MethodBodyEditor addReturnStatement(Type returnType) {
         if (!returnType.isVoidType())
             this.returnStmtBlock.addStatement(new ReturnStmt(DummyValueCreator.getDummyParamValueFromType(returnType)));
         return this;
@@ -92,7 +92,7 @@ public class MethodBodyCreator {
      * @param methodFullName The full name of the method, needed to print it.
      * @return A this instance.
      */
-    public MethodBodyCreator addDefaultStatements(String methodFullName) {
+    public MethodBodyEditor addDefaultStatements(String methodFullName) {
         // In the future, should ideally contain "advanced" operations. TODO a sleep() operation for starters
         this.regularInstrsBlock.addStatement(new NameExpr("System.out.println(\"" + "Current method: " + methodFullName + "\")"));
         return this;

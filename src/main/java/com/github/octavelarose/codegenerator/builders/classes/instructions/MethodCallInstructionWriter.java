@@ -77,7 +77,7 @@ public class MethodCallInstructionWriter {
     public void writeMethodCallInCaller() throws BuildFailedException {
         checkCallerAndCalleeValues();
 
-        MethodBodyCreator mbc = new MethodBodyCreator(this.getCallerMethodBody());
+        MethodBodyEditor mbc = new MethodBodyEditor(this.getCallerMethodBody());
         NodeList<Expression> dummyParamVals = DummyValueCreator.getDummyParameterValuesAsExprs(calleeMethod.getParameters());
 
         IsCalleeMethodStatic isCalleeMethodStatic = calleeMethod.getModifiers()
@@ -106,7 +106,7 @@ public class MethodCallInstructionWriter {
      * @param isCalleeMethodStatic Whether or not the method called is static. If it is, no instantiation is necessary.
      * @throws BuildFailedException If the class we're trying to instantiate has no constructors, we can't do anything.
      */
-    private void doSafeguardInstantiation(MethodBodyCreator methodBody,
+    private void doSafeguardInstantiation(MethodBodyEditor methodBody,
                                           IsCalleeMethodStatic isCalleeMethodStatic) throws BuildFailedException {
         if (!isClassInstantiationInMethod(methodBody.getMethodBody(), calleeClass.getName())
                 && isCalleeMethodStatic == IsCalleeMethodStatic.NO) {
@@ -163,7 +163,7 @@ public class MethodCallInstructionWriter {
      * @param methodBody The body of the method to be appended.
      * @param dummyParamVals Dummy values for the method parameters.
      */
-    private void addForeignMethodCall(MethodBodyCreator methodBody,
+    private void addForeignMethodCall(MethodBodyEditor methodBody,
                                       NodeList<Expression> dummyParamVals,
                                       IsCalleeMethodStatic isCalleeMethodStatic) {
         Expression callerExpr = (isCalleeMethodStatic == IsCalleeMethodStatic.NO)
@@ -177,7 +177,7 @@ public class MethodCallInstructionWriter {
      * @param methodBody The body of the method to be appended.
      * @param dummyParamVals Dummy values for the method parameters.
      */
-    private void addLocalMethodCall(MethodBodyCreator methodBody,
+    private void addLocalMethodCall(MethodBodyEditor methodBody,
                                     NodeList<Expression> dummyParamVals,
                                     IsCalleeMethodStatic isCalleeMethodStatic) {
         Expression callerExpr = (isCalleeMethodStatic == IsCalleeMethodStatic.NO)
@@ -192,7 +192,7 @@ public class MethodCallInstructionWriter {
      * @param dummyParamVals Dummy values for the method parameters.
      * @throws BuildFailedException If the class with the given name couldn't be accessed.
      */
-    private void addCalleeClassConstructorCall(MethodBodyCreator methodBody,
+    private void addCalleeClassConstructorCall(MethodBodyEditor methodBody,
                                                NodeList<Expression> dummyParamVals) throws BuildFailedException {
         ClassOrInterfaceType classWithName;
 

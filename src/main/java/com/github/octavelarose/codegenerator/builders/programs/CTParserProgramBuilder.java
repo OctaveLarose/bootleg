@@ -11,7 +11,7 @@ import com.github.octavelarose.codegenerator.builders.BuildConstants;
 import com.github.octavelarose.codegenerator.builders.BuildFailedException;
 import com.github.octavelarose.codegenerator.builders.classes.BasicClassBuilder;
 import com.github.octavelarose.codegenerator.builders.classes.ClassBuilder;
-import com.github.octavelarose.codegenerator.builders.classes.instructions.MethodBodyCreator;
+import com.github.octavelarose.codegenerator.builders.classes.instructions.MethodBodyEditor;
 import com.github.octavelarose.codegenerator.builders.classes.instructions.MethodCallInstructionWriter;
 import com.github.octavelarose.codegenerator.builders.programs.asm_types.ASMTypeParsingUtils;
 import com.github.octavelarose.codegenerator.builders.programs.filereader.CTFileParser;
@@ -148,7 +148,7 @@ public class CTParserProgramBuilder implements ProgramBuilder {
 
         Type returnType = ASMTypeParsingUtils.getTypeFromStr(splitDescriptor[1]);
 
-        BlockStmt methodBody = new MethodBodyCreator()
+        BlockStmt methodBody = new MethodBodyEditor()
                                 .addDefaultStatements(methodArr.get(FULLNAME))
                                 .addReturnStatement(returnType)
                                 .getMethodBody();
