@@ -1,4 +1,4 @@
-package com.github.octavelarose.codegenerator.builders.classes.instructions;
+package com.github.octavelarose.codegenerator.builders.classes.methods;
 
 import com.github.javaparser.ParseException;
 import com.github.javaparser.ast.Modifier;
@@ -7,11 +7,10 @@ import com.github.javaparser.ast.body.CallableDeclaration;
 import com.github.javaparser.ast.body.ConstructorDeclaration;
 import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.expr.*;
-import com.github.javaparser.ast.stmt.BlockStmt;
-import com.github.javaparser.ast.stmt.Statement;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.octavelarose.codegenerator.builders.BuildFailedException;
 import com.github.octavelarose.codegenerator.builders.classes.ClassBuilder;
+import com.github.octavelarose.codegenerator.builders.classes.methods.bodies.CallableMethodBodyEditor;
 import com.github.octavelarose.codegenerator.builders.utils.JPTypeUtils;
 
 import java.util.List;
@@ -76,7 +75,7 @@ public class MethodCallInstructionWriter {
     public void writeMethodCallInCaller() throws BuildFailedException {
         checkCallerAndCalleeValues();
 
-        MethodBodyEditor mbc = new MethodBodyEditor(callerMethod);
+        CallableMethodBodyEditor mbc = new CallableMethodBodyEditor(callerMethod);
         NodeList<Expression> dummyParamVals = DummyValueCreator.getDummyParameterValuesAsExprs(calleeMethod.getParameters());
 
         IsCalleeMethodStatic isCalleeMethodStatic = calleeMethod.getModifiers()
@@ -95,19 +94,19 @@ public class MethodCallInstructionWriter {
             }
         }
 
-        mbc.setBodyToCallable(this.callerMethod);
+        mbc.setBodyToCallable();
     }
 
     /**
      * Debatable safeguard. If an object is returned from a method call, or if it's in a field, it can't be detected
      * So for now I'll just create a new instance of it in every method that needs it. TODO improve, but how?
-     * @param methodBody The body of the method that needs a class to checked for class instantiations and possibly appended with one
+     * @param cmbc The body of the method that needs a class to checked for class instantiations and possibly appended with one
      * @param isCalleeMethodStatic Whether or not the method called is static. If it is, no instantiation is necessary.
      * @throws BuildFailedException If the class we're trying to instantiate has no constructors, we can't do anything.
      */
-    private void doSafeguardInstantiation(MethodBodyEditor methodBody,
+    private void doSafeguardInstantiation(CallableMethodBodyEditor cmbc,
                                           IsCalleeMethodStatic isCalleeMethodStatic) throws BuildFailedException {
-        if (!isClassInstantiationInMethod(methodBody.getMethodBody(), calleeClass.getName())
+        if (!cmbc.isClassInstantiationInMethodBody(calleeClass.getName())
                 && isCalleeMethodStatic == IsCalleeMethodStatic.NO) {
             List<ConstructorDeclaration> constructors = calleeClass.getConstructors();
 
@@ -117,7 +116,7 @@ public class MethodCallInstructionWriter {
                         + " in our safeguard code, as it has no constructors");
 
             this.addCalleeClassConstructorCall(
-                    methodBody,
+                    cmbc,
                     DummyValueCreator.getDummyParameterValuesAsExprs(constructors.get(0).getParameters())
             );
         }
@@ -136,39 +135,39 @@ public class MethodCallInstructionWriter {
 
     /**
      * Adds a call to a method from another class to the given method body.
-     * @param methodBody The body of the method to be appended.
+     * @param cmbc The body of the method to be appended.
      * @param dummyParamVals Dummy values for the method parameters.
      */
-    private void addForeignMethodCall(MethodBodyEditor methodBody,
+    private void addForeignMethodCall(CallableMethodBodyEditor cmbc,
                                       NodeList<Expression> dummyParamVals,
                                       IsCalleeMethodStatic isCalleeMethodStatic) {
         Expression callerExpr = (isCalleeMethodStatic == IsCalleeMethodStatic.NO)
                 ? new NameExpr(calleeClass.getName().toLowerCase()) : new NameExpr(calleeClass.getName());
 
-        methodBody.addRegularStatement(new MethodCallExpr(callerExpr, calleeMethod.getName(), dummyParamVals));
+        cmbc.addRegularStatement(new MethodCallExpr(callerExpr, calleeMethod.getName(), dummyParamVals));
     }
 
     /**
      * Add a call to a method in the same class, so with a "this.(...)" statement.
-     * @param methodBody The body of the method to be appended.
+     * @param cmbc The body of the method to be appended.
      * @param dummyParamVals Dummy values for the method parameters.
      */
-    private void addLocalMethodCall(MethodBodyEditor methodBody,
+    private void addLocalMethodCall(CallableMethodBodyEditor cmbc,
                                     NodeList<Expression> dummyParamVals,
                                     IsCalleeMethodStatic isCalleeMethodStatic) {
         Expression callerExpr = (isCalleeMethodStatic == IsCalleeMethodStatic.NO)
                 ? new ThisExpr() : new NameExpr(calleeClass.getName());
 
-        methodBody.addRegularStatement(new MethodCallExpr(callerExpr, calleeMethod.getName(), dummyParamVals));
+        cmbc.addRegularStatement(new MethodCallExpr(callerExpr, calleeMethod.getName(), dummyParamVals));
     }
 
     /**
      * Adds a call to a constructor, i.e instantiates the callee class and puts it in a new local variable.
-     * @param methodBody The body of the method to be appended.
+     * @param cmbc The body of the method to be appended.
      * @param dummyParamVals Dummy values for the method parameters.
      * @throws BuildFailedException If the class with the given name couldn't be accessed.
      */
-    private void addCalleeClassConstructorCall(MethodBodyEditor methodBody,
+    private void addCalleeClassConstructorCall(CallableMethodBodyEditor cmbc,
                                                NodeList<Expression> dummyParamVals) throws BuildFailedException {
         ClassOrInterfaceType classWithName;
 
@@ -183,36 +182,12 @@ public class MethodCallInstructionWriter {
 
 //        System.out.println(calleeClass.getImportStr());
         callerClass.addImport(calleeClass.getImportStr());
-        methodBody.addVarInsnStatement(new VariableDeclarationExpr(
+        cmbc.addVarInsnStatement(new VariableDeclarationExpr(
                         new VariableDeclarator(classWithName, calleeClass.getName().toLowerCase(),
                                 new ObjectCreationExpr().setType(classWithName).setArguments(dummyParamVals))
                 )
         );
 
 //        System.out.println(methodBody);
-    }
-
-    /**
-     * Is there a local variable in the method that corresponds to an instantiation of a given class?
-     * @param methodBody The body of the method.
-     * @param className The name of the class.
-     * @return true if a variable was instantiated with the type className, false otherwise.
-     */
-    private boolean isClassInstantiationInMethod(BlockStmt methodBody, String className) {
-        for (Statement methodLine: methodBody.getStatements()) {
-            // A bit awkward. Right now we add a return stmt at the start, and those need to be ignored
-            // I guess this could be changed to "if it isn't an expression statement" instead
-            if (methodLine.isReturnStmt())
-                continue;
-
-            if (!(methodLine.asExpressionStmt().getExpression() instanceof VariableDeclarationExpr))
-                continue;
-
-            VariableDeclarationExpr varDecExpr = (VariableDeclarationExpr) methodLine.asExpressionStmt().getExpression();
-            for (VariableDeclarator varDec: varDecExpr.getVariables())
-                if (className.equals(varDec.getType().asString()))
-                    return true;
-        }
-        return false;
     }
 }

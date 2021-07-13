@@ -1,4 +1,4 @@
-package com.github.octavelarose.codegenerator.builders.classes.instructions;
+package com.github.octavelarose.codegenerator.builders.classes.methods;
 
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.Parameter;
