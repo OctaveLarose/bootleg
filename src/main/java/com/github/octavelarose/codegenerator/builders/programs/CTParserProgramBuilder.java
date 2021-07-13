@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Stack;
 
+import static com.github.octavelarose.codegenerator.builders.BuildConstants.PARAM_NAME_LENGTH;
 import static com.github.octavelarose.codegenerator.builders.programs.filereader.CTFileParser.*;
 
 /**
@@ -157,7 +158,7 @@ public class CTParserProgramBuilder implements ProgramBuilder {
 
         for (Type paramType: ASMTypeParsingUtils.getTypesFromParametersStr(paramsStr)) {
             // TODO: check for duplicate param names, just in case (more of a hassle than it seems)
-            String paramName = RandomUtils.generateRandomName(3);
+            String paramName = RandomUtils.generateRandomName(PARAM_NAME_LENGTH);
             parameters.add(new Parameter(paramType, paramName));
         }
 
