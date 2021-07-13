@@ -11,6 +11,7 @@ import com.github.javaparser.ast.stmt.ExpressionStmt;
 import com.github.javaparser.ast.stmt.ReturnStmt;
 import com.github.javaparser.ast.stmt.Statement;
 import com.github.javaparser.ast.type.Type;
+import com.github.octavelarose.codegenerator.builders.BuildFailedException;
 
 /**
  * Creates and manages a method body, i.e a BlockStmt object.
@@ -18,9 +19,9 @@ import com.github.javaparser.ast.type.Type;
 public class MethodBodyEditor {
     // We're assuming methods are divided into three parts: the instantiation of local variables, various calculations, and end return statements.
     // That's empirical but I believe this separation can be justified with some research by smarter people than me who use that as a predicate
-    BlockStmt varsInsnBlock = new BlockStmt();
-    BlockStmt regularInstrsBlock = new BlockStmt();
-    BlockStmt returnStmtBlock = new BlockStmt();
+    private final BlockStmt varsInsnBlock = new BlockStmt();
+    private final BlockStmt regularInstrsBlock = new BlockStmt();
+    private final BlockStmt returnStmtBlock = new BlockStmt();
 
     /**
      * Default constructor, creates a BlockStmt instance.
@@ -28,10 +29,12 @@ public class MethodBodyEditor {
     public MethodBodyEditor() {}
 
     /**
-     * A constructor that takes in an already existing method body.
-     * @param methodBody The existing method body.
+     * A constructor that takes in a method object.
+     * @param method The method object to get the existing method body from.
      */
-    public MethodBodyEditor(BlockStmt methodBody) {
+    public MethodBodyEditor(CallableDeclaration<?> method) throws BuildFailedException {
+        BlockStmt methodBody = this.getMethodBodyOfCallable(method);
+
         // Not very good, what if there's a return statement in the middle of the function?
         // Will do the job fine so far since we're assuming all methods will have this distinct var insn/calculations/return statement structure
         for (Statement stmt: methodBody.getStatements()) {
@@ -45,12 +48,41 @@ public class MethodBodyEditor {
     }
 
     /**
+     * @return The caller method's body, containing the method instructions.
+     * @throws BuildFailedException If the method's type can't be inferred (i.e it isn't a method/constructor)
+     */
+    private BlockStmt getMethodBodyOfCallable(CallableDeclaration<?> method) throws BuildFailedException {
+        BlockStmt methodBody;
+
+        if (method instanceof MethodDeclaration) {
+            MethodDeclaration md = ((MethodDeclaration) method);
+            if (md.getBody().isEmpty()) { // Should never happen since methods are always instantiated with an empty block
+                methodBody = new BlockStmt();
+                md.setBody(methodBody);
+            } else {
+                methodBody = md.getBody().get();
+            }
+        } else if (method instanceof ConstructorDeclaration)
+            methodBody = ((ConstructorDeclaration) method).getBody();
+        else
+            throw new BuildFailedException("Couldn't find method body, as this is neither a classic method nor a constructor");
+
+        return methodBody;
+    }
+
+    /**
      * @return The method body.
      */
     public BlockStmt getMethodBody() {
-        NodeList<Statement> concatStmts = this.varsInsnBlock.getStatements();
-        concatStmts.addAll(this.regularInstrsBlock.getStatements());
-        concatStmts.addAll(this.returnStmtBlock.getStatements());
+        NodeList<Statement> concatStmts = new NodeList<>();
+
+        for (Statement stmt: this.varsInsnBlock.getStatements())
+            concatStmts.add(stmt);
+        for (Statement stmt: this.regularInstrsBlock.getStatements())
+            concatStmts.add(stmt);
+        for (Statement stmt: this.returnStmtBlock.getStatements())
+            concatStmts.add(stmt);
+
         return new BlockStmt(concatStmts);
     }
 

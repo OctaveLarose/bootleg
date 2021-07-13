@@ -5,7 +5,6 @@ import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.CallableDeclaration;
 import com.github.javaparser.ast.body.ConstructorDeclaration;
-import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.expr.*;
 import com.github.javaparser.ast.stmt.BlockStmt;
@@ -77,7 +76,7 @@ public class MethodCallInstructionWriter {
     public void writeMethodCallInCaller() throws BuildFailedException {
         checkCallerAndCalleeValues();
 
-        MethodBodyEditor mbc = new MethodBodyEditor(this.getCallerMethodBody());
+        MethodBodyEditor mbc = new MethodBodyEditor(callerMethod);
         NodeList<Expression> dummyParamVals = DummyValueCreator.getDummyParameterValuesAsExprs(calleeMethod.getParameters());
 
         IsCalleeMethodStatic isCalleeMethodStatic = calleeMethod.getModifiers()
@@ -133,29 +132,6 @@ public class MethodCallInstructionWriter {
             throw new BuildFailedException("Invalid caller or callee class.");
         if (this.callerMethod == null || this.calleeMethod == null)
             throw new BuildFailedException("Invalid caller or callee method.");
-    }
-
-    /**
-     * @return The caller method's body, containing the method instructions.
-     * @throws BuildFailedException If the method's type can't be inferred (i.e it isn't a method/constructor)
-     */
-    private BlockStmt getCallerMethodBody() throws BuildFailedException {
-        BlockStmt methodBody;
-
-        if (callerMethod instanceof MethodDeclaration) {
-            MethodDeclaration md = ((MethodDeclaration) callerMethod);
-            if (md.getBody().isEmpty()) { // Should never happen since methods are always instantiated with an empty block
-                methodBody = new BlockStmt();
-                md.setBody(methodBody);
-            } else {
-                methodBody = md.getBody().get();
-            }
-        } else if (callerMethod instanceof ConstructorDeclaration)
-            methodBody = ((ConstructorDeclaration) callerMethod).getBody();
-        else
-            throw new BuildFailedException("Couldn't find method body, as this is neither a classic method nor a constructor");
-
-        return methodBody;
     }
 
     /**
