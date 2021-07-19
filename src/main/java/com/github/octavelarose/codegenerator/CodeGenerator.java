@@ -39,9 +39,12 @@ public class CodeGenerator {
             if (args.length < 1 || args[0].equals("--test"))
                 builders = new TestProgramBuilder().build();
             else if (args[0].equals("--ct-file") && args.length > 1) {
-                builders = new CTParserProgramBuilder(args[1]).build();
+                if (Arrays.asList(args).contains("--op-file")) {
+                    builders = new CTParserProgramBuilder(args[1], args[Arrays.asList(args).indexOf("--op-file") + 1]).build();
+                } else {
+                    builders = new CTParserProgramBuilder(args[1]).build();
+                }
             } else {
-                System.out.println(Arrays.toString(args));
                 printUsage();
                 return;
             }

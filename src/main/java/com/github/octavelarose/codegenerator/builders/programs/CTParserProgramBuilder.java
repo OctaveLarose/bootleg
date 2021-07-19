@@ -31,9 +31,16 @@ import static com.github.octavelarose.codegenerator.builders.programs.filereader
  */
 public class CTParserProgramBuilder implements ProgramBuilder {
     private final String ctFileName;
+    private final String opsFileName;
 
     public CTParserProgramBuilder(String ctFileName) {
         this.ctFileName = ctFileName;
+        this.opsFileName = null;
+    }
+
+    public CTParserProgramBuilder(String ctFileName, String opsFileName) {
+        this.ctFileName = ctFileName;
+        this.opsFileName = opsFileName;
     }
 
     public HashMap<String, ClassBuilder> build() throws BuildFailedException {
