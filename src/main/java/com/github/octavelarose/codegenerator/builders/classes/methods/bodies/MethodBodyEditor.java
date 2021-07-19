@@ -13,7 +13,6 @@ import com.github.octavelarose.codegenerator.builders.classes.methods.DummyValue
  */
 public abstract class MethodBodyEditor {
     // We're assuming methods are divided into three parts: the instantiation of local variables, various calculations, and end return statements.
-    // That's empirical but I believe this separation can be justified with some research by smarter people than me who use that as a predicate
     protected final BlockStmt varsInsnBlock = new BlockStmt();
     protected final BlockStmt regularInstrsBlock = new BlockStmt();
     protected final BlockStmt returnStmtBlock = new BlockStmt();

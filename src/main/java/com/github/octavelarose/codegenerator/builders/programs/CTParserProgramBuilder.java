@@ -71,7 +71,7 @@ public class CTParserProgramBuilder implements ProgramBuilder {
                 methodArr.set(SCOPE, methodArr.get(SCOPE).concat("/pub"));
             }
 
-            // so TODO: if it's part of the JDK then we don't create a class builder... or do we? one that wraps a jdk class? too tired to think, good luck monday me
+            // so TODO: if it's part of the JDK then we don't create a class builder... or do we? one that wraps a jdk class?
             ClassBuilder classCb = getOrCreateClassBuilder(classBuilders, className);
 
             if (classCb.hasMethod(methodName)) {
@@ -101,7 +101,7 @@ public class CTParserProgramBuilder implements ProgramBuilder {
      * @return true if it represents a function entry, false otherwise.
      */
     private boolean isFunctionEntry(String dirStr) {
-        return dirStr.equals(">");
+        return dirStr.equals(BuildConstants.ENTRY_STR);
     }
 
     /**
@@ -157,7 +157,7 @@ public class CTParserProgramBuilder implements ProgramBuilder {
         NodeList<Parameter> parameters = new NodeList<>();
 
         for (Type paramType: ASMTypeParsingUtils.getTypesFromParametersStr(paramsStr)) {
-            // TODO: check for duplicate param names, just in case (more of a hassle than it seems)
+            // We don't check for duplicate parameter names since the odds are very low with a long enough length
             String paramName = RandomUtils.generateRandomName(PARAM_NAME_LENGTH);
             parameters.add(new Parameter(paramType, paramName));
         }
