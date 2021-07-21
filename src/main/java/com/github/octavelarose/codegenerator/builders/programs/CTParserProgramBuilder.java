@@ -14,8 +14,9 @@ import com.github.octavelarose.codegenerator.builders.classes.ClassBuilder;
 import com.github.octavelarose.codegenerator.builders.classes.methods.MethodCallInstructionWriter;
 import com.github.octavelarose.codegenerator.builders.classes.methods.bodies.SimpleMethodBodyCreator;
 import com.github.octavelarose.codegenerator.builders.programs.asm_types.ASMTypeParsingUtils;
-import com.github.octavelarose.codegenerator.builders.programs.calltraces.CTFileParser;
 import com.github.octavelarose.codegenerator.builders.programs.calltraces.CTStrUtils;
+import com.github.octavelarose.codegenerator.builders.programs.fileparsers.ArithmeticOperationsFileParser;
+import com.github.octavelarose.codegenerator.builders.programs.fileparsers.CTFileParser;
 import com.github.octavelarose.codegenerator.builders.utils.RandomUtils;
 
 import java.util.Arrays;
@@ -32,31 +33,27 @@ import static com.github.octavelarose.codegenerator.builders.programs.calltraces
  * Generates a program from a calltrace file of a format I defined myself.
  */
 public class CTParserProgramBuilder implements ProgramBuilder {
-    private final String ctFileName;
-    private final String opsFileName;
+    private final List<List<String>> callFileLines;
+    private HashMap<String, List<String>> methodOperations;
 
-    public CTParserProgramBuilder(String ctFileName) {
-        this.ctFileName = ctFileName;
-        this.opsFileName = null;
+    public CTParserProgramBuilder(String ctFileName) throws BuildFailedException {
+        System.out.println("Generating a program from the calltrace file: " + ctFileName);
+        this.callFileLines = new CTFileParser(ctFileName).parse().getParsedCT();
     }
 
-    public CTParserProgramBuilder(String ctFileName, String opsFileName) {
-        this.ctFileName = ctFileName;
-        this.opsFileName = opsFileName;
+    public CTParserProgramBuilder(String ctFileName, String opsFileName) throws BuildFailedException {
+        System.out.println("Generating a program from the calltrace file: " + ctFileName
+                + ", and operations file: " + opsFileName);
+        this.callFileLines = new CTFileParser(ctFileName).parse().getParsedCT();
+        this.methodOperations = new ArithmeticOperationsFileParser(opsFileName).parse().getParsedArithmeticOps();
     }
 
     public HashMap<String, ClassBuilder> build() throws BuildFailedException {
-        System.out.println("Generating a program from the calltrace file: " + this.ctFileName);
-        List<List<String>> fileLines = new CTFileParser(ctFileName).parse().getParsedCT();
-        return buildFromCtLines(fileLines);
-    }
-
-    private HashMap<String, ClassBuilder> buildFromCtLines(List<List<String>> fileLines) throws BuildFailedException {
         HashMap<String, ClassBuilder> classBuilders = new HashMap<>();
         Stack<Pair<ClassBuilder, CallableDeclaration.Signature>> callStack = new Stack<>();
         int idx = 0; // Used for debugging
 
-        for (List<String> methodArr: fileLines) {
+        for (List<String> methodArr: this.callFileLines) {
             idx++;
 
             // We ignore lambda calls for now. TODO: look into why some are capitalized and some aren't

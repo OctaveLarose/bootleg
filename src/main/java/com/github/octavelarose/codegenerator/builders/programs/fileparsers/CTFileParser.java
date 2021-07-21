@@ -1,4 +1,4 @@
-package com.github.octavelarose.codegenerator.builders.programs.calltraces;
+package com.github.octavelarose.codegenerator.builders.programs.fileparsers;
 
 import com.github.octavelarose.codegenerator.builders.BuildFailedException;
 
