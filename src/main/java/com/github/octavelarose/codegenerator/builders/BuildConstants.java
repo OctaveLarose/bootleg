@@ -7,6 +7,9 @@ public class BuildConstants {
     // The name given to constructors, by the ASM library.
     public static String CONSTRUCTOR_NAME = "<init>";
 
+    // The name given to static init blocks, by the ASM library.
+    public static String STATIC_INIT_NAME = "<clinit>";
+
     // How a function entry is defined in our data
     public static String ENTRY_STR = ">";
 

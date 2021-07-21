@@ -14,7 +14,8 @@ import com.github.octavelarose.codegenerator.builders.classes.ClassBuilder;
 import com.github.octavelarose.codegenerator.builders.classes.methods.MethodCallInstructionWriter;
 import com.github.octavelarose.codegenerator.builders.classes.methods.bodies.SimpleMethodBodyCreator;
 import com.github.octavelarose.codegenerator.builders.programs.asm_types.ASMTypeParsingUtils;
-import com.github.octavelarose.codegenerator.builders.programs.filereader.CTFileParser;
+import com.github.octavelarose.codegenerator.builders.programs.calltraces.CTFileParser;
+import com.github.octavelarose.codegenerator.builders.programs.calltraces.CTStrUtils;
 import com.github.octavelarose.codegenerator.builders.utils.RandomUtils;
 
 import java.util.Arrays;
@@ -23,7 +24,8 @@ import java.util.List;
 import java.util.Stack;
 
 import static com.github.octavelarose.codegenerator.builders.BuildConstants.PARAM_NAME_LENGTH;
-import static com.github.octavelarose.codegenerator.builders.programs.filereader.CTFileParser.*;
+import static com.github.octavelarose.codegenerator.builders.BuildConstants.STATIC_INIT_NAME;
+import static com.github.octavelarose.codegenerator.builders.programs.calltraces.CTStrUtils.*;
 
 /**
  * CallTrace Parser Program Builder.
@@ -61,19 +63,17 @@ public class CTParserProgramBuilder implements ProgramBuilder {
             if (methodArr.get(FULLNAME).contains("Lambda") || methodArr.get(FULLNAME).contains("lambda"))
                 continue;
 
+            // If it's a method exit, we modify the call stack accordingly, but we don't actually touch the method content.
             if (!this.isFunctionEntry(methodArr.get(DIRECTION))) {
                 callStack.pop();
                 continue;
             }
 
-//            System.out.println(i + " : " + methodArr);
-
-            String[] splitFullName = methodArr.get(FULLNAME).split("\\.");
-            String className = splitFullName[0];
-            String methodName = splitFullName[1];
+            String className = CTStrUtils.getClassName(methodArr);
+            String methodName = CTStrUtils.getMethodName(methodArr);
 
             // TODO static initializers, defined by <clinit>, are NOT handled so we pretend it's a regular public method
-            if (methodName.equals("<clinit>")) {
+            if (methodName.equals(STATIC_INIT_NAME)) {
                 methodName = "staticInit";
                 methodArr.set(SCOPE, methodArr.get(SCOPE).concat("/pub"));
             }
@@ -81,6 +81,7 @@ public class CTParserProgramBuilder implements ProgramBuilder {
             // so TODO: if it's part of the JDK then we don't create a class builder... or do we? one that wraps a jdk class?
             ClassBuilder classCb = getOrCreateClassBuilder(classBuilders, className);
 
+            // If the method already exists, we don't need to generate it and just modify the call stack.
             if (classCb.hasMethod(methodName)) {
                 callStack.push(new Pair<>(classCb, classCb.getMethodFromName(methodName).getSignature()));
                 continue;
@@ -128,8 +129,6 @@ public class CTParserProgramBuilder implements ProgramBuilder {
             else {
                 List<String> splitClassPath = Arrays.asList(className.split("/"));
                 String pkgPath = String.join(".", splitClassPath.subList(0, splitClassPath.size() - 1));
-//                System.out.println(splitClassPath.get(splitClassPath.size() - 1));
-//                System.out.println(pkgPath);
                 classCb = new BasicClassBuilder(splitClassPath.get(splitClassPath.size() - 1), 0, 0, pkgPath);
             }
             classBuilders.put(className, classCb);
@@ -150,11 +149,9 @@ public class CTParserProgramBuilder implements ProgramBuilder {
                                                                  ClassBuilder classCb) throws BuildFailedException {
         NodeList<Modifier> modifiers = this.getModifiersListFromScope(methodArr.get(SCOPE));
 
-        String descriptor = methodArr.get(DESCRIPTOR);
-        String[] splitDescriptor = descriptor.split("\\)");
-        String paramsStr = splitDescriptor[0].substring(1);
+        String paramsStr = CTStrUtils.getParamsStr(methodArr);
 
-        Type returnType = ASMTypeParsingUtils.getTypeFromStr(splitDescriptor[1]);
+        Type returnType = ASMTypeParsingUtils.getTypeFromStr(CTStrUtils.getReturnTypeStr(methodArr));
 
         BlockStmt methodBody = new SimpleMethodBodyCreator()
                                 .addDefaultStatements(methodArr.get(FULLNAME))
