@@ -66,9 +66,7 @@ public class CTParserProgramBuilder implements ProgramBuilder {
                 continue;
             }
 
-            // so TODO: if it's part of the JDK then we don't create a class builder... or do we? one that wraps a jdk class?
-            ClassBuilder classCb = getOrCreateClassBuilder(classBuilders, CTStrUtils.getClassName(methodArr));
-
+            String className = CTStrUtils.getClassName(methodArr);
             String methodName = CTStrUtils.getMethodName(methodArr);
 
             // TODO static initializers, defined by <clinit>, are NOT handled so we pretend it's a regular public method
@@ -76,6 +74,9 @@ public class CTParserProgramBuilder implements ProgramBuilder {
                 methodName = "staticInit";
                 methodArr.set(SCOPE, methodArr.get(SCOPE).concat("/pub"));
             }
+
+            // so TODO: if it's part of the JDK then we don't create a class builder... or do we? one that wraps a jdk class?
+            ClassBuilder classCb = getOrCreateClassBuilder(classBuilders, className);
 
             // If the method already exists, we don't need to generate it and just modify the call stack.
             if (classCb.hasMethod(methodName)) {
@@ -91,8 +92,6 @@ public class CTParserProgramBuilder implements ProgramBuilder {
                 MethodCallInstructionWriter mciw = new MethodCallInstructionWriter()
                         .setCaller(callStack.lastElement().a, callStack.lastElement().b)
                         .setCallee(classCb, methodNode.getSignature());
-                if (this.methodOperations != null)
-                    mciw.setMethodOperations(this.methodOperations.get(methodArr.get(FULLNAME)));
                 mciw.writeMethodCallInCaller();
             }
 

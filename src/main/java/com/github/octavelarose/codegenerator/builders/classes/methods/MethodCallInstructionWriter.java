@@ -14,7 +14,6 @@ import com.github.octavelarose.codegenerator.builders.classes.methods.bodies.Cal
 import com.github.octavelarose.codegenerator.builders.utils.JPTypeUtils;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Writes a call to one method in another, i.e "methodName(3, "hello", 1.2);"
@@ -24,7 +23,6 @@ public class MethodCallInstructionWriter {
     ClassBuilder calleeClass;
     CallableDeclaration<?> callerMethod;
     CallableDeclaration<?> calleeMethod;
-    Optional<List<String>> methodOperations;
 
     private enum IsCalleeMethodStatic {
         YES,
@@ -69,11 +67,6 @@ public class MethodCallInstructionWriter {
         return this;
     }
 
-    public MethodCallInstructionWriter setMethodOperations(List<String> methodOperations) {
-        this.methodOperations = Optional.of(methodOperations);
-        return this;
-    }
-
     /**
      * Modifies the caller's method to add a call to a callee method, and all that entails for it to run.
      * (all that entails being import statements, callee class instantiations, for instance).
@@ -83,11 +76,6 @@ public class MethodCallInstructionWriter {
         checkCallerAndCalleeValues();
 
         CallableMethodBodyEditor mbc = new CallableMethodBodyEditor(callerMethod);
-
-        if (methodOperations.isPresent()) {
-            mbc.addRegularStatement(new NameExpr("System.out.println(\"Operations: " + methodOperations.get() + "\")"));
-        }
-
         NodeList<Expression> dummyParamVals = DummyValueCreator.getDummyParameterValuesAsExprs(calleeMethod.getParameters());
 
         IsCalleeMethodStatic isCalleeMethodStatic = calleeMethod.getModifiers()
