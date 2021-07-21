@@ -2,6 +2,9 @@ package com.github.octavelarose.codegenerator.builders.utils;
 
 import java.util.Random;
 
+/**
+ * Literally utils for randomness related operations, not a mess of utils for random classes, because we have (debatable) standards
+ */
 public class RandomUtils {
     /**
      * Generates a random name. Used to name methods, among others. May need to be moved to a "Utils" class.
