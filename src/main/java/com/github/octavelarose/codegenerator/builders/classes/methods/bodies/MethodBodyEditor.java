@@ -1,12 +1,20 @@
 package com.github.octavelarose.codegenerator.builders.classes.methods.bodies;
 
 import com.github.javaparser.ast.NodeList;
+import com.github.javaparser.ast.body.VariableDeclarator;
+import com.github.javaparser.ast.expr.BinaryExpr;
 import com.github.javaparser.ast.expr.Expression;
+import com.github.javaparser.ast.expr.NameExpr;
+import com.github.javaparser.ast.expr.VariableDeclarationExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.ReturnStmt;
 import com.github.javaparser.ast.stmt.Statement;
+import com.github.javaparser.ast.type.PrimitiveType;
 import com.github.javaparser.ast.type.Type;
 import com.github.octavelarose.codegenerator.builders.classes.methods.DummyValueCreator;
+import com.github.octavelarose.codegenerator.builders.utils.RandomUtils;
+
+import java.util.List;
 
 /**
  * Creates and manages a method body, i.e a BlockStmt object.
@@ -68,5 +76,36 @@ public abstract class MethodBodyEditor {
         if (!returnType.isVoidType())
             this.returnStmtBlock.addStatement(new ReturnStmt(DummyValueCreator.getDummyParamValueFromType(returnType)));
         return this;
+    }
+
+    /**
+     * Processes a list of arithmetic operations (ADD, SUB, etc...) and adds them to the method body.
+     * @param methodOps The operations list
+     */
+    public void processOperationStatements(List<String> methodOps) {
+        for (String op: methodOps) {
+            this.addVarInsnStatement(new VariableDeclarationExpr(
+                    new VariableDeclarator(PrimitiveType.doubleType(), RandomUtils.generateRandomName(5),
+                            new BinaryExpr(new NameExpr(String.valueOf(RandomUtils.generateRandomFloat())),
+                                    new NameExpr(String.valueOf(RandomUtils.generateRandomFloat())),
+                                    this.getOperatorFromStr(op.substring(1)))))
+            );
+//            this.regularInstrsBlock.addStatement(new NameExpr("System.out.println(\"" + "Op.: " + op + "\")"));
+        }
+    }
+
+    private BinaryExpr.Operator getOperatorFromStr(String opStr) {
+        switch (opStr) {
+            case "ADD":
+                return BinaryExpr.Operator.PLUS;
+            case "SUB":
+                return BinaryExpr.Operator.MINUS;
+            case "MUL":
+                return BinaryExpr.Operator.MULTIPLY;
+            case "DIV":
+                return BinaryExpr.Operator.DIVIDE;
+            default:
+                return BinaryExpr.Operator.AND; // TODO throw
+        }
     }
 }
