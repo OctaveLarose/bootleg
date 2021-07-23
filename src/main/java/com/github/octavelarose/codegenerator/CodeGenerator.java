@@ -29,7 +29,8 @@ public class CodeGenerator {
     private static void printUsage() {
         System.out.println("--help: print this message.");
         System.out.println("--test: to generate a proof of concept program.");
-        System.out.println("--ct-file FILENAME: to generate a proof of concept program.");
+        System.out.println("--ct-file FILENAME: to generate a program from a calltrace file.");
+        System.out.println("--op-file FILENAME: if a calltrace file has been provided, you can also provide a file detailing method operations");
     }
 
     private static void generateProgram(String[] args) {
