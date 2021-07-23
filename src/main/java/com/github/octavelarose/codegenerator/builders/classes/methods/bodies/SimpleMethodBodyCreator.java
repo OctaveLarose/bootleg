@@ -4,6 +4,8 @@ import com.github.javaparser.ast.expr.NameExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.type.Type;
 
+import java.util.List;
+
 /**
  * Creates a simple method body, with default statements inside and which returns the BlockStmt object directly.
  */
@@ -33,4 +35,13 @@ public class SimpleMethodBodyCreator extends MethodBodyEditor {
         this.regularInstrsBlock.addStatement(new NameExpr("System.out.println(\"" + "Current method: " + methodFullName + "\")"));
         return this;
     }
+
+    /**
+     * Processes a list of arithmetic operations (ADD, SUB, etc...) and adds them to the method body.
+     * @param methodOps The operations list
+     */
+    public void processOperationStatements(List<String> methodOps) {
+        this.regularInstrsBlock.addStatement(new NameExpr("System.out.println(\"" + "Method operations: " + methodOps + "\")"));
+    }
+
 }

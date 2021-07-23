@@ -21,6 +21,8 @@ public class CTMethodInfo {
 
     private final List<String> methodArr;
 
+    private List<String> methodOperations;
+
     public CTMethodInfo(List<String> methodArr) {
         this.methodArr = methodArr;
     }
@@ -53,6 +55,18 @@ public class CTMethodInfo {
         String descriptor = methodArr.get(DESCRIPTOR);
         String[] splitDescriptor = descriptor.split("\\)");
         return splitDescriptor[1];
+    }
+
+    public List<String> getMethodOperations() {
+         return this.methodOperations;
+    }
+
+    public void setMethodOperations(List<String> methodOps) {
+         this.methodOperations = methodOps;
+    }
+
+    public boolean hasMethodOperations() {
+        return this.methodOperations != null;
     }
 
     /**
@@ -102,4 +116,5 @@ public class CTMethodInfo {
 
         return modifiers;
     }
+
 }

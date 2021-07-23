@@ -56,6 +56,8 @@ public class CTParserProgramBuilder implements ProgramBuilder {
             idx++;
 
             CTMethodInfo ctMethodInfo = new CTMethodInfo(methodArr);
+            if (this.methodOperations != null)
+                ctMethodInfo.setMethodOperations(this.methodOperations.get(ctMethodInfo.get(FULLNAME)));
 
             // We ignore lambda calls for now. TODO: look into why some lambda function names are capitalized and some aren't
             if (ctMethodInfo.isLambda())
@@ -133,10 +135,14 @@ public class CTParserProgramBuilder implements ProgramBuilder {
         Type returnType = ASMTypeParsingUtils.getTypeFromStr(ctMethodInfo.getReturnTypeStr());
         NodeList<Modifier> modifiers = ctMethodInfo.getScopeModifiersList();
 
-        BlockStmt methodBody = new SimpleMethodBodyCreator()
+        SimpleMethodBodyCreator smbc = new SimpleMethodBodyCreator()
                                 .addDefaultStatements(ctMethodInfo.get(FULLNAME))
-                                .addReturnStatement(returnType)
-                                .getMethodBody();
+                                .addReturnStatement(returnType);
+
+        if (ctMethodInfo.hasMethodOperations())
+            smbc.processOperationStatements(ctMethodInfo.getMethodOperations());
+
+        BlockStmt methodBody = smbc.getMethodBody();
 
         NodeList<Parameter> parameters = new NodeList<>();
 
