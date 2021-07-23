@@ -40,11 +40,15 @@ public class CTParserProgramBuilder implements ProgramBuilder {
         this.callFileLines = new CTFileParser(ctFileName).parse().getParsedCT();
     }
 
-    public CTParserProgramBuilder(String ctFileName, String opsFileName) throws BuildFailedException {
-        System.out.println("Generating a program from the calltrace file: " + ctFileName
-                + ", and operations file: " + opsFileName);
-        this.callFileLines = new CTFileParser(ctFileName).parse().getParsedCT();
+    /**
+     * Provide an optional file describing operations executed by a method.
+     * @param opsFileName The name of the operations file
+     * @throws BuildFailedException If parsing the operations file fails.
+     */
+    public CTParserProgramBuilder setOperationsFileName(String opsFileName) throws BuildFailedException {
+        System.out.println("Optional operations file provided: " + opsFileName);
         this.methodOperations = new ArithmeticOperationsFileParser(opsFileName).parse().getParsedArithmeticOps();
+        return this;
     }
 
     public HashMap<String, ClassBuilder> build() throws BuildFailedException {
@@ -56,7 +60,7 @@ public class CTParserProgramBuilder implements ProgramBuilder {
             idx++;
 
             CTMethodInfo ctMethodInfo = new CTMethodInfo(methodArr);
-            if (this.methodOperations != null)
+            if (this.methodOperations != null && this.methodOperations.get(ctMethodInfo.get(FULLNAME)) != null)
                 ctMethodInfo.setMethodOperations(this.methodOperations.get(ctMethodInfo.get(FULLNAME)));
 
             // We ignore lambda calls for now. TODO: look into why some lambda function names are capitalized and some aren't

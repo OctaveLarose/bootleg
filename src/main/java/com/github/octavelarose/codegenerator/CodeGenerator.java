@@ -3,6 +3,7 @@ package com.github.octavelarose.codegenerator;
 import com.github.octavelarose.codegenerator.builders.BuildFailedException;
 import com.github.octavelarose.codegenerator.builders.classes.ClassBuilder;
 import com.github.octavelarose.codegenerator.builders.programs.CTParserProgramBuilder;
+import com.github.octavelarose.codegenerator.builders.programs.ProgramBuilder;
 import com.github.octavelarose.codegenerator.builders.programs.TestProgramBuilder;
 import com.github.octavelarose.codegenerator.export.ProgramExporter;
 
@@ -35,20 +36,22 @@ public class CodeGenerator {
 
     private static void generateProgram(String[] args) {
         HashMap<String, ClassBuilder> builders;
+        ProgramBuilder pb;
 
         try {
             if (args.length < 1 || args[0].equals("--test"))
-                builders = new TestProgramBuilder().build();
+                pb = new TestProgramBuilder();
             else if (args[0].equals("--ct-file") && args.length > 1) {
                 if (Arrays.asList(args).contains("--op-file")) {
-                    builders = new CTParserProgramBuilder(args[1], args[Arrays.asList(args).indexOf("--op-file") + 1]).build();
+                    pb = new CTParserProgramBuilder(args[1]).setOperationsFileName(args[Arrays.asList(args).indexOf("--op-file") + 1]);
                 } else {
-                    builders = new CTParserProgramBuilder(args[1]).build();
+                    pb = new CTParserProgramBuilder(args[1]);
                 }
             } else {
                 printUsage();
                 return;
             }
+            builders = pb.build();
         } catch (BuildFailedException e) {
             e.printStackTrace();
             return;
