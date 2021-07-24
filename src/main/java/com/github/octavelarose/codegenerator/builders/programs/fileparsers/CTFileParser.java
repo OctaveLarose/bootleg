@@ -1,4 +1,4 @@
-package com.github.octavelarose.codegenerator.builders.programs.filereader;
+package com.github.octavelarose.codegenerator.builders.programs.fileparsers;
 
 import com.github.octavelarose.codegenerator.builders.BuildFailedException;
 
@@ -14,14 +14,6 @@ import java.util.List;
  * Reads and parses a calltrace file. Encapsulates the format used in them.
  */
 public class CTFileParser {
-    // CT line format example (each element separated by a space):
-    // "< pub/con (Lcd/CallSign;Lcd/Vector3D;)V cd/Aircraft.<init> (54562ns)"
-    public static int DIRECTION = 0;
-    public static int SCOPE = 1;
-    public static int DESCRIPTOR = 2;
-    public static int FULLNAME = 3;
-    public static int TIME = 4;
-
     private final String filename;
     private List<List<String>> fileLines;
 

@@ -1,12 +1,21 @@
 package com.github.octavelarose.codegenerator.builders.classes.methods.bodies;
 
 import com.github.javaparser.ast.NodeList;
+import com.github.javaparser.ast.body.VariableDeclarator;
+import com.github.javaparser.ast.expr.BinaryExpr;
 import com.github.javaparser.ast.expr.Expression;
+import com.github.javaparser.ast.expr.NameExpr;
+import com.github.javaparser.ast.expr.VariableDeclarationExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.ReturnStmt;
 import com.github.javaparser.ast.stmt.Statement;
 import com.github.javaparser.ast.type.Type;
+import com.github.octavelarose.codegenerator.builders.BuildFailedException;
 import com.github.octavelarose.codegenerator.builders.classes.methods.DummyValueCreator;
+import com.github.octavelarose.codegenerator.builders.programs.asm_types.ASMTypeParsingUtils;
+import com.github.octavelarose.codegenerator.builders.utils.RandomUtils;
+
+import java.util.List;
 
 /**
  * Creates and manages a method body, i.e a BlockStmt object.
@@ -68,5 +77,23 @@ public abstract class MethodBodyEditor {
         if (!returnType.isVoidType())
             this.returnStmtBlock.addStatement(new ReturnStmt(DummyValueCreator.getDummyParamValueFromType(returnType)));
         return this;
+    }
+
+    /**
+     * Processes a list of arithmetic operations (ADD, SUB, etc...) and adds them to the method body.
+     * @param methodOps The operations list
+     */
+    public void processOperationStatements(List<String> methodOps) throws BuildFailedException {
+        for (String opStr: methodOps) {
+            Type opType = ASMTypeParsingUtils.getTypeFromBytecodePrefix(opStr.charAt(0));
+            BinaryExpr.Operator operator = ASMTypeParsingUtils.getOperatorFromBytecodeStr(opStr.substring(1));
+
+            this.addVarInsnStatement(new VariableDeclarationExpr(
+                    new VariableDeclarator(opType, RandomUtils.generateRandomName(5),
+                            new BinaryExpr(new NameExpr(DummyValueCreator.getDummyParamValueFromType(opType)),
+                                    new NameExpr(DummyValueCreator.getDummyParamValueFromType(opType)),
+                                    operator)))
+            );
+        }
     }
 }

@@ -14,7 +14,9 @@ import com.github.octavelarose.codegenerator.builders.classes.ClassBuilder;
 import com.github.octavelarose.codegenerator.builders.classes.methods.MethodCallInstructionWriter;
 import com.github.octavelarose.codegenerator.builders.classes.methods.bodies.SimpleMethodBodyCreator;
 import com.github.octavelarose.codegenerator.builders.programs.asm_types.ASMTypeParsingUtils;
-import com.github.octavelarose.codegenerator.builders.programs.filereader.CTFileParser;
+import com.github.octavelarose.codegenerator.builders.programs.calltraces.CTMethodInfo;
+import com.github.octavelarose.codegenerator.builders.programs.fileparsers.ArithmeticOperationsFileParser;
+import com.github.octavelarose.codegenerator.builders.programs.fileparsers.CTFileParser;
 import com.github.octavelarose.codegenerator.builders.utils.RandomUtils;
 
 import java.util.Arrays;
@@ -23,66 +25,70 @@ import java.util.List;
 import java.util.Stack;
 
 import static com.github.octavelarose.codegenerator.builders.BuildConstants.PARAM_NAME_LENGTH;
-import static com.github.octavelarose.codegenerator.builders.programs.filereader.CTFileParser.*;
+import static com.github.octavelarose.codegenerator.builders.programs.calltraces.CTMethodInfo.FULLNAME;
 
 /**
  * CallTrace Parser Program Builder.
  * Generates a program from a calltrace file of a format I defined myself.
  */
 public class CTParserProgramBuilder implements ProgramBuilder {
-    private final String ctFileName;
+    private final List<List<String>> callFileLines;
+    private HashMap<String, List<String>> methodOperations;
 
-    public CTParserProgramBuilder(String ctFileName) {
-        this.ctFileName = ctFileName;
+    public CTParserProgramBuilder(String ctFileName) throws BuildFailedException {
+        System.out.println("Generating a program from the calltrace file: " + ctFileName);
+        this.callFileLines = new CTFileParser(ctFileName).parse().getParsedCT();
+    }
+
+    /**
+     * Provide an optional file describing operations executed by a method.
+     * @param opsFileName The name of the operations file
+     * @throws BuildFailedException If parsing the operations file fails.
+     */
+    public CTParserProgramBuilder setOperationsFileName(String opsFileName) throws BuildFailedException {
+        System.out.println("Optional operations file provided: " + opsFileName);
+        this.methodOperations = new ArithmeticOperationsFileParser(opsFileName).parse().getParsedArithmeticOps();
+        return this;
     }
 
     public HashMap<String, ClassBuilder> build() throws BuildFailedException {
-        System.out.println("Generating a program from the calltrace file: " + this.ctFileName);
-        List<List<String>> fileLines = new CTFileParser(ctFileName).parse().getParsedCT();
-        return buildFromCtLines(fileLines);
-    }
-
-    private HashMap<String, ClassBuilder> buildFromCtLines(List<List<String>> fileLines) throws BuildFailedException {
         HashMap<String, ClassBuilder> classBuilders = new HashMap<>();
         Stack<Pair<ClassBuilder, CallableDeclaration.Signature>> callStack = new Stack<>();
         int idx = 0; // Used for debugging
 
-        for (List<String> methodArr: fileLines) {
+        for (List<String> methodArr: this.callFileLines) {
             idx++;
 
-            // We ignore lambda calls for now. TODO: look into why some are capitalized and some aren't
-            if (methodArr.get(FULLNAME).contains("Lambda") || methodArr.get(FULLNAME).contains("lambda"))
+            CTMethodInfo ctMethodInfo = new CTMethodInfo(methodArr);
+            if (this.methodOperations != null && this.methodOperations.get(ctMethodInfo.get(FULLNAME)) != null)
+                ctMethodInfo.setMethodOperations(this.methodOperations.get(ctMethodInfo.get(FULLNAME)));
+
+            // We ignore lambda calls for now. TODO: look into why some lambda function names are capitalized and some aren't
+            if (ctMethodInfo.isLambda())
                 continue;
 
-            if (!this.isFunctionEntry(methodArr.get(DIRECTION))) {
+            // If it's a method exit, we modify the call stack accordingly, but we don't actually touch the method content.
+            if (!ctMethodInfo.isFunctionEntry()) {
                 callStack.pop();
                 continue;
             }
 
-//            System.out.println(i + " : " + methodArr);
-
-            String[] splitFullName = methodArr.get(FULLNAME).split("\\.");
-            String className = splitFullName[0];
-            String methodName = splitFullName[1];
-
-            // TODO static initializers, defined by <clinit>, are NOT handled so we pretend it's a regular public method
-            if (methodName.equals("<clinit>")) {
-                methodName = "staticInit";
-                methodArr.set(SCOPE, methodArr.get(SCOPE).concat("/pub"));
-            }
+            ctMethodInfo.modifyIfStaticInit();
 
             // so TODO: if it's part of the JDK then we don't create a class builder... or do we? one that wraps a jdk class?
-            ClassBuilder classCb = getOrCreateClassBuilder(classBuilders, className);
+            ClassBuilder classCb = getOrCreateClassBuilder(classBuilders, ctMethodInfo.getClassName());
 
+            // If the method already exists, we don't need to generate it and just modify the call stack.
+            String methodName = ctMethodInfo.getMethodName();
             if (classCb.hasMethod(methodName)) {
                 callStack.push(new Pair<>(classCb, classCb.getMethodFromName(methodName).getSignature()));
                 continue;
             }
 
-            CallableDeclaration<?> methodNode = this.addNewMethodToClassFromCTInfo(methodName, methodArr, classCb);
+            CallableDeclaration<?> methodNode = this.addNewMethodToClassFromCTInfo(ctMethodInfo, classCb);
 
             if (callStack.empty()) {
-                System.out.println("Entry point: " + methodArr.get(FULLNAME));
+                System.out.println("Entry point: " + ctMethodInfo.get(FULLNAME));
             } else {
                 MethodCallInstructionWriter mciw = new MethodCallInstructionWriter()
                         .setCaller(callStack.lastElement().a, callStack.lastElement().b)
@@ -94,14 +100,6 @@ public class CTParserProgramBuilder implements ProgramBuilder {
         }
 
         return classBuilders;
-    }
-
-    /**
-     * @param dirStr The string defining the method entry/exit.
-     * @return true if it represents a function entry, false otherwise.
-     */
-    private boolean isFunctionEntry(String dirStr) {
-        return dirStr.equals(BuildConstants.ENTRY_STR);
     }
 
     /**
@@ -121,8 +119,6 @@ public class CTParserProgramBuilder implements ProgramBuilder {
             else {
                 List<String> splitClassPath = Arrays.asList(className.split("/"));
                 String pkgPath = String.join(".", splitClassPath.subList(0, splitClassPath.size() - 1));
-//                System.out.println(splitClassPath.get(splitClassPath.size() - 1));
-//                System.out.println(pkgPath);
                 classCb = new BasicClassBuilder(splitClassPath.get(splitClassPath.size() - 1), 0, 0, pkgPath);
             }
             classBuilders.put(className, classCb);
@@ -134,25 +130,23 @@ public class CTParserProgramBuilder implements ProgramBuilder {
 
     /**
      * Adds a new method to a class, setting adequate parameters beforehand.
-     * @param methodName The name of the method.
-     * @param methodArr Info about the method in general.
+     * @param ctMethodInfo The class wrapping the CT call info / method info.
      * @param classCb The class(builder) to which it needs to be added.
      */
-    private CallableDeclaration<?> addNewMethodToClassFromCTInfo(String methodName,
-                                                                 List<String> methodArr,
+    private CallableDeclaration<?> addNewMethodToClassFromCTInfo(CTMethodInfo ctMethodInfo,
                                                                  ClassBuilder classCb) throws BuildFailedException {
-        NodeList<Modifier> modifiers = this.getModifiersListFromScope(methodArr.get(SCOPE));
+        String paramsStr = ctMethodInfo.getParamsStr();
+        Type returnType = ASMTypeParsingUtils.getTypeFromStr(ctMethodInfo.getReturnTypeStr());
+        NodeList<Modifier> modifiers = ctMethodInfo.getScopeModifiersList();
 
-        String descriptor = methodArr.get(DESCRIPTOR);
-        String[] splitDescriptor = descriptor.split("\\)");
-        String paramsStr = splitDescriptor[0].substring(1);
+        SimpleMethodBodyCreator smbc = new SimpleMethodBodyCreator()
+                                .addDefaultStatements(ctMethodInfo.get(FULLNAME))
+                                .addReturnStatement(returnType);
 
-        Type returnType = ASMTypeParsingUtils.getTypeFromStr(splitDescriptor[1]);
+        if (ctMethodInfo.hasMethodOperations())
+            smbc.processOperationStatements(ctMethodInfo.getMethodOperations());
 
-        BlockStmt methodBody = new SimpleMethodBodyCreator()
-                                .addDefaultStatements(methodArr.get(FULLNAME))
-                                .addReturnStatement(returnType)
-                                .getMethodBody();
+        BlockStmt methodBody = smbc.getMethodBody();
 
         NodeList<Parameter> parameters = new NodeList<>();
 
@@ -162,33 +156,9 @@ public class CTParserProgramBuilder implements ProgramBuilder {
             parameters.add(new Parameter(paramType, paramName));
         }
 
-        if (methodName.equals(BuildConstants.CONSTRUCTOR_NAME))
+        if (ctMethodInfo.getMethodName().equals(BuildConstants.CONSTRUCTOR_NAME))
             return classCb.addConstructor(parameters, methodBody, modifiers);
         else
-            return classCb.addMethod(methodName, returnType, parameters, methodBody, modifiers);
-    }
-
-    /**
-     * Returns modifiers given a string defining a scope.
-     * Needs a definition of the syntax I use somewhere, since it's my own standard.
-     * @param scope A string defining the method's scope (public, private...).
-     * @return a NodeList of Modifier objects, corresponding to the input scope
-     */
-    private NodeList<Modifier> getModifiersListFromScope(String scope) {
-        NodeList<Modifier> modifiers = new NodeList<>();
-        String[] splitScope = scope.split("/");
-
-        for (String modStr: splitScope) {
-            if (modStr.equals("pub"))
-                modifiers.add(Modifier.publicModifier());
-            if (modStr.equals("pri"))
-                modifiers.add(Modifier.privateModifier());
-            if (modStr.equals("pro"))
-                modifiers.add(Modifier.protectedModifier());
-            if (modStr.equals("sta"))
-                modifiers.add(Modifier.staticModifier());
-        }
-
-        return modifiers;
+            return classCb.addMethod(ctMethodInfo.getMethodName(), returnType, parameters, methodBody, modifiers);
     }
 }
