@@ -140,8 +140,7 @@ public class CTParserProgramBuilder implements ProgramBuilder {
         NodeList<Modifier> modifiers = ctMethodInfo.getScopeModifiersList();
 
         SimpleMethodBodyCreator smbc = new SimpleMethodBodyCreator()
-                                .addDefaultStatements(ctMethodInfo.get(FULLNAME))
-                                .addReturnStatement(returnType);
+                                .addDefaultStatements(ctMethodInfo.get(FULLNAME));
 
         NodeList<Parameter> parameters = new NodeList<>();
 
@@ -154,6 +153,9 @@ public class CTParserProgramBuilder implements ProgramBuilder {
         if (ctMethodInfo.hasMethodOperations()) {
             smbc.setMethodParameters(parameters);
             smbc.processOperationStatements(ctMethodInfo.getMethodOperations());
+            smbc.addReturnStatementFromLocalVar(returnType);
+        } else {
+            smbc.addRandomReturnStatement(returnType);
         }
 
         BlockStmt methodBody = smbc.getMethodBody();

@@ -2,7 +2,6 @@ package com.github.octavelarose.codegenerator.builders.classes.methods.bodies;
 
 import com.github.javaparser.ast.expr.NameExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
-import com.github.javaparser.ast.type.Type;
 
 /**
  * Creates a simple method body, with default statements inside and which returns the BlockStmt object directly.
@@ -13,13 +12,6 @@ public class SimpleMethodBodyCreator extends MethodBodyEditor {
      */
     public BlockStmt getMethodBody() {
         return this.generateMethodBody();
-    }
-
-    // TODO try implementing it using generics. ("public class SimpleMethodBodyCreator extends MethodBodyEditor<SimpleMethodBodyCreator>")
-    // Right now, code duplication because can't chain methods that return this because of inheritance, so this is a hack
-    public SimpleMethodBodyCreator addReturnStatement(Type returnType) {
-        super.addReturnStatement(returnType);
-        return this;
     }
 
     /**

@@ -73,14 +73,49 @@ public abstract class MethodBodyEditor {
     }
 
     /**
-     * Adds a return statement to the end of a method, unless the type fed is void in which case none is necessary.
+     * Adds a return statement.
+     * @param returnStmt A return statement object.
+     * @return A this instance.
+     */
+    public MethodBodyEditor addReturnStatement(ReturnStmt returnStmt) {
+        this.returnStmtBlock.addStatement(returnStmt);
+        return this;
+    }
+
+    /**
+     * Adds a random return statement of a given type, unless the type fed is void in which case none is necessary.
      * @param returnType The return type of the method.
      * @return A this instance.
      */
-    public MethodBodyEditor addReturnStatement(Type returnType) {
+    public MethodBodyEditor addRandomReturnStatement(Type returnType) {
         if (!returnType.isVoidType())
             this.returnStmtBlock.addStatement(new ReturnStmt(DummyValueCreator.getDummyParamValueFromType(returnType)));
         return this;
+    }
+
+    /**
+     * Adds a return statement of a given type, making sure a local variable is returned.
+     * If none are eligible, then a random value is returned instead.
+     * @param returnType The return type of the method.
+     * @return A this instance.
+     */
+    public MethodBodyEditor addReturnStatementFromLocalVar(Type returnType) {
+        Optional<VariableDeclarator> localVar = this.getLocalVarOrParamOfType(returnType);
+
+        if (localVar.isPresent())
+            this.addReturnStatement(new ReturnStmt(new NameExpr(localVar.get().getName())));
+        else
+            this.addRandomReturnStatement(returnType);
+
+        return this;
+    }
+
+    /**
+     * Sets the method's parameters. Need to be used by operations, ideally
+     * @param methodParameters The method parameters
+     */
+    public void setMethodParameters(NodeList<Parameter> methodParameters) {
+        this.methodParameters = methodParameters;
     }
 
     /**
@@ -92,7 +127,7 @@ public abstract class MethodBodyEditor {
             Type opType = ASMBytecodeParsingUtils.getTypeFromBytecodePrefix(opStr.charAt(0));
             AssignExpr.Operator operator = ASMBytecodeParsingUtils.getAssignOperatorFromBytecodeStr(opStr.substring(1));
 
-            Optional<String> localVarName = this.getLocalVarOrParamNameOfType(opType);
+            Optional<VariableDeclarator> localVarName = this.getLocalVarOrParamOfType(opType);
 
             if (localVarName.isEmpty()) {
                 this.addVarInsnStatement(new VariableDeclarationExpr(
@@ -101,7 +136,7 @@ public abstract class MethodBodyEditor {
                 );
             } else {
                 this.addRegularStatement(new AssignExpr(
-                        new NameExpr(localVarName.get()),
+                        new NameExpr(localVarName.get().getName()),
                         new NameExpr(DummyValueCreator.getDummyParamValueFromType(opType)),
                         operator));
             }
@@ -112,26 +147,18 @@ public abstract class MethodBodyEditor {
      * @param wantedType The type of the variable being queried
      * @return The name of a local variable / parameter of that given type
      */
-    protected Optional<String> getLocalVarOrParamNameOfType(Type wantedType) {
+    protected Optional<VariableDeclarator> getLocalVarOrParamOfType(Type wantedType) {
         for (Parameter param: this.methodParameters) {
             if (param.getType().equals(wantedType))
-                return Optional.of(param.getName().asString());
+                return Optional.of(new VariableDeclarator(param.getType(), param.getName()));
         }
 
         for (Statement stmt: this.varsInsnBlock.getStatements()) {
             VariableDeclarationExpr expr = stmt.asExpressionStmt().getExpression().asVariableDeclarationExpr();
             if (expr.getVariable(0).getType().equals(wantedType))
-                return Optional.of(expr.getVariable(0).getName().asString());
+                return Optional.of(expr.getVariable(0));
         }
 
         return Optional.empty();
-    }
-
-    /**
-     * Sets the method's parameters. Need to be used by operations, ideally
-     * @param methodParameters The method parameters
-     */
-    public void setMethodParameters(NodeList<Parameter> methodParameters) {
-        this.methodParameters = methodParameters;
     }
 }
