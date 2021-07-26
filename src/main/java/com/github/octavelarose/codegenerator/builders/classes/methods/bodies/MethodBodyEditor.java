@@ -8,6 +8,7 @@ import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.NameExpr;
 import com.github.javaparser.ast.expr.VariableDeclarationExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
+import com.github.javaparser.ast.stmt.ExpressionStmt;
 import com.github.javaparser.ast.stmt.ReturnStmt;
 import com.github.javaparser.ast.stmt.Statement;
 import com.github.javaparser.ast.type.Type;
@@ -54,11 +55,11 @@ public abstract class MethodBodyEditor {
 
     /**
      * Adds a variable instantiation statement.
-     * @param expr The variable instantiation statement/expression. TODO make statement
+     * @param exprStmt The variable instantiation statement.
      * @return A this instance.
      */
-    public MethodBodyEditor addVarInsnStatement(Expression expr) {
-        this.varsInsnBlock.addStatement(expr);
+    public MethodBodyEditor addVarInsnStatement(ExpressionStmt exprStmt) {
+        this.varsInsnBlock.addStatement(exprStmt);
         return this;
     }
 
@@ -130,15 +131,17 @@ public abstract class MethodBodyEditor {
             Optional<VariableDeclarator> localVarName = this.getLocalVarOrParamOfType(opType);
 
             if (localVarName.isEmpty()) {
-                this.addVarInsnStatement(new VariableDeclarationExpr(
-                        new VariableDeclarator(opType, RandomUtils.generateRandomName(5),
+                this.addVarInsnStatement(new ExpressionStmt(
+                        new VariableDeclarationExpr(
+                            new VariableDeclarator(opType, RandomUtils.generateRandomName(5),
                                 new NameExpr(DummyValueCreator.getDummyParamValueFromType(opType))))
-                );
+                ));
             } else {
                 this.addRegularStatement(new AssignExpr(
                         new NameExpr(localVarName.get().getName()),
                         new NameExpr(DummyValueCreator.getDummyParamValueFromType(opType)),
-                        operator));
+                        operator)
+                );
             }
         }
     }

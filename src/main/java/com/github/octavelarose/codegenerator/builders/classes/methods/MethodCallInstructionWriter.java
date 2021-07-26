@@ -7,6 +7,7 @@ import com.github.javaparser.ast.body.CallableDeclaration;
 import com.github.javaparser.ast.body.ConstructorDeclaration;
 import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.expr.*;
+import com.github.javaparser.ast.stmt.ExpressionStmt;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.octavelarose.codegenerator.builders.BuildFailedException;
 import com.github.octavelarose.codegenerator.builders.classes.ClassBuilder;
@@ -180,14 +181,11 @@ public class MethodCallInstructionWriter {
             throw new BuildFailedException(e.getMessage());
         }
 
-//        System.out.println(calleeClass.getImportStr());
         callerClass.addImport(calleeClass.getImportStr());
-        cmbc.addVarInsnStatement(new VariableDeclarationExpr(
+        cmbc.addVarInsnStatement(new ExpressionStmt(new VariableDeclarationExpr(
                         new VariableDeclarator(classWithName, calleeClass.getName().toLowerCase(),
                                 new ObjectCreationExpr().setType(classWithName).setArguments(dummyParamVals))
-                )
+                ))
         );
-
-//        System.out.println(methodBody);
     }
 }
