@@ -143,11 +143,6 @@ public class CTParserProgramBuilder implements ProgramBuilder {
                                 .addDefaultStatements(ctMethodInfo.get(FULLNAME))
                                 .addReturnStatement(returnType);
 
-        if (ctMethodInfo.hasMethodOperations())
-            smbc.processOperationStatements(ctMethodInfo.getMethodOperations());
-
-        BlockStmt methodBody = smbc.getMethodBody();
-
         NodeList<Parameter> parameters = new NodeList<>();
 
         for (Type paramType: ASMTypeParsingUtils.getTypesFromParametersStr(paramsStr)) {
@@ -155,6 +150,13 @@ public class CTParserProgramBuilder implements ProgramBuilder {
             String paramName = RandomUtils.generateRandomName(PARAM_NAME_LENGTH);
             parameters.add(new Parameter(paramType, paramName));
         }
+
+        if (ctMethodInfo.hasMethodOperations()) {
+            smbc.setMethodParameters(parameters);
+            smbc.processOperationStatements(ctMethodInfo.getMethodOperations());
+        }
+
+        BlockStmt methodBody = smbc.getMethodBody();
 
         if (ctMethodInfo.getMethodName().equals(BuildConstants.CONSTRUCTOR_NAME))
             return classCb.addConstructor(parameters, methodBody, modifiers);

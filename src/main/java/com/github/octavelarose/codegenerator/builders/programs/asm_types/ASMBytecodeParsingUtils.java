@@ -1,5 +1,6 @@
 package com.github.octavelarose.codegenerator.builders.programs.asm_types;
 
+import com.github.javaparser.ast.expr.AssignExpr;
 import com.github.javaparser.ast.expr.BinaryExpr;
 import com.github.javaparser.ast.type.PrimitiveType;
 import com.github.javaparser.ast.type.Type;
@@ -49,6 +50,30 @@ public class ASMBytecodeParsingUtils {
                 return BinaryExpr.Operator.MULTIPLY;
             case "DIV":
                 return BinaryExpr.Operator.DIVIDE;
+            default:
+                throw new ASMParsingException("Invalid operator str");
+        }
+    }
+
+    /**
+     * Returns an operator given an input corresponding to a bytecode operation (ADD, SUB, MUL, DIV)
+     * The operator is an assignment operator, so "+=", "/=" and others.
+     * Too similar to getOperatorFromBytecodeStr() for my taste.
+     * @param bcStr The string describing the bytecode operation
+     * @return An operator object corresponding to the input
+     * @throws ASMParsingException If the input string is invalid
+     */
+    public static AssignExpr.Operator getAssignOperatorFromBytecodeStr(String bcStr) throws ASMParsingException {
+        // Only arithmetic operations so far
+        switch (bcStr) {
+            case "ADD":
+                return AssignExpr.Operator.PLUS;
+            case "SUB":
+                return AssignExpr.Operator.MINUS;
+            case "MUL":
+                return AssignExpr.Operator.MULTIPLY;
+            case "DIV":
+                return AssignExpr.Operator.DIVIDE;
             default:
                 throw new ASMParsingException("Invalid operator str");
         }
