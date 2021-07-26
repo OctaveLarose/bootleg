@@ -17,6 +17,7 @@ import com.github.octavelarose.codegenerator.builders.programs.asm_types.ASMByte
 import com.github.octavelarose.codegenerator.builders.utils.RandomUtils;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Creates and manages a method body, i.e a BlockStmt object.
@@ -84,36 +85,46 @@ public abstract class MethodBodyEditor {
 
     /**
      * Processes a list of arithmetic operations (ADD, SUB, etc...) and adds them to the method body.
-     * @param methodOps The operations list
+     * @param methodOps The operations list (ex: ["IADD", "DSUB", "DDIV", ...])
      */
     public void processOperationStatements(List<String> methodOps) throws BuildFailedException {
         for (String opStr: methodOps) {
             Type opType = ASMBytecodeParsingUtils.getTypeFromBytecodePrefix(opStr.charAt(0));
             AssignExpr.Operator operator = ASMBytecodeParsingUtils.getAssignOperatorFromBytecodeStr(opStr.substring(1));
 
-            VariableDeclarator localVar = this.getLocalVarOfType(opType);
+            Optional<String> localVarName = this.getLocalVarOrParamNameOfType(opType);
 
-            if (localVar == null) {
+            if (localVarName.isEmpty()) {
                 this.addVarInsnStatement(new VariableDeclarationExpr(
                         new VariableDeclarator(opType, RandomUtils.generateRandomName(5),
                                 new NameExpr(DummyValueCreator.getDummyParamValueFromType(opType))))
                 );
             } else {
                 this.addRegularStatement(new AssignExpr(
-                        new NameExpr(localVar.getName()),
+                        new NameExpr(localVarName.get()),
                         new NameExpr(DummyValueCreator.getDummyParamValueFromType(opType)),
                         operator));
             }
         }
     }
 
-    protected VariableDeclarator getLocalVarOfType(Type opType) {
-        for (Statement insn: this.varsInsnBlock.getStatements()) {
-            VariableDeclarationExpr expr = (VariableDeclarationExpr) insn.asExpressionStmt().getExpression();
-            if (expr.getVariable(0).getType().equals(opType))
-                return expr.getVariable(0);
+    /**
+     * @param wantedType The type of the variable being queried
+     * @return The name of a local variable / parameter of that given type
+     */
+    protected Optional<String> getLocalVarOrParamNameOfType(Type wantedType) {
+        for (Parameter param: this.methodParameters) {
+            if (param.getType().equals(wantedType))
+                return Optional.of(param.getName().asString());
         }
-        return null;
+
+        for (Statement stmt: this.varsInsnBlock.getStatements()) {
+            VariableDeclarationExpr expr = stmt.asExpressionStmt().getExpression().asVariableDeclarationExpr();
+            if (expr.getVariable(0).getType().equals(wantedType))
+                return Optional.of(expr.getVariable(0).getName().asString());
+        }
+
+        return Optional.empty();
     }
 
     /**
