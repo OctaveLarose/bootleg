@@ -4,7 +4,6 @@ import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.expr.AssignExpr;
-import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.NameExpr;
 import com.github.javaparser.ast.expr.VariableDeclarationExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
@@ -68,7 +67,7 @@ public abstract class MethodBodyEditor {
      * @param expr The regular operation statement/expression. TODO make statement
      * @return A this instance.
      */
-    public MethodBodyEditor addRegularStatement(Expression expr) {
+    public MethodBodyEditor addRegularStatement(Statement expr) {
         this.regularInstrsBlock.addStatement(expr);
         return this;
     }
@@ -137,11 +136,12 @@ public abstract class MethodBodyEditor {
                                 new NameExpr(DummyValueCreator.getDummyParamValueFromType(opType))))
                 ));
             } else {
-                this.addRegularStatement(new AssignExpr(
-                        new NameExpr(localVarName.get().getName()),
-                        new NameExpr(DummyValueCreator.getDummyParamValueFromType(opType)),
-                        operator)
-                );
+                this.addRegularStatement(new ExpressionStmt(
+                        new AssignExpr(
+                            new NameExpr(localVarName.get().getName()),
+                            new NameExpr(DummyValueCreator.getDummyParamValueFromType(opType)),
+                            operator)
+                ));
             }
         }
     }

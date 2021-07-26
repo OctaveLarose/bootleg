@@ -145,7 +145,9 @@ public class MethodCallInstructionWriter {
         Expression callerExpr = (isCalleeMethodStatic == IsCalleeMethodStatic.NO)
                 ? new NameExpr(calleeClass.getName().toLowerCase()) : new NameExpr(calleeClass.getName());
 
-        cmbc.addRegularStatement(new MethodCallExpr(callerExpr, calleeMethod.getName(), dummyParamVals));
+        cmbc.addRegularStatement(new ExpressionStmt(
+                new MethodCallExpr(callerExpr, calleeMethod.getName(), dummyParamVals))
+        );
     }
 
     /**
@@ -159,7 +161,9 @@ public class MethodCallInstructionWriter {
         Expression callerExpr = (isCalleeMethodStatic == IsCalleeMethodStatic.NO)
                 ? new ThisExpr() : new NameExpr(calleeClass.getName());
 
-        cmbc.addRegularStatement(new MethodCallExpr(callerExpr, calleeMethod.getName(), dummyParamVals));
+        cmbc.addRegularStatement(new ExpressionStmt(
+                new MethodCallExpr(callerExpr, calleeMethod.getName(), dummyParamVals))
+        );
     }
 
     /**
