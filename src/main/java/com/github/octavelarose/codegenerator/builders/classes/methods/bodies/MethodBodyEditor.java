@@ -12,7 +12,7 @@ import com.github.javaparser.ast.stmt.Statement;
 import com.github.javaparser.ast.type.Type;
 import com.github.octavelarose.codegenerator.builders.BuildFailedException;
 import com.github.octavelarose.codegenerator.builders.classes.methods.DummyValueCreator;
-import com.github.octavelarose.codegenerator.builders.programs.asm_types.ASMTypeParsingUtils;
+import com.github.octavelarose.codegenerator.builders.programs.asm_types.ASMBytecodeParsingUtils;
 import com.github.octavelarose.codegenerator.builders.utils.RandomUtils;
 
 import java.util.List;
@@ -85,8 +85,8 @@ public abstract class MethodBodyEditor {
      */
     public void processOperationStatements(List<String> methodOps) throws BuildFailedException {
         for (String opStr: methodOps) {
-            Type opType = ASMTypeParsingUtils.getTypeFromBytecodePrefix(opStr.charAt(0));
-            BinaryExpr.Operator operator = ASMTypeParsingUtils.getOperatorFromBytecodeStr(opStr.substring(1));
+            Type opType = ASMBytecodeParsingUtils.getTypeFromBytecodePrefix(opStr.charAt(0));
+            BinaryExpr.Operator operator = ASMBytecodeParsingUtils.getOperatorFromBytecodeStr(opStr.substring(1));
 
             this.addVarInsnStatement(new VariableDeclarationExpr(
                     new VariableDeclarator(opType, RandomUtils.generateRandomName(5),
