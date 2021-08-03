@@ -55,59 +55,48 @@ public abstract class MethodBodyEditor {
     /**
      * Adds a variable instantiation statement.
      * @param exprStmt The variable instantiation statement.
-     * @return A this instance.
      */
-    public MethodBodyEditor addVarInsnStatement(ExpressionStmt exprStmt) {
-        this.varsInsnBlock.addStatement(exprStmt);
-        return this;
+    public void addVarInsnStatement(ExpressionStmt exprStmt) {
+        this.varsInsnBlock.addStatement(0, exprStmt);
     }
 
     /**
      * Adds a regular operation statement.
      * @param expr The regular operation statement/expression. TODO make statement
-     * @return A this instance.
      */
-    public MethodBodyEditor addRegularStatement(Statement expr) {
+    public void addRegularStatement(Statement expr) {
         this.regularInstrsBlock.addStatement(expr);
-        return this;
     }
 
     /**
      * Adds a return statement.
      * @param returnStmt A return statement object.
-     * @return A this instance.
      */
-    public MethodBodyEditor addReturnStatement(ReturnStmt returnStmt) {
+    public void addReturnStatement(ReturnStmt returnStmt) {
         this.returnStmtBlock.addStatement(returnStmt);
-        return this;
     }
 
     /**
      * Adds a random return statement of a given type, unless the type fed is void in which case none is necessary.
      * @param returnType The return type of the method.
-     * @return A this instance.
      */
-    public MethodBodyEditor addRandomReturnStatement(Type returnType) {
+    public void addRandomReturnStatement(Type returnType) {
         if (!returnType.isVoidType())
             this.returnStmtBlock.addStatement(new ReturnStmt(DummyValueCreator.getDummyParamValueFromType(returnType)));
-        return this;
     }
 
     /**
      * Adds a return statement of a given type, making sure a local variable is returned.
      * If none are eligible, then a random value is returned instead.
      * @param returnType The return type of the method.
-     * @return A this instance.
      */
-    public MethodBodyEditor addReturnStatementFromLocalVar(Type returnType) {
+    public void addReturnStatementFromLocalVar(Type returnType) {
         Optional<VariableDeclarator> localVar = this.getLocalVarOrParamOfType(returnType);
 
         if (localVar.isPresent())
             this.addReturnStatement(new ReturnStmt(new NameExpr(localVar.get().getName())));
         else
             this.addRandomReturnStatement(returnType);
-
-        return this;
     }
 
     /**

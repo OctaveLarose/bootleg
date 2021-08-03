@@ -4,12 +4,15 @@ import com.github.javaparser.ast.body.CallableDeclaration;
 import com.github.javaparser.ast.body.ConstructorDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.VariableDeclarator;
+import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.VariableDeclarationExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.ExpressionStmt;
 import com.github.javaparser.ast.stmt.ReturnStmt;
 import com.github.javaparser.ast.stmt.Statement;
+import com.github.javaparser.ast.type.Type;
 import com.github.octavelarose.codegenerator.builders.BuildFailedException;
+import com.github.octavelarose.codegenerator.builders.utils.RandomUtils;
 
 public class CallableMethodBodyEditor extends MethodBodyEditor {
     private final CallableDeclaration<?> method;
@@ -93,5 +96,22 @@ public class CallableMethodBodyEditor extends MethodBodyEditor {
             ((MethodDeclaration) this.method).setBody(this.generateMethodBody());
         else
             throw new BuildFailedException("Couldn't set method body, as this is neither a classic method nor a constructor");
+    }
+
+
+    /**
+     * Generates a new statement from a method call, either a regular statement (if void is returned), or a var. instantiation statement otherwise
+     * @param methodCallExpr The call to the method
+     * @param returnType The return type of the method
+     */
+    public void addMethodCallToLocalVar(MethodCallExpr methodCallExpr, Type returnType) {
+        if (returnType.isVoidType()) {
+            this.addRegularStatement(new ExpressionStmt(methodCallExpr));
+        } else {
+            this.addVarInsnStatement(new ExpressionStmt(new VariableDeclarationExpr(
+                    new VariableDeclarator(returnType, RandomUtils.generateRandomName(5),
+                            methodCallExpr))
+            ));
+        }
     }
 }

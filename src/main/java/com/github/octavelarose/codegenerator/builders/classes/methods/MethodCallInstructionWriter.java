@@ -5,6 +5,7 @@ import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.CallableDeclaration;
 import com.github.javaparser.ast.body.ConstructorDeclaration;
+import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.expr.*;
 import com.github.javaparser.ast.stmt.ExpressionStmt;
@@ -145,8 +146,9 @@ public class MethodCallInstructionWriter {
         Expression callerExpr = (isCalleeMethodStatic == IsCalleeMethodStatic.NO)
                 ? new NameExpr(calleeClass.getName().toLowerCase()) : new NameExpr(calleeClass.getName());
 
-        cmbc.addRegularStatement(new ExpressionStmt(
-                new MethodCallExpr(callerExpr, calleeMethod.getName(), dummyParamVals))
+        cmbc.addMethodCallToLocalVar(
+                new MethodCallExpr(callerExpr, calleeMethod.getName(), dummyParamVals),
+                ((MethodDeclaration)calleeMethod).getType()
         );
     }
 
@@ -161,8 +163,9 @@ public class MethodCallInstructionWriter {
         Expression callerExpr = (isCalleeMethodStatic == IsCalleeMethodStatic.NO)
                 ? new ThisExpr() : new NameExpr(calleeClass.getName());
 
-        cmbc.addRegularStatement(new ExpressionStmt(
-                new MethodCallExpr(callerExpr, calleeMethod.getName(), dummyParamVals))
+        cmbc.addMethodCallToLocalVar(
+                new MethodCallExpr(callerExpr, calleeMethod.getName(), dummyParamVals),
+                ((MethodDeclaration)calleeMethod).getType()
         );
     }
 
