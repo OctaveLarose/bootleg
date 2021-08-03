@@ -41,6 +41,7 @@ public class DummyValueCreator {
      */
     private static String getDummyParamValueFromTypeStr(String typeStr) {
         // JP can parse a NameExpr which is fed this, but it'd be better if we made it return a VariableDeclarationExpr
+        // Or a IntegerLiteralExpr / StringLiteralExpr / anything
         if (typeStr.endsWith("[]"))
             return "new " + typeStr.substring(0, typeStr.length() - 2) + "[]{}";
 

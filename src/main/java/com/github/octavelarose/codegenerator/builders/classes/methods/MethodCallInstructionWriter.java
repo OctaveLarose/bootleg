@@ -176,9 +176,6 @@ public class MethodCallInstructionWriter {
                                                NodeList<Expression> dummyParamVals) throws BuildFailedException {
         ClassOrInterfaceType classWithName;
 
-//        System.out.println(callerClass.getName() + ":" + callerMethod.getName() + " ; "
-//                + calleeClass.getName() + ":" + calleeMethod.getName());
-
         try {
             classWithName = JPTypeUtils.getClassTypeFromName(calleeClass.getName().replace("/", "."));
         } catch (ParseException e) {
