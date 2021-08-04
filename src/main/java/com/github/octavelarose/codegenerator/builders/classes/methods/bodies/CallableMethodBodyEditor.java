@@ -10,6 +10,7 @@ import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.ExpressionStmt;
 import com.github.javaparser.ast.stmt.ReturnStmt;
 import com.github.javaparser.ast.stmt.Statement;
+import com.github.octavelarose.codegenerator.builders.BuildConstants;
 import com.github.octavelarose.codegenerator.builders.BuildFailedException;
 import com.github.octavelarose.codegenerator.builders.classes.methods.DummyValueCreator;
 import com.github.octavelarose.codegenerator.builders.classes.methods.MethodCallInstructionWriter.IsCalleeMethodStatic;
@@ -129,12 +130,9 @@ public class CallableMethodBodyEditor extends MethodBodyEditor {
             return;
         }
 
-        String varName = RandomUtils.generateRandomName(5);
-        if (isCalleeMethodStatic == IsCalleeMethodStatic.NO && !calleeClassName.equals(this.className))
-            varName = calleeClassName.toLowerCase();
-
         this.addVarInsnStatement(new ExpressionStmt(new VariableDeclarationExpr(
-                new VariableDeclarator(method.getType(), varName,
+                new VariableDeclarator(method.getType(),
+                        RandomUtils.generateRandomName(BuildConstants.LOCAL_VAR_NAME_LENGTH),
                         methodCallExpr))
         ));
     }

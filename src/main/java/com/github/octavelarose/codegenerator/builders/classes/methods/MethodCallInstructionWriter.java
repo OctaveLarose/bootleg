@@ -135,41 +135,6 @@ public class MethodCallInstructionWriter {
             throw new BuildFailedException("Invalid caller or callee method.");
     }
 
-//    /**
-//     * Adds a call to a method from another class to the given method body.
-//     * @param cmbc The body of the method to be appended.
-//     * @param dummyParamVals Dummy values for the method parameters.
-//     */
-//    private void addForeignMethodCall(CallableMethodBodyEditor cmbc,
-//                                      NodeList<Expression> dummyParamVals,
-//                                      IsCalleeMethodStatic isCalleeMethodStatic) {
-//        Expression callerExpr = (isCalleeMethodStatic == IsCalleeMethodStatic.NO)
-//                ? new NameExpr(calleeClass.getName().toLowerCase()) : new NameExpr(calleeClass.getName());
-//
-//        cmbc.addMethodCallToLocalVar(
-//                new MethodCallExpr(callerExpr, calleeMethod.getName(), dummyParamVals),
-//                ((MethodDeclaration)calleeMethod).getType()
-//        );
-//    }
-//
-//    /**
-//     * Add a call to a method in the same class, so with a "this.(...)" statement.
-//     * @param cmbc The body of the method to be appended.
-//     * @param dummyParamVals Dummy values for the method parameters.
-//     */
-//    private void addLocalMethodCall(CallableMethodBodyEditor cmbc,
-//                                    NodeList<Expression> dummyParamVals,
-//                                    IsCalleeMethodStatic isCalleeMethodStatic) {
-//        Expression callerExpr = (isCalleeMethodStatic == IsCalleeMethodStatic.NO)
-//                ? new ThisExpr() : new NameExpr(calleeClass.getName());
-//
-//        cmbc.addMethodCallToLocalVar(
-//                new MethodCallExpr(callerExpr, calleeMethod.getName(), dummyParamVals),
-//                ((MethodDeclaration)calleeMethod).getType()
-//        );
-////        cmbc.addMethodCallToLocalVar(((MethodDeclaration)calleeMethod).getType(), &calleeMethod.getName(), dummyParamVals);
-//    }
-
     /**
      * Adds a call to a constructor, i.e instantiates the callee class and puts it in a new local variable.
      * @param cmbc The body of the method to be appended.

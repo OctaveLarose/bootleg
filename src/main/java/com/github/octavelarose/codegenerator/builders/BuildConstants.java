@@ -15,4 +15,7 @@ public class BuildConstants {
 
     // The length of method parameter names.
     public static int PARAM_NAME_LENGTH = 5;
+
+    // The length of local variable names.
+    public static final int LOCAL_VAR_NAME_LENGTH = 5;
 }

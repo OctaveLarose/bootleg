@@ -140,9 +140,11 @@ public abstract class MethodBodyEditor {
      * @return The name of a local variable / parameter of that given type
      */
     protected Optional<VariableDeclarator> getLocalVarOrParamOfType(Type wantedType) {
-        for (Parameter param: this.methodParameters) {
-            if (param.getType().equals(wantedType))
-                return Optional.of(new VariableDeclarator(param.getType(), param.getName()));
+        if (this.methodParameters != null && this.methodParameters.isNonEmpty()) {
+            for (Parameter param : this.methodParameters) {
+                if (param.getType().equals(wantedType))
+                    return Optional.of(new VariableDeclarator(param.getType(), param.getName()));
+            }
         }
 
         for (Statement stmt: this.varsInsnBlock.getStatements()) {
