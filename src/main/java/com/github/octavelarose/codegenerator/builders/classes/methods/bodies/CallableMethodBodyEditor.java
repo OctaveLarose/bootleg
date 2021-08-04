@@ -1,30 +1,33 @@
 package com.github.octavelarose.codegenerator.builders.classes.methods.bodies;
 
+import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.CallableDeclaration;
 import com.github.javaparser.ast.body.ConstructorDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.VariableDeclarator;
-import com.github.javaparser.ast.expr.MethodCallExpr;
-import com.github.javaparser.ast.expr.VariableDeclarationExpr;
+import com.github.javaparser.ast.expr.*;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.ExpressionStmt;
 import com.github.javaparser.ast.stmt.ReturnStmt;
 import com.github.javaparser.ast.stmt.Statement;
-import com.github.javaparser.ast.type.Type;
 import com.github.octavelarose.codegenerator.builders.BuildFailedException;
+import com.github.octavelarose.codegenerator.builders.classes.methods.DummyValueCreator;
+import com.github.octavelarose.codegenerator.builders.classes.methods.MethodCallInstructionWriter.IsCalleeMethodStatic;
 import com.github.octavelarose.codegenerator.builders.utils.RandomUtils;
 
 public class CallableMethodBodyEditor extends MethodBodyEditor {
     private final CallableDeclaration<?> method;
+    private final String className;
 
     /**
      * A constructor that takes in a method object.
      * @param method The method object to get the existing method body from.
      */
-    public CallableMethodBodyEditor(CallableDeclaration<?> method) throws BuildFailedException {
+    public CallableMethodBodyEditor(CallableDeclaration<?> method, String className) throws BuildFailedException {
         BlockStmt methodBody = this.getMethodBodyOfCallable(method);
 
         this.method = method;
+        this.className = className;
 
         // Not very good, what if there's a return statement in the middle of the function?
         // Will do the job fine so far since we're assuming all methods will have this distinct var insn/calculations/return statement structure
@@ -98,20 +101,41 @@ public class CallableMethodBodyEditor extends MethodBodyEditor {
             throw new BuildFailedException("Couldn't set method body, as this is neither a classic method nor a constructor");
     }
 
-
     /**
-     * Generates a new statement from a method call, either a regular statement (if void is returned), or a var. instantiation statement otherwise
-     * @param methodCallExpr The call to the method
-     * @param returnType The return type of the method
+     * Generates a new statement from a method call, a var. instantiation statement or a regular statement if void is returned
+     * @param method A method instance
+     * @param calleeClassName The name of the class the method belongs to
+     * @param isCalleeMethodStatic Whether or not the method is static
      */
-    public void addMethodCallToLocalVar(MethodCallExpr methodCallExpr, Type returnType) {
-        if (returnType.isVoidType()) {
-            this.addRegularStatement(new ExpressionStmt(methodCallExpr));
+    public void addMethodCallToLocalVar(MethodDeclaration method,
+                                        String calleeClassName,
+                                        IsCalleeMethodStatic isCalleeMethodStatic) {
+        NodeList<Expression> dummyParamVals = DummyValueCreator.getDummyParameterValuesAsExprs(method.getParameters());
+        MethodCallExpr methodCallExpr = new MethodCallExpr()
+                .setName(method.getName())
+                .setArguments(dummyParamVals);
+
+        if (isCalleeMethodStatic == IsCalleeMethodStatic.YES) {
+            methodCallExpr.setScope(new NameExpr(calleeClassName));
         } else {
-            this.addVarInsnStatement(new ExpressionStmt(new VariableDeclarationExpr(
-                    new VariableDeclarator(returnType, RandomUtils.generateRandomName(5),
-                            methodCallExpr))
-            ));
+            if (calleeClassName.equals(this.className))
+                methodCallExpr.setScope(new ThisExpr());
+            else
+                methodCallExpr.setScope(new NameExpr(calleeClassName.toLowerCase()));
         }
+
+        if (method.getType().isVoidType()) {
+            this.addRegularStatement(new ExpressionStmt(methodCallExpr));
+            return;
+        }
+
+        String varName = RandomUtils.generateRandomName(5);
+        if (isCalleeMethodStatic == IsCalleeMethodStatic.NO && !calleeClassName.equals(this.className))
+            varName = calleeClassName.toLowerCase();
+
+        this.addVarInsnStatement(new ExpressionStmt(new VariableDeclarationExpr(
+                new VariableDeclarator(method.getType(), varName,
+                        methodCallExpr))
+        ));
     }
 }

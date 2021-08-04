@@ -7,7 +7,9 @@ import com.github.javaparser.ast.body.CallableDeclaration;
 import com.github.javaparser.ast.body.ConstructorDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.VariableDeclarator;
-import com.github.javaparser.ast.expr.*;
+import com.github.javaparser.ast.expr.Expression;
+import com.github.javaparser.ast.expr.ObjectCreationExpr;
+import com.github.javaparser.ast.expr.VariableDeclarationExpr;
 import com.github.javaparser.ast.stmt.ExpressionStmt;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.octavelarose.codegenerator.builders.BuildFailedException;
@@ -26,7 +28,7 @@ public class MethodCallInstructionWriter {
     CallableDeclaration<?> callerMethod;
     CallableDeclaration<?> calleeMethod;
 
-    private enum IsCalleeMethodStatic {
+    public enum IsCalleeMethodStatic {
         YES,
         NO
     }
@@ -77,8 +79,7 @@ public class MethodCallInstructionWriter {
     public void writeMethodCallInCaller() throws BuildFailedException {
         checkCallerAndCalleeValues();
 
-        CallableMethodBodyEditor mbc = new CallableMethodBodyEditor(callerMethod);
-        NodeList<Expression> dummyParamVals = DummyValueCreator.getDummyParameterValuesAsExprs(calleeMethod.getParameters());
+        CallableMethodBodyEditor cmbe = new CallableMethodBodyEditor(callerMethod, callerClass.getName());
 
         IsCalleeMethodStatic isCalleeMethodStatic = calleeMethod.getModifiers()
                 .stream()
@@ -86,30 +87,29 @@ public class MethodCallInstructionWriter {
                 ? IsCalleeMethodStatic.YES : IsCalleeMethodStatic.NO;
 
         if (calleeMethod instanceof ConstructorDeclaration) {
-            this.addCalleeClassConstructorCall(mbc, dummyParamVals);
+            this.addCalleeClassConstructorCall(cmbe, DummyValueCreator.getDummyParameterValuesAsExprs(calleeMethod.getParameters()));
         } else {
-            if (callerClass == calleeClass)
-                this.addLocalMethodCall(mbc, dummyParamVals, isCalleeMethodStatic);
-            else {
-                this.addForeignMethodCall(mbc, dummyParamVals, isCalleeMethodStatic);
-                this.doSafeguardInstantiation(mbc, isCalleeMethodStatic);
-            }
+            cmbe.addMethodCallToLocalVar(
+                    (MethodDeclaration)calleeMethod,
+                    calleeClass.getName(),
+                    isCalleeMethodStatic
+            );
+
+            if (!callerClass.getName().equals(calleeClass.getName()))
+                this.doSafeguardInstantiation(cmbe);
         }
 
-        mbc.setBodyToCallable();
+        cmbe.setBodyToCallable();
     }
 
     /**
      * Debatable safeguard. If an object is returned from a method call, or if it's in a field, it can't be detected
      * So for now I'll just create a new instance of it in every method that needs it. TODO improve, but how?
      * @param cmbc The body of the method that needs a class to checked for class instantiations and possibly appended with one
-     * @param isCalleeMethodStatic Whether or not the method called is static. If it is, no instantiation is necessary.
      * @throws BuildFailedException If the class we're trying to instantiate has no constructors, we can't do anything.
      */
-    private void doSafeguardInstantiation(CallableMethodBodyEditor cmbc,
-                                          IsCalleeMethodStatic isCalleeMethodStatic) throws BuildFailedException {
-        if (!cmbc.isClassInstantiationInMethodBody(calleeClass.getName())
-                && isCalleeMethodStatic == IsCalleeMethodStatic.NO) {
+    private void doSafeguardInstantiation(CallableMethodBodyEditor cmbc) throws BuildFailedException {
+        if (!cmbc.isClassInstantiationInMethodBody(calleeClass.getName())) {
             List<ConstructorDeclaration> constructors = calleeClass.getConstructors();
 
             if (constructors.size() == 0)
@@ -135,39 +135,40 @@ public class MethodCallInstructionWriter {
             throw new BuildFailedException("Invalid caller or callee method.");
     }
 
-    /**
-     * Adds a call to a method from another class to the given method body.
-     * @param cmbc The body of the method to be appended.
-     * @param dummyParamVals Dummy values for the method parameters.
-     */
-    private void addForeignMethodCall(CallableMethodBodyEditor cmbc,
-                                      NodeList<Expression> dummyParamVals,
-                                      IsCalleeMethodStatic isCalleeMethodStatic) {
-        Expression callerExpr = (isCalleeMethodStatic == IsCalleeMethodStatic.NO)
-                ? new NameExpr(calleeClass.getName().toLowerCase()) : new NameExpr(calleeClass.getName());
-
-        cmbc.addMethodCallToLocalVar(
-                new MethodCallExpr(callerExpr, calleeMethod.getName(), dummyParamVals),
-                ((MethodDeclaration)calleeMethod).getType()
-        );
-    }
-
-    /**
-     * Add a call to a method in the same class, so with a "this.(...)" statement.
-     * @param cmbc The body of the method to be appended.
-     * @param dummyParamVals Dummy values for the method parameters.
-     */
-    private void addLocalMethodCall(CallableMethodBodyEditor cmbc,
-                                    NodeList<Expression> dummyParamVals,
-                                    IsCalleeMethodStatic isCalleeMethodStatic) {
-        Expression callerExpr = (isCalleeMethodStatic == IsCalleeMethodStatic.NO)
-                ? new ThisExpr() : new NameExpr(calleeClass.getName());
-
-        cmbc.addMethodCallToLocalVar(
-                new MethodCallExpr(callerExpr, calleeMethod.getName(), dummyParamVals),
-                ((MethodDeclaration)calleeMethod).getType()
-        );
-    }
+//    /**
+//     * Adds a call to a method from another class to the given method body.
+//     * @param cmbc The body of the method to be appended.
+//     * @param dummyParamVals Dummy values for the method parameters.
+//     */
+//    private void addForeignMethodCall(CallableMethodBodyEditor cmbc,
+//                                      NodeList<Expression> dummyParamVals,
+//                                      IsCalleeMethodStatic isCalleeMethodStatic) {
+//        Expression callerExpr = (isCalleeMethodStatic == IsCalleeMethodStatic.NO)
+//                ? new NameExpr(calleeClass.getName().toLowerCase()) : new NameExpr(calleeClass.getName());
+//
+//        cmbc.addMethodCallToLocalVar(
+//                new MethodCallExpr(callerExpr, calleeMethod.getName(), dummyParamVals),
+//                ((MethodDeclaration)calleeMethod).getType()
+//        );
+//    }
+//
+//    /**
+//     * Add a call to a method in the same class, so with a "this.(...)" statement.
+//     * @param cmbc The body of the method to be appended.
+//     * @param dummyParamVals Dummy values for the method parameters.
+//     */
+//    private void addLocalMethodCall(CallableMethodBodyEditor cmbc,
+//                                    NodeList<Expression> dummyParamVals,
+//                                    IsCalleeMethodStatic isCalleeMethodStatic) {
+//        Expression callerExpr = (isCalleeMethodStatic == IsCalleeMethodStatic.NO)
+//                ? new ThisExpr() : new NameExpr(calleeClass.getName());
+//
+//        cmbc.addMethodCallToLocalVar(
+//                new MethodCallExpr(callerExpr, calleeMethod.getName(), dummyParamVals),
+//                ((MethodDeclaration)calleeMethod).getType()
+//        );
+////        cmbc.addMethodCallToLocalVar(((MethodDeclaration)calleeMethod).getType(), &calleeMethod.getName(), dummyParamVals);
+//    }
 
     /**
      * Adds a call to a constructor, i.e instantiates the callee class and puts it in a new local variable.
