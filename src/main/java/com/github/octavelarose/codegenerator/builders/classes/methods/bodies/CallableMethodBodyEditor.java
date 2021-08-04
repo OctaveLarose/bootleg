@@ -42,6 +42,8 @@ public class CallableMethodBodyEditor extends MethodBodyEditor {
             else
                 this.regularInstrsBlock.addStatement(stmt);
         }
+
+        this.setMethodParameters(method.getParameters());
     }
 
     /**
@@ -129,7 +131,7 @@ public class CallableMethodBodyEditor extends MethodBodyEditor {
                 if (localVarOfType.isPresent())
                     methodCallExpr.setScope(new NameExpr(localVarOfType.get().getName()));
                 else
-                    methodCallExpr.setScope(new NameExpr(calleeClassName.toLowerCase())); // and hope it gets caught by the instantiation... TODO move instantiation here
+                    methodCallExpr.setScope(new NameExpr(calleeClassName.toLowerCase())); // and hope it gets caught by the safeguard. TODO move safeguard here, probably
             }
         }
 
