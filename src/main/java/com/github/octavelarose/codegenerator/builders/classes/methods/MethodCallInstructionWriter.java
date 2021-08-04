@@ -152,7 +152,9 @@ public class MethodCallInstructionWriter {
         }
 
         callerClass.addImport(calleeClass.getImportStr());
-        cmbc.addVarInsnStatement(new ExpressionStmt(new VariableDeclarationExpr(
+
+        // Added to the start to make sure it's instantiated before the operations that need it, since those operations may be in variable instantiations themselves
+        cmbc.addVarInsnStatementToStart(new ExpressionStmt(new VariableDeclarationExpr(
                         new VariableDeclarator(classWithName, calleeClass.getName().toLowerCase(),
                                 new ObjectCreationExpr().setType(classWithName).setArguments(dummyParamVals))
                 ))

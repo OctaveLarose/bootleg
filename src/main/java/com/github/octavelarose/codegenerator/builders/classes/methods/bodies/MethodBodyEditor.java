@@ -59,6 +59,14 @@ public abstract class MethodBodyEditor {
      * @param exprStmt The variable instantiation statement.
      */
     public void addVarInsnStatement(ExpressionStmt exprStmt) {
+        this.varsInsnBlock.addStatement(exprStmt);
+    }
+
+    /**
+     * Adds a variable instantiation statement to the start of the instantiations.
+     * @param exprStmt The variable instantiation statement.
+     */
+    public void addVarInsnStatementToStart(ExpressionStmt exprStmt) {
         this.varsInsnBlock.addStatement(0, exprStmt);
     }
 
