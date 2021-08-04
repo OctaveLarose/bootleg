@@ -16,6 +16,8 @@ import com.github.octavelarose.codegenerator.builders.classes.methods.DummyValue
 import com.github.octavelarose.codegenerator.builders.classes.methods.MethodCallInstructionWriter.IsCalleeMethodStatic;
 import com.github.octavelarose.codegenerator.builders.utils.RandomUtils;
 
+import java.util.Optional;
+
 public class CallableMethodBodyEditor extends MethodBodyEditor {
     private final CallableDeclaration<?> method;
     private final String className;
@@ -121,8 +123,14 @@ public class CallableMethodBodyEditor extends MethodBodyEditor {
         } else {
             if (calleeClassName.equals(this.className))
                 methodCallExpr.setScope(new ThisExpr());
-            else
-                methodCallExpr.setScope(new NameExpr(calleeClassName.toLowerCase()));
+            else {
+                Optional<VariableDeclarator> localVarOfType = this.getLocalVarOrParamOfTypeObjFromStr(calleeClassName);
+
+                if (localVarOfType.isPresent())
+                    methodCallExpr.setScope(new NameExpr(localVarOfType.get().getName()));
+                else
+                    methodCallExpr.setScope(new NameExpr(calleeClassName.toLowerCase())); // and hope it gets caught by the instantiation... TODO move instantiation here
+            }
         }
 
         if (method.getType().isVoidType()) {

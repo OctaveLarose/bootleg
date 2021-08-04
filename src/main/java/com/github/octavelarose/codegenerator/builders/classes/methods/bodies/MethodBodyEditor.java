@@ -1,5 +1,6 @@
 package com.github.octavelarose.codegenerator.builders.classes.methods.bodies;
 
+import com.github.javaparser.ParseException;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.body.VariableDeclarator;
@@ -14,6 +15,7 @@ import com.github.javaparser.ast.type.Type;
 import com.github.octavelarose.codegenerator.builders.BuildFailedException;
 import com.github.octavelarose.codegenerator.builders.classes.methods.DummyValueCreator;
 import com.github.octavelarose.codegenerator.builders.programs.asm_types.ASMBytecodeParsingUtils;
+import com.github.octavelarose.codegenerator.builders.utils.JPTypeUtils;
 import com.github.octavelarose.codegenerator.builders.utils.RandomUtils;
 
 import java.util.List;
@@ -151,6 +153,20 @@ public abstract class MethodBodyEditor {
             VariableDeclarationExpr expr = stmt.asExpressionStmt().getExpression().asVariableDeclarationExpr();
             if (expr.getVariable(0).getType().equals(wantedType))
                 return Optional.of(expr.getVariable(0));
+        }
+
+        return Optional.empty();
+    }
+
+    /**
+     * @param objName The name of the object, as a string.
+     * @return The name of a local variable / parameter of that given type
+     */
+    protected Optional<VariableDeclarator> getLocalVarOrParamOfTypeObjFromStr(String objName) {
+        try {
+            return this.getLocalVarOrParamOfType(JPTypeUtils.getClassTypeFromName(objName));
+        } catch (ParseException e) {
+            System.err.println(e.getMessage()); // Ugly, but should never happen (famous last words)
         }
 
         return Optional.empty();
