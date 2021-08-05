@@ -101,7 +101,7 @@ public abstract class ClassBuilder {
         if (this.cu.getPackageDeclaration().isPresent())
             return this.cu.getPackageDeclaration().get().getNameAsString() + "." + this.outputClass.getName();
         else
-            return null; // Should throw instead, but it's unreachable, so whatever
+            return this.outputClass.getNameAsString();
     }
 
     /**
