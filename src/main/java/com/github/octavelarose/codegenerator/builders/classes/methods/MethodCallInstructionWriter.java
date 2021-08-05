@@ -17,8 +17,6 @@ import com.github.octavelarose.codegenerator.builders.classes.ClassBuilder;
 import com.github.octavelarose.codegenerator.builders.classes.methods.bodies.CallableMethodBodyEditor;
 import com.github.octavelarose.codegenerator.builders.utils.JPTypeUtils;
 
-import java.util.List;
-
 /**
  * Writes a call to one method in another, i.e "methodName(3, "hello", 1.2);"
  */
@@ -79,7 +77,7 @@ public class MethodCallInstructionWriter {
     public void writeMethodCallInCaller() throws BuildFailedException {
         checkCallerAndCalleeValues();
 
-        CallableMethodBodyEditor cmbe = new CallableMethodBodyEditor(callerMethod, callerClass.getName());
+        CallableMethodBodyEditor cmbe = new CallableMethodBodyEditor(callerMethod, callerClass);
 
         IsCalleeMethodStatic isCalleeMethodStatic = calleeMethod.getModifiers()
                 .stream()
@@ -91,41 +89,13 @@ public class MethodCallInstructionWriter {
         } else {
             cmbe.addMethodCallToLocalVar(
                     (MethodDeclaration)calleeMethod,
-                    calleeClass.getName(),
+                    calleeClass,
                     isCalleeMethodStatic
             );
-
-            if (!callerClass.getName().equals(calleeClass.getName()))
-                this.doSafeguardInstantiation(cmbe, isCalleeMethodStatic);
         }
 
         cmbe.setBodyToCallable();
     }
-
-    /**
-     * Debatable safeguard. If an object is returned from a method call, or if it's in a field, it can't be detected
-     * So for now I'll just create a new instance of it in every method that needs it. TODO improve, but how?
-     * @param cmbc The body of the method that needs a class to checked for class instantiations and possibly appended with one
-     * @throws BuildFailedException If the class we're trying to instantiate has no constructors, we can't do anything.
-     */
-    private void doSafeguardInstantiation(CallableMethodBodyEditor cmbc,
-                                          IsCalleeMethodStatic isCalleeMethodStatic) throws BuildFailedException {
-        if (!cmbc.isClassInstantiationInMethodBody(calleeClass.getName())
-                && isCalleeMethodStatic == IsCalleeMethodStatic.NO) {
-            List<ConstructorDeclaration> constructors = calleeClass.getConstructors();
-
-            if (constructors.size() == 0)
-                throw new BuildFailedException("Can't instantiate a new instance of class "
-                        + calleeClass.getName()
-                        + " in our safeguard code, as it has no constructors");
-
-            this.addCalleeClassConstructorCall(
-                    cmbc,
-                    DummyValueCreator.getDummyParameterValuesAsExprs(constructors.get(0).getParameters())
-            );
-        }
-    }
-
 
     /**
      * @throws BuildFailedException If one of the input values (calle(r/e) classes/methods) are null.
@@ -145,21 +115,19 @@ public class MethodCallInstructionWriter {
      */
     private void addCalleeClassConstructorCall(CallableMethodBodyEditor cmbc,
                                                NodeList<Expression> dummyParamVals) throws BuildFailedException {
-        ClassOrInterfaceType classWithName;
-
         try {
-            classWithName = JPTypeUtils.getClassTypeFromName(calleeClass.getName().replace("/", "."));
+            ClassOrInterfaceType classWithName = JPTypeUtils.getClassTypeFromName(calleeClass.getName().replace("/", "."));
+
+            callerClass.addImport(calleeClass.getImportStr());
+
+            // Added to the start to make sure it's instantiated before the operations that need it, since those operations may be in variable instantiations themselves
+            cmbc.addVarInsnStatementToStart(new ExpressionStmt(new VariableDeclarationExpr(
+                            new VariableDeclarator(classWithName, calleeClass.getName().toLowerCase(),
+                                    new ObjectCreationExpr().setType(classWithName).setArguments(dummyParamVals))
+                    ))
+            );
         } catch (ParseException e) {
             throw new BuildFailedException(e.getMessage());
         }
-
-        callerClass.addImport(calleeClass.getImportStr());
-
-        // Added to the start to make sure it's instantiated before the operations that need it, since those operations may be in variable instantiations themselves
-        cmbc.addVarInsnStatementToStart(new ExpressionStmt(new VariableDeclarationExpr(
-                        new VariableDeclarator(classWithName, calleeClass.getName().toLowerCase(),
-                                new ObjectCreationExpr().setType(classWithName).setArguments(dummyParamVals))
-                ))
-        );
     }
 }

@@ -1,5 +1,6 @@
 package com.github.octavelarose.codegenerator.builders.classes.methods.bodies;
 
+import com.github.javaparser.ParseException;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.CallableDeclaration;
 import com.github.javaparser.ast.body.ConstructorDeclaration;
@@ -10,27 +11,31 @@ import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.ExpressionStmt;
 import com.github.javaparser.ast.stmt.ReturnStmt;
 import com.github.javaparser.ast.stmt.Statement;
+import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.octavelarose.codegenerator.builders.BuildConstants;
 import com.github.octavelarose.codegenerator.builders.BuildFailedException;
+import com.github.octavelarose.codegenerator.builders.classes.ClassBuilder;
 import com.github.octavelarose.codegenerator.builders.classes.methods.DummyValueCreator;
 import com.github.octavelarose.codegenerator.builders.classes.methods.MethodCallInstructionWriter.IsCalleeMethodStatic;
+import com.github.octavelarose.codegenerator.builders.utils.JPTypeUtils;
 import com.github.octavelarose.codegenerator.builders.utils.RandomUtils;
 
+import java.util.List;
 import java.util.Optional;
 
 public class CallableMethodBodyEditor extends MethodBodyEditor {
     private final CallableDeclaration<?> method;
-    private final String className;
+    private final ClassBuilder parentClass;
 
     /**
      * A constructor that takes in a method object.
      * @param method The method object to get the existing method body from.
      */
-    public CallableMethodBodyEditor(CallableDeclaration<?> method, String className) throws BuildFailedException {
+    public CallableMethodBodyEditor(CallableDeclaration<?> method, ClassBuilder parentClass) throws BuildFailedException {
         BlockStmt methodBody = this.getMethodBodyOfCallable(method);
 
         this.method = method;
-        this.className = className;
+        this.parentClass = parentClass;
 
         // Not very good, what if there's a return statement in the middle of the function?
         // Will do the job fine so far since we're assuming all methods will have this distinct var insn/calculations/return statement structure
@@ -109,12 +114,13 @@ public class CallableMethodBodyEditor extends MethodBodyEditor {
     /**
      * Generates a new statement from a method call, a var. instantiation statement or a regular statement if void is returned
      * @param method A method instance
-     * @param calleeClassName The name of the class the method belongs to
+     * @param calleeClass The class the method belongs to
      * @param isCalleeMethodStatic Whether or not the method is static
      */
     public void addMethodCallToLocalVar(MethodDeclaration method,
-                                        String calleeClassName,
-                                        IsCalleeMethodStatic isCalleeMethodStatic) {
+                                        ClassBuilder calleeClass,
+                                        IsCalleeMethodStatic isCalleeMethodStatic) throws BuildFailedException {
+        String calleeClassName = calleeClass.getName();
         NodeList<Expression> dummyParamVals = DummyValueCreator.getDummyParameterValuesAsExprs(method.getParameters());
         MethodCallExpr methodCallExpr = new MethodCallExpr()
                 .setName(method.getName())
@@ -123,17 +129,27 @@ public class CallableMethodBodyEditor extends MethodBodyEditor {
         if (isCalleeMethodStatic == IsCalleeMethodStatic.YES) {
             methodCallExpr.setScope(new NameExpr(calleeClassName));
         } else {
-            if (calleeClassName.equals(this.className))
+            if (calleeClassName.equals(this.parentClass.getName()))
                 methodCallExpr.setScope(new ThisExpr());
             else {
                 Optional<VariableDeclarator> localVarOfType = this.getLocalVarOrParamOfTypeObjFromStr(calleeClassName);
 
                 if (localVarOfType.isPresent())
                     methodCallExpr.setScope(new NameExpr(localVarOfType.get().getName()));
-                else
-                    methodCallExpr.setScope(new NameExpr(calleeClassName.toLowerCase())); // and hope it gets caught by the safeguard. TODO move safeguard here, probably
+                else {
+                    // We instantiate a new class of the given type if none is present to access the method from.
+                    // This safeguard shouldn't exist, since there should always be an option to find an instance of one in the input real program (else it wouldn't run).
+                    // This is needed (as of 05/08/21) since for instance, a class instance could only be present in a field, and those aren't implemented yet.
+                    VariableDeclarator newVar = this.createNewVarOfTypeObj(calleeClass);
+                    methodCallExpr.setScope(new NameExpr(newVar.getName()));
+
+                }
             }
         }
+
+        // In rare cases, JavaParser doesn't handle imports well by itself? And this function is the safest place for me to put this safeguard
+        // parentClass.addImport(calleeClass.getImportStr());
+
 
         if (method.getType().isVoidType()) {
             this.addRegularStatement(new ExpressionStmt(methodCallExpr));
@@ -145,5 +161,38 @@ public class CallableMethodBodyEditor extends MethodBodyEditor {
                         RandomUtils.generateRandomName(BuildConstants.LOCAL_VAR_NAME_LENGTH),
                         methodCallExpr))
         ));
+    }
+
+    /**
+     * Creates a new variable of a given class type, being given a class.
+     * @param inputClass The class which needs a new instance
+     * @return The variable in question.
+     * @throws BuildFailedException If the class can't be instantiated because it has no constructors,
+     */
+    private VariableDeclarator createNewVarOfTypeObj(ClassBuilder inputClass) throws BuildFailedException {
+        List<ConstructorDeclaration> constructors = inputClass.getConstructors();
+
+        if (constructors.size() == 0)
+            throw new BuildFailedException("Can't instantiate a new instance of class "
+                    + inputClass.getName()
+                    + " in our safeguard code, as it has no constructors");
+
+        var dummyParamVals = DummyValueCreator.getDummyParameterValuesAsExprs(constructors.get(0).getParameters());
+
+        try {
+            ClassOrInterfaceType classType = JPTypeUtils.getClassTypeFromName(inputClass.getName().replace("/", "."));
+            var varDeclarator = new VariableDeclarator(classType,
+                    RandomUtils.generateRandomName(BuildConstants.LOCAL_VAR_NAME_LENGTH),
+                    new ObjectCreationExpr().setType(classType).setArguments(dummyParamVals));
+
+            parentClass.addImport(inputClass.getImportStr());
+
+            // Added to the start to make sure it's instantiated before the operations that need it, since those operations may be in variable instantiations themselves
+            this.addVarInsnStatementToStart(new ExpressionStmt(new VariableDeclarationExpr(varDeclarator)));
+
+            return varDeclarator;
+        } catch (ParseException e) {
+            throw new BuildFailedException("ParseException: " + e.getMessage());
+        }
     }
 }
