@@ -116,9 +116,7 @@ public class MethodCallInstructionWriter {
     private void addCalleeClassConstructorCall(CallableMethodBodyEditor cmbc,
                                                NodeList<Expression> dummyParamVals) throws BuildFailedException {
         try {
-            ClassOrInterfaceType classWithName = JPTypeUtils.getClassTypeFromName(calleeClass.getName().replace("/", "."));
-
-            callerClass.addImport(calleeClass.getImportStr());
+            ClassOrInterfaceType classWithName = JPTypeUtils.getClassTypeFromName(calleeClass.getImportStr());
 
             // Added to the start to make sure it's instantiated before the operations that need it, since those operations may be in variable instantiations themselves
             cmbc.addVarInsnStatementToStart(new ExpressionStmt(new VariableDeclarationExpr(

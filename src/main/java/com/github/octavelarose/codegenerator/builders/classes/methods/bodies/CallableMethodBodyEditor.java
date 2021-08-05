@@ -132,7 +132,7 @@ public class CallableMethodBodyEditor extends MethodBodyEditor {
             if (calleeClassName.equals(this.parentClass.getName()))
                 methodCallExpr.setScope(new ThisExpr());
             else {
-                Optional<VariableDeclarator> localVarOfType = this.getLocalVarOrParamOfTypeObjFromStr(calleeClassName);
+                Optional<VariableDeclarator> localVarOfType = this.getLocalVarOrParamOfTypeObjFromStr(calleeClass.getImportStr());
 
                 if (localVarOfType.isPresent())
                     methodCallExpr.setScope(new NameExpr(localVarOfType.get().getName()));
@@ -142,14 +142,9 @@ public class CallableMethodBodyEditor extends MethodBodyEditor {
                     // This is needed (as of 05/08/21) since for instance, a class instance could only be present in a field, and those aren't implemented yet.
                     VariableDeclarator newVar = this.createNewVarOfTypeObj(calleeClass);
                     methodCallExpr.setScope(new NameExpr(newVar.getName()));
-
                 }
             }
         }
-
-        // In rare cases, JavaParser doesn't handle imports well by itself? And this function is the safest place for me to put this safeguard
-        // Needs to be removed. One of my commits attempted to fix it, but only did so at the cost of side effects in the generation
-        parentClass.addImport(calleeClass.getImportStr());
 
         if (method.getType().isVoidType()) {
             this.addRegularStatement(new ExpressionStmt(methodCallExpr));
@@ -180,12 +175,10 @@ public class CallableMethodBodyEditor extends MethodBodyEditor {
         var dummyParamVals = DummyValueCreator.getDummyParameterValuesAsExprs(constructors.get(0).getParameters());
 
         try {
-            ClassOrInterfaceType classType = JPTypeUtils.getClassTypeFromName(inputClass.getName().replace("/", "."));
+            ClassOrInterfaceType classType = JPTypeUtils.getClassTypeFromName(inputClass.getImportStr());
             var varDeclarator = new VariableDeclarator(classType,
                     RandomUtils.generateRandomName(BuildConstants.LOCAL_VAR_NAME_LENGTH),
                     new ObjectCreationExpr().setType(classType).setArguments(dummyParamVals));
-
-            parentClass.addImport(inputClass.getImportStr());
 
             // Added to the start to make sure it's instantiated before the operations that need it, since those operations may be in variable instantiations themselves
             this.addVarInsnStatementToStart(new ExpressionStmt(new VariableDeclarationExpr(varDeclarator)));
