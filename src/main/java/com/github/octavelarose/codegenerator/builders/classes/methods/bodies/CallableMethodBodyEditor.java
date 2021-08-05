@@ -132,7 +132,7 @@ public class CallableMethodBodyEditor extends MethodBodyEditor {
             if (calleeClassName.equals(this.parentClass.getName()))
                 methodCallExpr.setScope(new ThisExpr());
             else {
-                Optional<VariableDeclarator> localVarOfType = this.getLocalVarOrParamOfTypeObjFromStr(calleeClass.getImportStr());
+                Optional<VariableDeclarator> localVarOfType = this.getLocalVarOrParamOfTypeObjFromStr(calleeClassName);
 
                 if (localVarOfType.isPresent())
                     methodCallExpr.setScope(new NameExpr(localVarOfType.get().getName()));
@@ -146,6 +146,10 @@ public class CallableMethodBodyEditor extends MethodBodyEditor {
                 }
             }
         }
+
+        // In rare cases, JavaParser doesn't handle imports well by itself? And this function is the safest place for me to put this safeguard
+        // Needs to be removed. One of my commits attempted to fix it, but only did so at the cost of side effects in the generation
+        parentClass.addImport(calleeClass.getImportStr());
 
         if (method.getType().isVoidType()) {
             this.addRegularStatement(new ExpressionStmt(methodCallExpr));

@@ -172,7 +172,7 @@ public abstract class MethodBodyEditor {
      */
     protected Optional<VariableDeclarator> getLocalVarOrParamOfTypeObjFromStr(String objName) {
         try {
-            return this.getLocalVarOrParamOfType(JPTypeUtils.getClassTypeFromName(objName.replace("/", ".")));
+            return this.getLocalVarOrParamOfType(JPTypeUtils.getClassTypeFromName(objName));
         } catch (ParseException e) {
             System.err.println(e.getMessage()); // Ugly, but should never happen (famous last words)
         }
