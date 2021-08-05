@@ -96,7 +96,7 @@ public class MethodCallInstructionWriter {
             );
 
             if (!callerClass.getName().equals(calleeClass.getName()))
-                this.doSafeguardInstantiation(cmbe);
+                this.doSafeguardInstantiation(cmbe, isCalleeMethodStatic);
         }
 
         cmbe.setBodyToCallable();
@@ -108,8 +108,10 @@ public class MethodCallInstructionWriter {
      * @param cmbc The body of the method that needs a class to checked for class instantiations and possibly appended with one
      * @throws BuildFailedException If the class we're trying to instantiate has no constructors, we can't do anything.
      */
-    private void doSafeguardInstantiation(CallableMethodBodyEditor cmbc) throws BuildFailedException {
-        if (!cmbc.isClassInstantiationInMethodBody(calleeClass.getName())) {
+    private void doSafeguardInstantiation(CallableMethodBodyEditor cmbc,
+                                          IsCalleeMethodStatic isCalleeMethodStatic) throws BuildFailedException {
+        if (!cmbc.isClassInstantiationInMethodBody(calleeClass.getName())
+                && isCalleeMethodStatic == IsCalleeMethodStatic.NO) {
             List<ConstructorDeclaration> constructors = calleeClass.getConstructors();
 
             if (constructors.size() == 0)
