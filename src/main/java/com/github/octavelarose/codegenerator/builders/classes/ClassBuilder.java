@@ -157,21 +157,13 @@ public abstract class ClassBuilder {
             if (m.getSignature().asString().equals(sig.asString()))
                 return m;
         }
+
         for (MethodDeclaration m: this.outputClass.getMethods()) {
 //            if (m.getSignature() == sig)
             if (m.getSignature().asString().equals(sig.asString()))
                 return m;
         }
-/*        System.out.println("AAAA");
-//        System.out.println(this.outputClass.getMethods());
-        System.out.println(this.outputClass.getMethods().get(1).getSignature());
-        System.out.println(sig);
-        System.out.println("Are they the same: " + (sig == this.outputClass.getMethods().get(1).getSignature()));
-        System.out.println("Same class? " + (sig.getClass() == this.outputClass.getMethods().get(1).getSignature().getClass()));
-        System.out.println("Same name? " + (sig.getName().equals(this.outputClass.getMethods().get(1).getSignature().getName())));
-//        System.out.println(sig.getParameterTypes() + " " + this.outputClass.getMethods().get(1).getSignature().getParameterTypes());
-        System.out.println("Same parameter types ? " + (sig.getParameterTypes().equals(this.outputClass.getMethods().get(1).getSignature().getParameterTypes())));
-        System.out.println("AAAA");*/
+
         return null;
     }
 
