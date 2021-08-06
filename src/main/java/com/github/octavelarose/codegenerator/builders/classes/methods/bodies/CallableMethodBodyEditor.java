@@ -2,10 +2,7 @@ package com.github.octavelarose.codegenerator.builders.classes.methods.bodies;
 
 import com.github.javaparser.ParseException;
 import com.github.javaparser.ast.NodeList;
-import com.github.javaparser.ast.body.CallableDeclaration;
-import com.github.javaparser.ast.body.ConstructorDeclaration;
-import com.github.javaparser.ast.body.MethodDeclaration;
-import com.github.javaparser.ast.body.VariableDeclarator;
+import com.github.javaparser.ast.body.*;
 import com.github.javaparser.ast.expr.*;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.ExpressionStmt;
@@ -75,30 +72,6 @@ public class CallableMethodBodyEditor extends MethodBodyEditor {
     }
 
     /**
-     * Is there a local variable in the method that corresponds to an instantiation of a given class?
-     * Used for a
-     * @param className The name of the class.
-     * @return true if a variable was instantiated with the type className, false otherwise.
-     */
-    public boolean isClassInstantiationInMethodBody(String className) {
-        for (Statement methodLine: this.generateMethodBody().getStatements()) {
-            // A bit awkward. Right now we add a return stmt at the start, and those need to be ignored
-            // I guess this could be changed to "if it isn't an expression statement" instead
-            if (methodLine.isReturnStmt())
-                continue;
-
-            if (!(methodLine.asExpressionStmt().getExpression() instanceof VariableDeclarationExpr))
-                continue;
-
-            VariableDeclarationExpr varDecExpr = (VariableDeclarationExpr) methodLine.asExpressionStmt().getExpression();
-            for (VariableDeclarator varDec: varDecExpr.getVariables())
-                if (className.equals(varDec.getType().asString()))
-                    return true;
-        }
-        return false;
-    }
-
-    /**
      * Sets the fabricated body to the wrapped callable.
      */
     public void setBodyToCallable() throws BuildFailedException {
@@ -109,6 +82,30 @@ public class CallableMethodBodyEditor extends MethodBodyEditor {
             ((MethodDeclaration) this.method).setBody(this.generateMethodBody());
         else
             throw new BuildFailedException("Couldn't set method body, as this is neither a classic method nor a constructor");
+    }
+
+    /**
+     * Adds a call to a constructor, i.e instantiates a class and puts it in a new local variable.
+     * @param calleeClass The class to be instantiated
+     * @param constructorParameters Parameters of the class constructor.
+     * @throws BuildFailedException If the class with the given name couldn't be accessed.
+     */
+    public void addConstructorCallToLocalVar(ClassBuilder calleeClass,
+                                             NodeList<Parameter> constructorParameters) throws BuildFailedException {
+        var dummyParamVals = DummyValueCreator.getDummyParameterValuesAsExprs(constructorParameters);
+
+        try {
+            ClassOrInterfaceType classWithName = JPTypeUtils.getClassTypeFromName(calleeClass.getImportStr());
+
+            // Added to the start to make sure it's instantiated before the operations that need it, since those operations may be in variable instantiations themselves
+            this.addVarInsnStatementToStart(new ExpressionStmt(new VariableDeclarationExpr(
+                            new VariableDeclarator(classWithName, calleeClass.getName().toLowerCase(),
+                                    new ObjectCreationExpr().setType(classWithName).setArguments(dummyParamVals))
+                    ))
+            );
+        } catch (ParseException e) {
+            throw new BuildFailedException(e.getMessage());
+        }
     }
 
     /**
@@ -146,16 +143,14 @@ public class CallableMethodBodyEditor extends MethodBodyEditor {
             }
         }
 
-        if (method.getType().isVoidType()) {
+        if (method.getType().isVoidType())
             this.addRegularStatement(new ExpressionStmt(methodCallExpr));
-            return;
-        }
-
-        this.addVarInsnStatement(new ExpressionStmt(new VariableDeclarationExpr(
-                new VariableDeclarator(method.getType(),
-                        RandomUtils.generateRandomName(BuildConstants.LOCAL_VAR_NAME_LENGTH),
-                        methodCallExpr))
-        ));
+        else
+            this.addVarInsnStatement(new ExpressionStmt(new VariableDeclarationExpr(
+                    new VariableDeclarator(method.getType(),
+                            RandomUtils.generateRandomName(BuildConstants.LOCAL_VAR_NAME_LENGTH),
+                            methodCallExpr))
+            ));
     }
 
     /**
