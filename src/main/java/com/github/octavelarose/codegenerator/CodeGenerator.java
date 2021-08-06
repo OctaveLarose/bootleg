@@ -6,9 +6,10 @@ import com.github.octavelarose.codegenerator.builders.programs.CTParserProgramBu
 import com.github.octavelarose.codegenerator.builders.programs.ProgramBuilder;
 import com.github.octavelarose.codegenerator.builders.programs.TestProgramBuilder;
 import com.github.octavelarose.codegenerator.export.ProgramExporter;
+import org.apache.commons.cli.*;
 
-import java.util.Arrays;
 import java.util.HashMap;
+
 
 /**
  * Main class for the code generator program.
@@ -18,39 +19,45 @@ public class CodeGenerator {
      * Main function to generate a codebase.
      * @param args Unused args for now.
      */
-    public static void main(String[] args) {
-        if (args.length > 1 && args[0].equals("--help")) {
-            printUsage();
-            return;
-        }
+    public static void main(String[] args) throws ParseException {
+        CommandLineParser parser = new DefaultParser();
+        CommandLine cmd = parser.parse(CodeGenerator.getOptions(), args);
 
-        generateProgram(args);
+        generateProgram(cmd);
     }
 
-    private static void printUsage() {
-        System.out.println("--help: print this message.");
-        System.out.println("--test: to generate a proof of concept program.");
-        System.out.println("--ct-file FILENAME: to generate a program from a calltrace file.");
-        System.out.println("--op-file FILENAME: if a calltrace file has been provided, you can also provide a file detailing method operations");
+    private static Options getOptions() {
+        Options options = new Options();
+
+        options.addOption("ct", "ct-file", true, "generates a program from a calltrace file");
+        options.addOption("op", "op-file", true, "if a calltrace file has been provided, you can also provide a file detailing method operations");
+        options.addOption("t", "test", false, "generates a very basic proof of concept program");
+        options.addOption("h", "help", false, "displays this message.");
+
+        return options;
     }
 
-    private static void generateProgram(String[] args) {
+    private static void generateProgram(CommandLine cmd) {
         HashMap<String, ClassBuilder> builders;
         ProgramBuilder pb;
 
+        if (cmd.hasOption("help")) {
+            new HelpFormatter().printHelp("bootleg", CodeGenerator.getOptions());
+            return;
+        }
+
         try {
-            if (args.length < 1 || args[0].equals("--test"))
+            if (cmd.hasOption("test"))
                 pb = new TestProgramBuilder();
-            else if (args[0].equals("--ct-file") && args.length > 1) {
-                if (Arrays.asList(args).contains("--op-file")) {
-                    pb = new CTParserProgramBuilder(args[1]).setOperationsFileName(args[Arrays.asList(args).indexOf("--op-file") + 1]);
-                } else {
-                    pb = new CTParserProgramBuilder(args[1]);
-                }
+            else if (cmd.hasOption("ct-file")) {
+                pb = new CTParserProgramBuilder(cmd.getOptionValue("ct-file"));
+                if (cmd.hasOption("op-file"))
+                    ((CTParserProgramBuilder)pb).setOperationsFileName(cmd.getOptionValue("op-file"));
             } else {
-                printUsage();
+                new HelpFormatter().printHelp("bootleg", CodeGenerator.getOptions());
                 return;
             }
+
             builders = pb.build();
         } catch (BuildFailedException e) {
             e.printStackTrace();
