@@ -165,7 +165,7 @@ public class CallableMethodBodyEditor extends MethodBodyEditor {
         if (constructors.size() == 0)
             throw new BuildFailedException("Can't instantiate a new instance of class "
                     + inputClass.getName()
-                    + " in our safeguard code, as it has no constructors");
+                    + ", as it has no constructors");
 
         var dummyParamVals = DummyValueCreator.getDummyParameterValuesAsExprs(constructors.get(0).getParameters());
 
