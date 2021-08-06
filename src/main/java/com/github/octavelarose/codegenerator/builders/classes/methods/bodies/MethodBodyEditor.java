@@ -28,7 +28,7 @@ public abstract class MethodBodyEditor {
     // We're assuming methods are divided into three parts: the instantiation of local variables, various calculations, and end return statements.
     protected final BlockStmt varsInsnBlock = new BlockStmt();
     protected final BlockStmt regularInstrsBlock = new BlockStmt();
-    protected final BlockStmt returnStmtBlock = new BlockStmt();
+    protected ReturnStmt returnStmt;
 
     protected NodeList<Parameter> methodParameters;
 
@@ -48,8 +48,8 @@ public abstract class MethodBodyEditor {
             concatStmts.add(stmt);
         for (Statement stmt: this.regularInstrsBlock.getStatements())
             concatStmts.add(stmt);
-        for (Statement stmt: this.returnStmtBlock.getStatements())
-            concatStmts.add(stmt);
+        if (this.returnStmt != null)
+            concatStmts.add(this.returnStmt);
 
         return new BlockStmt(concatStmts);
     }
@@ -82,17 +82,17 @@ public abstract class MethodBodyEditor {
      * Adds a return statement.
      * @param returnStmt A return statement object.
      */
-    public void addReturnStatement(ReturnStmt returnStmt) {
-        this.returnStmtBlock.addStatement(returnStmt);
+    public void setReturnStatement(ReturnStmt returnStmt) {
+        this.returnStmt = returnStmt;
     }
 
     /**
      * Adds a random return statement of a given type, unless the type fed is void in which case none is necessary.
      * @param returnType The return type of the method.
      */
-    public void addRandomReturnStatement(Type returnType) {
+    public void setRandomReturnStatement(Type returnType) {
         if (!returnType.isVoidType())
-            this.returnStmtBlock.addStatement(new ReturnStmt(DummyValueCreator.getDummyParamValueFromType(returnType)));
+            this.setReturnStatement(new ReturnStmt(DummyValueCreator.getDummyParamValueFromType(returnType)));
     }
 
     /**
@@ -104,9 +104,16 @@ public abstract class MethodBodyEditor {
         Optional<VariableDeclarator> localVar = this.getLocalVarOrParamOfType(returnType);
 
         if (localVar.isPresent())
-            this.addReturnStatement(new ReturnStmt(new NameExpr(localVar.get().getName())));
+            this.setReturnStatement(new ReturnStmt(new NameExpr(localVar.get().getName())));
         else
-            this.addRandomReturnStatement(returnType);
+            this.setRandomReturnStatement(returnType);
+    }
+
+    /**
+     * @return true if the method has a return statement, false otherwise.
+     */
+    public boolean hasReturnStatement() {
+        return this.returnStmt != null;
     }
 
     /**

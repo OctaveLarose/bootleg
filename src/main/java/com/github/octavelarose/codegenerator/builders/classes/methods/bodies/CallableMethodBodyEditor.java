@@ -43,7 +43,7 @@ public class CallableMethodBodyEditor extends MethodBodyEditor {
             if (stmt instanceof ExpressionStmt && ((ExpressionStmt)stmt).getExpression().isVariableDeclarationExpr())
                 this.varsInsnBlock.addStatement(stmt);
             else if (stmt instanceof ReturnStmt)
-                this.returnStmtBlock.addStatement(stmt);
+                this.returnStmt = (ReturnStmt) stmt;
             else
                 this.regularInstrsBlock.addStatement(stmt);
         }

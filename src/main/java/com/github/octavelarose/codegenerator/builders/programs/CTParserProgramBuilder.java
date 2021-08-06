@@ -12,6 +12,7 @@ import com.github.octavelarose.codegenerator.builders.BuildFailedException;
 import com.github.octavelarose.codegenerator.builders.classes.BasicClassBuilder;
 import com.github.octavelarose.codegenerator.builders.classes.ClassBuilder;
 import com.github.octavelarose.codegenerator.builders.classes.methods.MethodCallInstructionWriter;
+import com.github.octavelarose.codegenerator.builders.classes.methods.bodies.CallableMethodBodyEditor;
 import com.github.octavelarose.codegenerator.builders.classes.methods.bodies.SimpleMethodBodyCreator;
 import com.github.octavelarose.codegenerator.builders.programs.asm_types.ASMTypeParsingUtils;
 import com.github.octavelarose.codegenerator.builders.programs.calltraces.CTMethodInfo;
@@ -67,16 +68,23 @@ public class CTParserProgramBuilder implements ProgramBuilder {
             if (ctMethodInfo.isLambda())
                 continue;
 
-            // If it's a method exit, we modify the call stack accordingly, but we don't actually touch the method content.
-            if (!ctMethodInfo.isFunctionEntry()) {
-                callStack.pop();
-                continue;
-            }
-
             ctMethodInfo.modifyIfStaticInit();
 
             // so TODO: if it's part of the JDK then we don't create a class builder... or do we? one that wraps a jdk class?
+            // I'm confusing myself here. Need to go back to that problem.
             ClassBuilder classCb = getOrCreateClassBuilder(classBuilders, ctMethodInfo.getClassName());
+
+            // If it's a method exit, we add a return statement and we go to the next one.
+            if (!ctMethodInfo.isFunctionEntry()) {
+                CallableMethodBodyEditor cmbe = new CallableMethodBodyEditor(classCb.getMethodFromName(ctMethodInfo.getMethodName()), classCb);
+                Type methodReturnType = ASMTypeParsingUtils.getTypeFromStr(ctMethodInfo.getReturnTypeStr());
+                if (!methodReturnType.isVoidType() && !cmbe.hasReturnStatement()) {
+                    cmbe.addReturnStatementFromLocalVar(methodReturnType);
+                    cmbe.setBodyToCallable();
+                }
+                callStack.pop();
+                continue;
+            }
 
             // If the method already exists, we don't need to generate it and just modify the call stack.
             String methodName = ctMethodInfo.getMethodName();
@@ -153,9 +161,6 @@ public class CTParserProgramBuilder implements ProgramBuilder {
         if (ctMethodInfo.hasMethodOperations()) {
             smbc.setMethodParameters(parameters);
             smbc.processOperationStatements(ctMethodInfo.getMethodOperations());
-            smbc.addReturnStatementFromLocalVar(returnType);
-        } else {
-            smbc.addRandomReturnStatement(returnType);
         }
 
         BlockStmt methodBody = smbc.getMethodBody();
