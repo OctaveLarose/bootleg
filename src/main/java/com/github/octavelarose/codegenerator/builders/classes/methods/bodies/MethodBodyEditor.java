@@ -100,7 +100,7 @@ public abstract class MethodBodyEditor {
      * If none are eligible, then a random value is returned instead.
      * @param returnType The return type of the method.
      */
-    public void addReturnStatementFromLocalVar(Type returnType) {
+    public void setReturnStatementFromLocalVar(Type returnType) {
         Optional<VariableDeclarator> localVar = this.getLocalVarOrParamOfType(returnType);
 
         if (localVar.isPresent())

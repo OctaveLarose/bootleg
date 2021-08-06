@@ -79,7 +79,7 @@ public class CTParserProgramBuilder implements ProgramBuilder {
                 CallableMethodBodyEditor cmbe = new CallableMethodBodyEditor(classCb.getMethodFromName(ctMethodInfo.getMethodName()), classCb);
                 Type methodReturnType = ASMTypeParsingUtils.getTypeFromStr(ctMethodInfo.getReturnTypeStr());
                 if (!methodReturnType.isVoidType() && !cmbe.hasReturnStatement()) {
-                    cmbe.addReturnStatementFromLocalVar(methodReturnType);
+                    cmbe.setReturnStatementFromLocalVar(methodReturnType); // TODO If there's none available, we RETURN A CONSTRUCTOR CALL
                     cmbe.setBodyToCallable();
                 }
                 callStack.pop();

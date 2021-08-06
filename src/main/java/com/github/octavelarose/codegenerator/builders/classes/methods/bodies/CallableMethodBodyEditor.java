@@ -118,7 +118,7 @@ public class CallableMethodBodyEditor extends MethodBodyEditor {
                                         ClassBuilder calleeClass,
                                         IsCalleeMethodStatic isCalleeMethodStatic) throws BuildFailedException {
         String calleeClassName = calleeClass.getName();
-        NodeList<Expression> dummyParamVals = DummyValueCreator.getDummyParameterValuesAsExprs(method.getParameters());
+        NodeList<Expression> dummyParamVals = this.getParamValuesFromContext(method.getParameters());
         MethodCallExpr methodCallExpr = new MethodCallExpr()
                 .setName(method.getName())
                 .setArguments(dummyParamVals);
@@ -151,6 +151,29 @@ public class CallableMethodBodyEditor extends MethodBodyEditor {
                             RandomUtils.generateRandomName(BuildConstants.LOCAL_VAR_NAME_LENGTH),
                             methodCallExpr))
             ));
+    }
+
+    /**
+     * Returns a list of filled parameter values inferred from context, i.e local variable/parameter names where possible.
+     * @param parameters The input parameters
+     * @return A list of Expression objects containing values, like local variable names.
+     */
+    private NodeList<Expression> getParamValuesFromContext(NodeList<Parameter> parameters) {
+        NodeList<Expression> paramValues = new NodeList<>();
+
+        // return DummyValueCreator.getDummyParameterValuesAsExprs(parameters);
+
+        for (Parameter param: parameters) {
+            Optional<VariableDeclarator> localVar = this.getLocalVarOrParamOfType(param.getType());
+
+            if (localVar.isPresent()) {
+                paramValues.add(new NameExpr(localVar.get().getName()));
+            } else {
+                paramValues.add(new NameExpr(DummyValueCreator.getDummyParamValueFromType(param.getType())));
+            }
+        }
+
+       return paramValues;
     }
 
     /**
