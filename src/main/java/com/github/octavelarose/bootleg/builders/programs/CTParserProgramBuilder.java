@@ -99,7 +99,8 @@ public class CTParserProgramBuilder implements ProgramBuilder {
             } else {
                 MethodCallInstructionWriter mciw = new MethodCallInstructionWriter()
                         .setCaller(callStack.lastElement().a, callStack.lastElement().b)
-                        .setCallee(classCb, methodNode.getSignature());
+                        .setCallee(classCb, methodNode.getSignature())
+                        .setOtherClassesContext(classBuilders);
                 mciw.writeMethodCallInCaller();
             }
 

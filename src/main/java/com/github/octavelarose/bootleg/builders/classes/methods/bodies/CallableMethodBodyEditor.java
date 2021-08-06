@@ -17,6 +17,7 @@ import com.github.octavelarose.bootleg.builders.classes.methods.MethodCallInstru
 import com.github.octavelarose.bootleg.builders.utils.JPTypeUtils;
 import com.github.octavelarose.bootleg.builders.utils.RandomUtils;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -88,18 +89,20 @@ public class CallableMethodBodyEditor extends MethodBodyEditor {
      * Adds a call to a constructor, i.e instantiates a class and puts it in a new local variable.
      * @param calleeClass The class to be instantiated
      * @param constructorParameters Parameters of the class constructor.
+     * @param otherClasses The other classes we created so far.
      * @throws BuildFailedException If the class with the given name couldn't be accessed.
      */
     public void addConstructorCallToLocalVar(ClassBuilder calleeClass,
-                                             NodeList<Parameter> constructorParameters) throws BuildFailedException {
-        var dummyParamVals = DummyValueCreator.getDummyParameterValuesAsExprs(constructorParameters);
+                                             NodeList<Parameter> constructorParameters,
+                                             HashMap<String, ClassBuilder> otherClasses) throws BuildFailedException {
+        var dummyParamVals = this.getParamValuesFromContext(constructorParameters, otherClasses);
 
         try {
             ClassOrInterfaceType classWithName = JPTypeUtils.getClassTypeFromName(calleeClass.getImportStr());
 
             // Added to the start to make sure it's instantiated before the operations that need it, since those operations may be in variable instantiations themselves
             this.addVarInsnStatementToStart(new ExpressionStmt(new VariableDeclarationExpr(
-                            new VariableDeclarator(classWithName, calleeClass.getName().toLowerCase(),
+                            new VariableDeclarator(classWithName, RandomUtils.generateRandomName(BuildConstants.LOCAL_VAR_NAME_LENGTH),
                                     new ObjectCreationExpr().setType(classWithName).setArguments(dummyParamVals))
                     ))
             );
@@ -113,12 +116,14 @@ public class CallableMethodBodyEditor extends MethodBodyEditor {
      * @param method A method instance
      * @param calleeClass The class the method belongs to
      * @param isCalleeMethodStatic Whether or not the method is static
+     * @param otherClasses The other classes we created so far.
      */
     public void addMethodCallToLocalVar(MethodDeclaration method,
                                         ClassBuilder calleeClass,
-                                        MethodCallInstructionWriter.IsCalleeMethodStatic isCalleeMethodStatic) throws BuildFailedException {
+                                        MethodCallInstructionWriter.IsCalleeMethodStatic isCalleeMethodStatic,
+                                        HashMap<String, ClassBuilder> otherClasses) throws BuildFailedException {
         String calleeClassName = calleeClass.getName();
-        NodeList<Expression> dummyParamVals = this.getParamValuesFromContext(method.getParameters());
+        NodeList<Expression> dummyParamVals = this.getParamValuesFromContext(method.getParameters(), otherClasses);
         MethodCallExpr methodCallExpr = new MethodCallExpr()
                 .setName(method.getName())
                 .setArguments(dummyParamVals);
@@ -156,12 +161,11 @@ public class CallableMethodBodyEditor extends MethodBodyEditor {
     /**
      * Returns a list of filled parameter values inferred from context, i.e local variable/parameter names where possible.
      * @param parameters The input parameters
+     * @param otherClasses The other classes we created so far.
      * @return A list of Expression objects containing values, like local variable names.
      */
-    private NodeList<Expression> getParamValuesFromContext(NodeList<Parameter> parameters) {
+    private NodeList<Expression> getParamValuesFromContext(NodeList<Parameter> parameters, HashMap<String, ClassBuilder> otherClasses) {
         NodeList<Expression> paramValues = new NodeList<>();
-
-        // return DummyValueCreator.getDummyParameterValuesAsExprs(parameters);
 
         for (Parameter param: parameters) {
             Optional<VariableDeclarator> localVar = this.getLocalVarOrParamOfType(param.getType());
@@ -169,7 +173,19 @@ public class CallableMethodBodyEditor extends MethodBodyEditor {
             if (localVar.isPresent()) {
                 paramValues.add(new NameExpr(localVar.get().getName()));
             } else {
-                paramValues.add(new NameExpr(DummyValueCreator.getDummyParamValueFromType(param.getType())));
+                String varTypeStr = DummyValueCreator.getDummyParamValueFromType(param.getType());
+
+                if (!varTypeStr.equals("null"))
+                    paramValues.add(new NameExpr(DummyValueCreator.getDummyParamValueFromType(param.getType())));
+                else if (param.getType().asString().startsWith("java.")) {
+                    paramValues.add(new NullLiteralExpr());
+                } else {
+                    ClassBuilder cb = otherClasses.get(param.getType().asClassOrInterfaceType().getNameWithScope().replace(".", "/"));
+
+                    // TODO should call a constructor instead, with default values created in the same way
+                    paramValues.add(new NameExpr("new " + cb.getImportStr() + "()"));
+                    // cb.getConstructors().get(0).getSignature()
+                }
             }
         }
 

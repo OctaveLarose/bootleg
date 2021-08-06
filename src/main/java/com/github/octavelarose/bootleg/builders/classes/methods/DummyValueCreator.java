@@ -60,10 +60,6 @@ public class DummyValueCreator {
             case "float":
             case "double":
                 return RandomUtils.generateRandomFloat() + "f";
-            case "Benchmark": // So this is a disgusting hack to get it to run with the new changes that make the method generation more coherent...
-                return "new Benchmark()"; // ...since these two are the only object needing to be instantiated in this context to run all 10 of my benchmarks. ...
-            case "som.Random": // ... What should ACTUALLY happen is "null" never being returned and objects being instantiated instead...
-                return "new som.Random()"; // ...but you need access to the object's constructors for that! So that's what's next.
             default: // We assume it's an object.
                 return "null";
         }

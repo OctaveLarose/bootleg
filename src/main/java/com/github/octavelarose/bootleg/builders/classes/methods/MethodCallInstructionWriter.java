@@ -8,14 +8,21 @@ import com.github.octavelarose.bootleg.builders.BuildFailedException;
 import com.github.octavelarose.bootleg.builders.classes.ClassBuilder;
 import com.github.octavelarose.bootleg.builders.classes.methods.bodies.CallableMethodBodyEditor;
 
+import java.util.HashMap;
+
 /**
- * Writes a call to one method in another, i.e "methodName(3, "hello", 1.2);"
+ * Writes a call to one method in another, i.e "parentClass.methodName(3, "hello", 1.2);"
+ * Plenty of caveats, like needing to instantiate a parent class if none is present, the different syntax for static methods, etc.
  */
 public class MethodCallInstructionWriter {
     ClassBuilder callerClass;
     ClassBuilder calleeClass;
     CallableDeclaration<?> callerMethod;
     CallableDeclaration<?> calleeMethod;
+
+    // Needed for context when a method takes other classes as arguments, and those can't be fetched from local variables/the method context, ...
+    // ...hence they need to be instantiated. Which requires their constructors, which requires access to the class instances.
+    HashMap<String, ClassBuilder> otherClasses;
 
     public enum IsCalleeMethodStatic {
         YES,
@@ -60,6 +67,11 @@ public class MethodCallInstructionWriter {
         return this;
     }
 
+    public MethodCallInstructionWriter setOtherClassesContext(HashMap<String, ClassBuilder> classBuilders) {
+        this.otherClasses = classBuilders;
+        return this;
+    }
+
     /**
      * @throws BuildFailedException If one of the input values (calle(r/e) classes/methods) are null.
      */
@@ -86,12 +98,13 @@ public class MethodCallInstructionWriter {
                 ? IsCalleeMethodStatic.YES : IsCalleeMethodStatic.NO;
 
         if (calleeMethod instanceof ConstructorDeclaration) {
-            cmbe.addConstructorCallToLocalVar(calleeClass, calleeMethod.getParameters());
+            cmbe.addConstructorCallToLocalVar(calleeClass, calleeMethod.getParameters(), otherClasses);
         } else {
             cmbe.addMethodCallToLocalVar(
                     (MethodDeclaration)calleeMethod,
                     calleeClass,
-                    isCalleeMethodStatic
+                    isCalleeMethodStatic,
+                    otherClasses
             );
         }
 
