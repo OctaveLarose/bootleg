@@ -101,7 +101,7 @@ public class CallableMethodBodyEditor extends MethodBodyEditor {
             ClassOrInterfaceType classWithName = JPTypeUtils.getClassTypeFromName(calleeClass.getImportStr());
 
             // Added to the start to make sure it's instantiated before the operations that need it, since those operations may be in variable instantiations themselves
-            this.addVarInsnStatementToStart(new ExpressionStmt(new VariableDeclarationExpr(
+            this.addVarInsnStatement(new ExpressionStmt(new VariableDeclarationExpr(
                             new VariableDeclarator(classWithName, RandomUtils.generateRandomName(BuildConstants.LOCAL_VAR_NAME_LENGTH),
                                     new ObjectCreationExpr().setType(classWithName).setArguments(dummyParamVals))
                     ))
