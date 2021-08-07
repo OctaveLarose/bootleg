@@ -175,16 +175,19 @@ public class CallableMethodBodyEditor extends MethodBodyEditor {
             } else {
                 String varTypeStr = DummyValueCreator.getDummyParamValueFromType(param.getType());
 
+                // TODO clean up this
                 if (!varTypeStr.equals("null"))
                     paramValues.add(new NameExpr(DummyValueCreator.getDummyParamValueFromType(param.getType())));
                 else if (param.getType().asString().startsWith("java.")) {
                     paramValues.add(new NullLiteralExpr());
                 } else {
-                    ClassBuilder cb = otherClasses.get(param.getType().asClassOrInterfaceType().getNameWithScope().replace(".", "/"));
+                    ClassOrInterfaceType classType = param.getType().asClassOrInterfaceType();
+                    ClassBuilder cb = otherClasses.get(classType.getNameWithScope().replace(".", "/"));
 
-                    // TODO should call a constructor instead, with default values created in the same way
-                    paramValues.add(new NameExpr("new " + cb.getImportStr() + "()"));
-                    // cb.getConstructors().get(0).getSignature()
+                    // TODO check if there are constructors
+                    var dummyParamVals = DummyValueCreator.getDummyParameterValuesAsExprs(cb.getConstructors().get(0).getParameters());
+
+                    paramValues.add(new ObjectCreationExpr().setType(classType).setArguments(dummyParamVals));
                 }
             }
         }
