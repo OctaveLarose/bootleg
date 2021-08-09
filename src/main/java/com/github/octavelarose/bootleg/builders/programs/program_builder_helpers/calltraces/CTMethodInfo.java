@@ -80,12 +80,13 @@ public class CTMethodInfo {
      * @return true if the method is a lambda, false otherwise.
      */
     public boolean isLambda() {
+        // Some lambda function names are capitalized and some aren't
         return methodArr.get(FULLNAME).contains("Lambda") || methodArr.get(FULLNAME).contains("lambda");
     }
 
     /**
      * Static initializers, defined by <clinit>, are NOT handled so we pretend it's a regular public method.
-     * TODO remove and handle static initializers instead.
+     * TODO remove and handle static initializers instead (the method addStaticInitializer() exists for class instances)
      */
     public void modifyIfStaticInit() {
         if (this.getMethodName().equals(STATIC_INIT_NAME)) {

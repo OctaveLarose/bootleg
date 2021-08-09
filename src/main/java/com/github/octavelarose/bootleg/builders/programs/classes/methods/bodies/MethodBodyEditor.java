@@ -72,7 +72,7 @@ public abstract class MethodBodyEditor {
 
     /**
      * Adds a regular operation statement.
-     * @param expr The regular operation statement/expression. TODO make statement
+     * @param expr The regular operation statement/expression.
      */
     public void addRegularStatement(Statement expr) {
         this.regularInstrsBlock.addStatement(expr);

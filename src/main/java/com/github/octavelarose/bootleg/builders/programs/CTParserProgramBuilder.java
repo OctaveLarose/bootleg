@@ -63,14 +63,12 @@ public class CTParserProgramBuilder implements ProgramBuilder {
             if (this.methodOperations != null && this.methodOperations.get(ctMethodInfo.get(CTMethodInfo.FULLNAME)) != null)
                 ctMethodInfo.setMethodOperations(this.methodOperations.get(ctMethodInfo.get(CTMethodInfo.FULLNAME)));
 
-            // We ignore lambda calls for now. TODO: look into why some lambda function names are capitalized and some aren't
+            // We ignore lambda calls for now.
             if (ctMethodInfo.isLambda())
                 continue;
 
             ctMethodInfo.modifyIfStaticInit();
 
-            // so TODO: if it's part of the JDK then we don't create a class builder... or do we? one that wraps a jdk class?
-            // I'm confusing myself here. Need to go back to that problem.
             ClassBuilder classCb = getOrCreateClassBuilder(classBuilders, ctMethodInfo.getClassName());
 
             // If it's a method exit, we add a return statement and we go to the next one.

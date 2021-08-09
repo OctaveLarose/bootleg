@@ -116,7 +116,7 @@ public class BasicClassBuilder extends ClassBuilder {
 
         Optional<PackageDeclaration> pkgDeclaration = cuClassToLink.getPackageDeclaration();
         if (pkgDeclaration.isPresent()) {
-            // TODO: It doesn't use it since it's the same pkg in my test case (I believe). Need to make sure
+            // It doesn't use it since it's the same pkg in my test case, I believe.
             String importDeclaration = pkgDeclaration.get().getNameAsString() + "." + className;
             this.addImport(importDeclaration);
         } else
