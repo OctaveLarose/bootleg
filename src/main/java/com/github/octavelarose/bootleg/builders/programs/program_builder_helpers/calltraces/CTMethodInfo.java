@@ -1,4 +1,4 @@
-package com.github.octavelarose.bootleg.builders.programs.calltraces;
+package com.github.octavelarose.bootleg.builders.programs.program_builder_helpers.calltraces;
 
 import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.NodeList;

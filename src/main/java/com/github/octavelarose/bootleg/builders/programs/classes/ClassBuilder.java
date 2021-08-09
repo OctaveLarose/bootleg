@@ -1,4 +1,4 @@
-package com.github.octavelarose.bootleg.builders.classes;
+package com.github.octavelarose.bootleg.builders.programs.classes;
 
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Modifier;

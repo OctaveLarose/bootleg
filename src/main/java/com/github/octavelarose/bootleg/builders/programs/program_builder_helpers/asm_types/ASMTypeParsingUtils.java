@@ -1,11 +1,11 @@
-package com.github.octavelarose.bootleg.builders.programs.asm_types;
+package com.github.octavelarose.bootleg.builders.programs.program_builder_helpers.asm_types;
 
 import com.github.javaparser.ParseException;
 import com.github.javaparser.ast.type.ArrayType;
 import com.github.javaparser.ast.type.PrimitiveType;
 import com.github.javaparser.ast.type.Type;
 import com.github.javaparser.ast.type.VoidType;
-import com.github.octavelarose.bootleg.builders.utils.JPTypeUtils;
+import com.github.octavelarose.bootleg.builders.programs.utils.JPTypeUtils;
 
 import java.util.ArrayList;
 import java.util.List;

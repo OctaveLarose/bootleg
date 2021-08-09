@@ -1,4 +1,4 @@
-package com.github.octavelarose.bootleg.builders.classes;
+package com.github.octavelarose.bootleg.builders.programs.classes;
 
 import com.github.javaparser.ParseException;
 import com.github.javaparser.ast.Modifier;
@@ -9,7 +9,7 @@ import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.type.ArrayType;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.type.VoidType;
-import com.github.octavelarose.bootleg.builders.utils.JPTypeUtils;
+import com.github.octavelarose.bootleg.builders.programs.utils.JPTypeUtils;
 
 import java.util.List;
 

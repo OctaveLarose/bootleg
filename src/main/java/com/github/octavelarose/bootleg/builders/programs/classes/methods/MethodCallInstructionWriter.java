@@ -1,12 +1,12 @@
-package com.github.octavelarose.bootleg.builders.classes.methods;
+package com.github.octavelarose.bootleg.builders.programs.classes.methods;
 
 import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.body.CallableDeclaration;
 import com.github.javaparser.ast.body.ConstructorDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.octavelarose.bootleg.builders.BuildFailedException;
-import com.github.octavelarose.bootleg.builders.classes.ClassBuilder;
-import com.github.octavelarose.bootleg.builders.classes.methods.bodies.CallableMethodBodyEditor;
+import com.github.octavelarose.bootleg.builders.programs.classes.ClassBuilder;
+import com.github.octavelarose.bootleg.builders.programs.classes.methods.bodies.CallableMethodBodyEditor;
 
 import java.util.HashMap;
 

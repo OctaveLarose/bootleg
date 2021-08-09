@@ -1,11 +1,11 @@
-package com.github.octavelarose.bootleg.builders.classes.methods;
+package com.github.octavelarose.bootleg.builders.programs.classes.methods.bodies.values;
 
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.NameExpr;
 import com.github.javaparser.ast.type.Type;
-import com.github.octavelarose.bootleg.builders.utils.RandomUtils;
+import com.github.octavelarose.bootleg.builders.programs.utils.RandomUtils;
 
 /**
  * Used to generate dummy values.

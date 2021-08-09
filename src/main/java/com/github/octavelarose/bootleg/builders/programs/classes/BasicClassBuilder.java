@@ -1,4 +1,4 @@
-package com.github.octavelarose.bootleg.builders.classes;
+package com.github.octavelarose.bootleg.builders.programs.classes;
 
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Modifier;
@@ -14,7 +14,7 @@ import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.type.PrimitiveType;
 import com.github.javaparser.ast.type.VoidType;
 import com.github.octavelarose.bootleg.builders.BuildFailedException;
-import com.github.octavelarose.bootleg.builders.utils.RandomUtils;
+import com.github.octavelarose.bootleg.builders.programs.utils.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;

@@ -1,10 +1,10 @@
 package com.github.octavelarose.bootleg;
 
 import com.github.octavelarose.bootleg.builders.BuildFailedException;
-import com.github.octavelarose.bootleg.builders.classes.ClassBuilder;
 import com.github.octavelarose.bootleg.builders.programs.CTParserProgramBuilder;
 import com.github.octavelarose.bootleg.builders.programs.ProgramBuilder;
 import com.github.octavelarose.bootleg.builders.programs.TestProgramBuilder;
+import com.github.octavelarose.bootleg.builders.programs.classes.ClassBuilder;
 import com.github.octavelarose.bootleg.export.ProgramExporter;
 import org.apache.commons.cli.*;
 

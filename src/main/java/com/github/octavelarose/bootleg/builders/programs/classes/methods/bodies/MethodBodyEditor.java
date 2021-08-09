@@ -1,4 +1,4 @@
-package com.github.octavelarose.bootleg.builders.classes.methods.bodies;
+package com.github.octavelarose.bootleg.builders.programs.classes.methods.bodies;
 
 import com.github.javaparser.ParseException;
 import com.github.javaparser.ast.NodeList;
@@ -13,10 +13,10 @@ import com.github.javaparser.ast.stmt.ReturnStmt;
 import com.github.javaparser.ast.stmt.Statement;
 import com.github.javaparser.ast.type.Type;
 import com.github.octavelarose.bootleg.builders.BuildFailedException;
-import com.github.octavelarose.bootleg.builders.classes.methods.DummyValueCreator;
-import com.github.octavelarose.bootleg.builders.programs.asm_types.ASMBytecodeParsingUtils;
-import com.github.octavelarose.bootleg.builders.utils.JPTypeUtils;
-import com.github.octavelarose.bootleg.builders.utils.RandomUtils;
+import com.github.octavelarose.bootleg.builders.programs.classes.methods.bodies.values.DummyValueCreator;
+import com.github.octavelarose.bootleg.builders.programs.program_builder_helpers.asm_types.ASMBytecodeParsingUtils;
+import com.github.octavelarose.bootleg.builders.programs.utils.JPTypeUtils;
+import com.github.octavelarose.bootleg.builders.programs.utils.RandomUtils;
 
 import java.util.List;
 import java.util.Optional;

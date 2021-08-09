@@ -1,9 +1,9 @@
 package com.github.octavelarose.bootleg.builders.programs;
 
 import com.github.octavelarose.bootleg.builders.BuildFailedException;
-import com.github.octavelarose.bootleg.builders.classes.BasicClassBuilder;
-import com.github.octavelarose.bootleg.builders.classes.ClassBuilder;
-import com.github.octavelarose.bootleg.builders.classes.EntryPointBuilder;
+import com.github.octavelarose.bootleg.builders.programs.classes.BasicClassBuilder;
+import com.github.octavelarose.bootleg.builders.programs.classes.ClassBuilder;
+import com.github.octavelarose.bootleg.builders.programs.classes.EntryPointBuilder;
 
 import java.util.ArrayList;
 import java.util.Arrays;

@@ -1,4 +1,4 @@
-package com.github.octavelarose.bootleg.builders.classes.methods.bodies;
+package com.github.octavelarose.bootleg.builders.programs.classes.methods.bodies;
 
 import com.github.javaparser.ParseException;
 import com.github.javaparser.ast.NodeList;
@@ -11,11 +11,11 @@ import com.github.javaparser.ast.stmt.Statement;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.octavelarose.bootleg.builders.BuildConstants;
 import com.github.octavelarose.bootleg.builders.BuildFailedException;
-import com.github.octavelarose.bootleg.builders.classes.ClassBuilder;
-import com.github.octavelarose.bootleg.builders.classes.methods.DummyValueCreator;
-import com.github.octavelarose.bootleg.builders.classes.methods.MethodCallInstructionWriter;
-import com.github.octavelarose.bootleg.builders.utils.JPTypeUtils;
-import com.github.octavelarose.bootleg.builders.utils.RandomUtils;
+import com.github.octavelarose.bootleg.builders.programs.classes.ClassBuilder;
+import com.github.octavelarose.bootleg.builders.programs.classes.methods.MethodCallInstructionWriter;
+import com.github.octavelarose.bootleg.builders.programs.classes.methods.bodies.values.DummyValueCreator;
+import com.github.octavelarose.bootleg.builders.programs.utils.JPTypeUtils;
+import com.github.octavelarose.bootleg.builders.programs.utils.RandomUtils;
 
 import java.util.HashMap;
 import java.util.List;

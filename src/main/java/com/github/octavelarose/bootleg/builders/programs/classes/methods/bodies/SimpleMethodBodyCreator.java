@@ -1,4 +1,4 @@
-package com.github.octavelarose.bootleg.builders.classes.methods.bodies;
+package com.github.octavelarose.bootleg.builders.programs.classes.methods.bodies;
 
 import com.github.javaparser.ast.expr.NameExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;

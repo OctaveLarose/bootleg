@@ -2,7 +2,7 @@ package com.github.octavelarose.bootleg.export;
 
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.PackageDeclaration;
-import com.github.octavelarose.bootleg.builders.classes.ClassBuilder;
+import com.github.octavelarose.bootleg.builders.programs.classes.ClassBuilder;
 
 import java.io.File;
 import java.io.FileWriter;

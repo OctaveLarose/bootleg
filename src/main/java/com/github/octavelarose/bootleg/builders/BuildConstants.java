@@ -1,7 +1,7 @@
 package com.github.octavelarose.bootleg.builders;
 
 /**
- * Constants related to code generation. Might delete in the future
+ * Constants related to code generation.
  */
 public class BuildConstants {
     // The name given to constructors, by the ASM library.

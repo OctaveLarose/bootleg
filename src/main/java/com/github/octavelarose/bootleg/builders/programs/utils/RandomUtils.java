@@ -1,4 +1,4 @@
-package com.github.octavelarose.bootleg.builders.utils;
+package com.github.octavelarose.bootleg.builders.programs.utils;
 
 import java.util.Random;
 
@@ -7,8 +7,7 @@ import java.util.Random;
  */
 public class RandomUtils {
     /**
-     * Generates a random name. Used to name methods, among others. May need to be moved to a "Utils" class.
-     *
+     * Generates a random name. Used to name methods, among others.
      * @param nbrCharacters Number of characters of the output string.
      * @return A string made up of nbrCharacters random characters.
      */
@@ -21,10 +20,6 @@ public class RandomUtils {
         }
 
         return buffer.toString();
-    }
-
-    public static int generateRandomInt() {
-        return new Random().nextInt(Integer.MAX_VALUE);
     }
 
     public static int generateRandomInt(int maxValue) {

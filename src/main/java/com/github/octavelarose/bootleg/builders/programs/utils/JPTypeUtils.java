@@ -1,4 +1,4 @@
-package com.github.octavelarose.bootleg.builders.utils;
+package com.github.octavelarose.bootleg.builders.programs.utils;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseException;
@@ -12,7 +12,6 @@ import java.util.Optional;
 public class JPTypeUtils {
     /**
      * Returns a ClassOrInterfaceType from a string.
-     * Needed to be wrapped in its own method as it's kind of a mouthful and got duplicated among the codebase fast.
      * @param className The name of the class.
      * @return The type of the class, from its name.
      * @throws ParseException If JP failed to parse the class. I believe this only happens if the string has a bad format.

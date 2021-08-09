@@ -1,6 +1,6 @@
 package com.github.octavelarose.bootleg.export;
 
-import com.github.octavelarose.bootleg.builders.classes.ClassBuilder;
+import com.github.octavelarose.bootleg.builders.programs.classes.ClassBuilder;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;

@@ -1,4 +1,4 @@
-package com.github.octavelarose.bootleg.builders.programs.fileparsers;
+package com.github.octavelarose.bootleg.builders.programs.program_builder_helpers.fileparsers;
 
 import com.github.octavelarose.bootleg.builders.BuildFailedException;
 
