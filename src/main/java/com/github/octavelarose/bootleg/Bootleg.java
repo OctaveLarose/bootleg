@@ -31,6 +31,7 @@ public class Bootleg {
 
         options.addOption("ct", "ct-file", true, "generates a program from a calltrace file");
         options.addOption("op", "op-file", true, "if a calltrace file has been provided, you can also provide a file detailing method operations");
+        options.addOption("n", "no-print-method-names", false,"to disable printing each method's name when in scope");
         options.addOption("t", "test", false, "generates a very basic proof of concept program");
         options.addOption("h", "help", false, "displays this message.");
 
@@ -53,6 +54,8 @@ public class Bootleg {
                 pb = new CTParserProgramBuilder(cmd.getOptionValue("ct-file"));
                 if (cmd.hasOption("op-file"))
                     ((CTParserProgramBuilder)pb).setOperationsFileName(cmd.getOptionValue("op-file"));
+                if (cmd.hasOption("no-print-method-names"))
+                    ((CTParserProgramBuilder)pb).shouldPrintMethodNames(false);
             } else {
                 new HelpFormatter().printHelp("bootleg", Bootleg.getOptions());
                 return;

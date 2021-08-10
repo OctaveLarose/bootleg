@@ -35,6 +35,8 @@ public class CTParserProgramBuilder implements ProgramBuilder {
     private final List<List<String>> callFileLines;
     private HashMap<String, List<String>> methodOperations;
 
+    private boolean shouldPrintMethodNames = true;
+
     public CTParserProgramBuilder(String ctFileName) throws BuildFailedException {
         System.out.println("Generating a program from the calltrace file: " + ctFileName);
         this.callFileLines = new CTFileParser(ctFileName).parse().getParsedCT();
@@ -45,10 +47,16 @@ public class CTParserProgramBuilder implements ProgramBuilder {
      * @param opsFileName The name of the operations file
      * @throws BuildFailedException If parsing the operations file fails.
      */
-    public CTParserProgramBuilder setOperationsFileName(String opsFileName) throws BuildFailedException {
+    public void setOperationsFileName(String opsFileName) throws BuildFailedException {
         System.out.println("Optional operations file provided: " + opsFileName);
         this.methodOperations = new ArithmeticOperationsFileParser(opsFileName).parse().getParsedArithmeticOps();
-        return this;
+    }
+
+    /**
+     * @param shouldPrintMethodNames Represents whether the method names should be printed when entering each method.
+     */
+    public void shouldPrintMethodNames(boolean shouldPrintMethodNames) {
+        this.shouldPrintMethodNames = shouldPrintMethodNames;
     }
 
     public HashMap<String, ClassBuilder> build() throws BuildFailedException {
@@ -145,8 +153,10 @@ public class CTParserProgramBuilder implements ProgramBuilder {
         Type returnType = ASMTypeParsingUtils.getTypeFromStr(ctMethodInfo.getReturnTypeStr());
         NodeList<Modifier> modifiers = ctMethodInfo.getScopeModifiersList();
 
-        SimpleMethodBodyCreator smbc = new SimpleMethodBodyCreator()
-                                .addDefaultStatements(ctMethodInfo.get(CTMethodInfo.FULLNAME));
+        SimpleMethodBodyCreator smbc = new SimpleMethodBodyCreator();
+
+        if (shouldPrintMethodNames)
+            smbc.addDefaultStatements(ctMethodInfo.get(CTMethodInfo.FULLNAME));
 
         NodeList<Parameter> parameters = new NodeList<>();
 
