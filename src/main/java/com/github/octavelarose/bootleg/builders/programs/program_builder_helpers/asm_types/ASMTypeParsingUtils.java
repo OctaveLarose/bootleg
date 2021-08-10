@@ -145,32 +145,4 @@ public class ASMTypeParsingUtils {
         }
         return typeArr;
     }
-
-    // --- Some example from the ASM lib ---
-/*    public static Type[] getArgumentTypes(final String methodDescriptor) throws ASMParsingException {
-        char[] buf = methodDescriptor.toCharArray();
-        int off = 1;
-        int size = 0;
-        while (true) {
-            char car = buf[off++];
-            if (car == ')') {
-                break;
-            } else if (car == 'L') {
-                while (buf[off++] != ';') {
-                }
-                ++size;
-            } else if (car != '[') {
-                ++size;
-            }
-        }
-        Type[] args = new Type[size];
-        off = 1;
-        size = 0;
-        while (buf[off] != ')') {
-            args[size] = getTypeFromStr(methodDescriptor.substring(off));
-            off += 1;
-            size += 1;
-        }
-        return args;
-    }*/
 }

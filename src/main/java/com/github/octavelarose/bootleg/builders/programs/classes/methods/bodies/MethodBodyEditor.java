@@ -4,16 +4,14 @@ import com.github.javaparser.ParseException;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.body.VariableDeclarator;
-import com.github.javaparser.ast.expr.AssignExpr;
-import com.github.javaparser.ast.expr.Expression;
-import com.github.javaparser.ast.expr.NameExpr;
-import com.github.javaparser.ast.expr.VariableDeclarationExpr;
+import com.github.javaparser.ast.expr.*;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.ExpressionStmt;
 import com.github.javaparser.ast.stmt.ReturnStmt;
 import com.github.javaparser.ast.stmt.Statement;
 import com.github.javaparser.ast.type.Type;
 import com.github.octavelarose.bootleg.builders.BuildFailedException;
+import com.github.octavelarose.bootleg.builders.programs.classes.ClassBuilder;
 import com.github.octavelarose.bootleg.builders.programs.classes.methods.bodies.values.DummyValueCreator;
 import com.github.octavelarose.bootleg.builders.programs.program_builder_helpers.asm_types.ASMBytecodeParsingUtils;
 import com.github.octavelarose.bootleg.builders.programs.utils.JPTypeUtils;
@@ -89,14 +87,32 @@ public abstract class MethodBodyEditor {
      * If none are eligible, then a random value is returned instead.
      * @param returnType The return type of the method.
      */
-    public void setReturnStatementFromLocalVar(Type returnType) {
+    public boolean setReturnStatementFromLocalVar(Type returnType) {
         Optional<VariableDeclarator> localVar = this.getLocalVarOrParamOfType(returnType);
 
         if (localVar.isPresent())
             this.setReturnStatement(new ReturnStmt(new NameExpr(localVar.get().getName())));
-        else
+        else if (!returnType.isClassOrInterfaceType())
             this.setRandomReturnStatement(returnType);
+        else
+            return false;
+
+        return true;
     }
+
+    /**
+     * Adds a return statement as a new class instantiation.
+     * @param classCb The class
+     */
+    public void setReturnStatementAsNewClass(ClassBuilder classCb) {
+        if (classCb.getConstructors().size() == 0)
+            this.returnStmt = new ReturnStmt(new NullLiteralExpr());
+        else
+            this.returnStmt = new ReturnStmt(new ObjectCreationExpr()
+                    .setType(classCb.getImportStr())
+                    .setArguments(DummyValueCreator.getDummyParameterValuesAsExprs(classCb.getConstructors().get(0).getParameters())));
+    }
+
 
     /**
      * @return true if the method has a return statement, false otherwise.
@@ -174,8 +190,7 @@ public abstract class MethodBodyEditor {
             return this.getLocalVarOrParamOfType(JPTypeUtils.getClassTypeFromName(objName));
         } catch (ParseException e) {
             System.err.println(e.getMessage()); // Ugly, but should never happen (famous last words)
+            return Optional.empty();
         }
-
-        return Optional.empty();
     }
 }
