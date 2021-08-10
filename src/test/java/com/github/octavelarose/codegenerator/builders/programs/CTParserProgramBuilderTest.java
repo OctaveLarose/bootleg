@@ -1,6 +1,6 @@
 package com.github.octavelarose.codegenerator.builders.programs;
 
-import com.github.octavelarose.bootleg.builders.programs.CTParserProgramBuilder;
+import com.github.octavelarose.bootleg.builders.programs.calltraces.CTParserProgramBuilder;
 import org.junit.Test;
 
 import java.io.File;
