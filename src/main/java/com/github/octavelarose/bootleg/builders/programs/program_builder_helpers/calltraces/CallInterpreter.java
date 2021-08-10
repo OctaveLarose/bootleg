@@ -35,7 +35,7 @@ public class CallInterpreter {
     final HashMap<String, ClassBuilder> classBuilders;
     final Stack<Pair<ClassBuilder, CallableDeclaration.Signature>> callStack;
 
-    static boolean shouldPrintMethodNames;
+    static boolean shouldPrintMethodNames = true;
 
     private ClassBuilder classCb;
 
@@ -93,7 +93,7 @@ public class CallInterpreter {
      * Adds a return statement at the end of the method body.
      * @throws BuildFailedException If something goes wrong when modifying the method body.
      */
-    public void addReturnStatement() throws BuildFailedException {
+    private void addReturnStatement() throws BuildFailedException {
         CallableMethodBodyEditor cmbe = new CallableMethodBodyEditor(classCb.getMethodFromName(ctMethodInfo.getMethodName()), classCb);
         Type methodReturnType = ASMTypeParsingUtils.getTypeFromStr(ctMethodInfo.getReturnTypeStr());
 
