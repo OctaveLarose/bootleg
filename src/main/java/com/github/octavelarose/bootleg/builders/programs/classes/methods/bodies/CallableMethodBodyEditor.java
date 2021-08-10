@@ -36,14 +36,12 @@ public class CallableMethodBodyEditor extends MethodBodyEditor {
         this.parentClass = parentClass;
 
         // Not very good, what if there's a return statement in the middle of the function?
-        // Will do the job fine so far since we're assuming all methods will have this distinct var insn/calculations/return statement structure
+        // Will do the job fine so far since we're assuming all methods only have a return statement at the end
         for (Statement stmt: methodBody.getStatements()) {
-            if (stmt instanceof ExpressionStmt && ((ExpressionStmt)stmt).getExpression().isVariableDeclarationExpr())
-                this.varsInsnBlock.addStatement(stmt);
-            else if (stmt instanceof ReturnStmt)
+            if (stmt instanceof ReturnStmt)
                 this.returnStmt = (ReturnStmt) stmt;
             else
-                this.regularInstrsBlock.addStatement(stmt);
+                this.instrsBlock.addStatement(stmt);
         }
 
         this.setMethodParameters(method.getParameters());
@@ -101,7 +99,7 @@ public class CallableMethodBodyEditor extends MethodBodyEditor {
             ClassOrInterfaceType classWithName = JPTypeUtils.getClassTypeFromName(calleeClass.getImportStr());
 
             // Added to the start to make sure it's instantiated before the operations that need it, since those operations may be in variable instantiations themselves
-            this.addVarInsnStatement(new ExpressionStmt(new VariableDeclarationExpr(
+            this.addStatement(new ExpressionStmt(new VariableDeclarationExpr(
                             new VariableDeclarator(classWithName, RandomUtils.generateRandomName(BuildConstants.LOCAL_VAR_NAME_LENGTH),
                                     new ObjectCreationExpr().setType(classWithName).setArguments(dummyParamVals))
                     ))
@@ -149,9 +147,9 @@ public class CallableMethodBodyEditor extends MethodBodyEditor {
         }
 
         if (method.getType().isVoidType())
-            this.addRegularStatement(new ExpressionStmt(methodCallExpr));
+            this.addStatement(new ExpressionStmt(methodCallExpr));
         else
-            this.addVarInsnStatement(new ExpressionStmt(new VariableDeclarationExpr(
+            this.addStatement(new ExpressionStmt(new VariableDeclarationExpr(
                     new VariableDeclarator(method.getType(),
                             RandomUtils.generateRandomName(BuildConstants.LOCAL_VAR_NAME_LENGTH),
                             methodCallExpr))
@@ -218,7 +216,7 @@ public class CallableMethodBodyEditor extends MethodBodyEditor {
                     new ObjectCreationExpr().setType(classType).setArguments(dummyParamVals));
 
             // Added to the start to make sure it's instantiated before the operations that need it, since those operations may be in variable instantiations themselves
-            this.addVarInsnStatementToStart(new ExpressionStmt(new VariableDeclarationExpr(varDeclarator)));
+            this.addStatementToStart(new ExpressionStmt(new VariableDeclarationExpr(varDeclarator)));
 
             return varDeclarator;
         } catch (ParseException e) {

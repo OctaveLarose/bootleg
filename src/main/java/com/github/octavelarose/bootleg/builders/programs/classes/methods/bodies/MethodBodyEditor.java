@@ -5,6 +5,7 @@ import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.expr.AssignExpr;
+import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.NameExpr;
 import com.github.javaparser.ast.expr.VariableDeclarationExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
@@ -25,9 +26,7 @@ import java.util.Optional;
  * Creates and manages a method body, i.e a BlockStmt object.
  */
 public abstract class MethodBodyEditor {
-    // We're assuming methods are divided into three parts: the instantiation of local variables, various calculations, and end return statements.
-    protected final BlockStmt varsInsnBlock = new BlockStmt();
-    protected final BlockStmt regularInstrsBlock = new BlockStmt();
+    protected final BlockStmt instrsBlock = new BlockStmt();
     protected ReturnStmt returnStmt;
 
     protected NodeList<Parameter> methodParameters;
@@ -44,9 +43,7 @@ public abstract class MethodBodyEditor {
     protected BlockStmt generateMethodBody() {
         NodeList<Statement> concatStmts = new NodeList<>();
 
-        for (Statement stmt: this.varsInsnBlock.getStatements())
-            concatStmts.add(stmt);
-        for (Statement stmt: this.regularInstrsBlock.getStatements())
+        for (Statement stmt: this.instrsBlock.getStatements())
             concatStmts.add(stmt);
         if (this.returnStmt != null)
             concatStmts.add(this.returnStmt);
@@ -55,27 +52,19 @@ public abstract class MethodBodyEditor {
     }
 
     /**
-     * Adds a variable instantiation statement.
-     * @param exprStmt The variable instantiation statement.
+     * Adds a statement to the method body.
+     * @param exprStmt The statement as an ExpressionStmt.
      */
-    public void addVarInsnStatement(ExpressionStmt exprStmt) {
-        this.varsInsnBlock.addStatement(exprStmt);
+    public void addStatement(ExpressionStmt exprStmt) {
+        this.instrsBlock.addStatement(exprStmt);
     }
 
     /**
-     * Adds a variable instantiation statement to the start of the instantiations.
-     * @param exprStmt The variable instantiation statement.
+     * Adds a statement to the start of the method body.
+     * @param exprStmt The statement as an ExpressionStmt.
      */
-    public void addVarInsnStatementToStart(ExpressionStmt exprStmt) {
-        this.varsInsnBlock.addStatement(0, exprStmt);
-    }
-
-    /**
-     * Adds a regular operation statement.
-     * @param expr The regular operation statement/expression.
-     */
-    public void addRegularStatement(Statement expr) {
-        this.regularInstrsBlock.addStatement(expr);
+    public void addStatementToStart(ExpressionStmt exprStmt) {
+        this.instrsBlock.addStatement(0, exprStmt);
     }
 
     /**
@@ -136,13 +125,13 @@ public abstract class MethodBodyEditor {
             Optional<VariableDeclarator> localVarName = this.getLocalVarOrParamOfType(opType);
 
             if (localVarName.isEmpty()) {
-                this.addVarInsnStatement(new ExpressionStmt(
+                this.addStatement(new ExpressionStmt(
                         new VariableDeclarationExpr(
                             new VariableDeclarator(opType, RandomUtils.generateRandomName(5),
                                 new NameExpr(DummyValueCreator.getDummyParamValueFromType(opType))))
                 ));
             } else {
-                this.addRegularStatement(new ExpressionStmt(
+                this.addStatement(new ExpressionStmt(
                         new AssignExpr(
                             new NameExpr(localVarName.get().getName()),
                             new NameExpr(DummyValueCreator.getDummyParamValueFromType(opType)),
@@ -164,10 +153,13 @@ public abstract class MethodBodyEditor {
             }
         }
 
-        for (Statement stmt: this.varsInsnBlock.getStatements()) {
-            VariableDeclarationExpr expr = stmt.asExpressionStmt().getExpression().asVariableDeclarationExpr();
-            if (expr.getVariable(0).getType().equals(wantedType))
-                return Optional.of(expr.getVariable(0));
+        for (Statement stmt: this.instrsBlock.getStatements()) {
+            Expression stmtExpr = stmt.asExpressionStmt().getExpression();
+            if (stmtExpr.isVariableDeclarationExpr()) {
+                VariableDeclarationExpr expr = stmt.asExpressionStmt().getExpression().asVariableDeclarationExpr();
+                if (expr.getVariable(0).getType().equals(wantedType))
+                    return Optional.of(expr.getVariable(0));
+            }
         }
 
         return Optional.empty();

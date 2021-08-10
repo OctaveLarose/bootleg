@@ -22,7 +22,7 @@ public class SimpleMethodBodyCreator extends MethodBodyEditor {
      */
     public SimpleMethodBodyCreator addDefaultStatements(String methodFullName) {
         // In the future, should ideally contain "advanced" operations.
-        this.regularInstrsBlock.addStatement(new NameExpr("System.out.println(\"" + "Current method: " + methodFullName + "\")"));
+        this.instrsBlock.addStatement(new NameExpr("System.out.println(\"" + "Current method: " + methodFullName + "\")"));
         return this;
     }
 }
