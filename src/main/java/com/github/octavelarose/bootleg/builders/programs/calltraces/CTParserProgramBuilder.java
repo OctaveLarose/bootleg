@@ -48,7 +48,7 @@ public class CTParserProgramBuilder implements ProgramBuilder {
 
         for (List<String> methodArr: this.callFileLines) {
             CTMethodInfo ctMethodInfo = new CTMethodInfo(methodArr);
-            if (this.methodOperations != null && this.methodOperations.get(ctMethodInfo.get(CTMethodInfo.FULLNAME)) != null)
+            if (this.methodOperations != null)
                 ctMethodInfo.setMethodOperations(this.methodOperations.get(ctMethodInfo.get(CTMethodInfo.FULLNAME)));
 
             CallInterpreter ctInterpreter = new CallInterpreter(ctMethodInfo, classBuilders, callStack);

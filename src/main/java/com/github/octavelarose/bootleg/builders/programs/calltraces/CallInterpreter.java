@@ -51,6 +51,10 @@ public class CallInterpreter {
         CallInterpreter.shouldPrintMethodNames = shouldPrintMethodNames;
     }
 
+    /**
+     * Does operations related to interpreting a single call from our calltrace.
+     * @throws BuildFailedException If something goes wrong in the program building during operations related to the current method call.
+     */
     public void execute() throws BuildFailedException {
         // We ignore lambda calls for now.
         if (ctMethodInfo.isLambda())
