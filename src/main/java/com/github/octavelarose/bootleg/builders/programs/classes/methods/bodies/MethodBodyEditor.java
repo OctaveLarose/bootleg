@@ -17,8 +17,10 @@ import com.github.octavelarose.bootleg.builders.programs.classes.methods.bodies.
 import com.github.octavelarose.bootleg.builders.programs.utils.JPTypeUtils;
 import com.github.octavelarose.bootleg.builders.programs.utils.RandomUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 
 /**
  * Creates and manages a method body, i.e a BlockStmt object.
@@ -162,10 +164,12 @@ public abstract class MethodBodyEditor {
      * @return The name of a local variable / parameter of that given type
      */
     protected Optional<VariableDeclarator> getLocalVarOrParamOfType(Type wantedType) {
+        List<VariableDeclarator> candidateVars = new ArrayList<>();
+
         if (this.methodParameters != null && this.methodParameters.isNonEmpty()) {
             for (Parameter param : this.methodParameters) {
                 if (param.getType().equals(wantedType))
-                    return Optional.of(new VariableDeclarator(param.getType(), param.getName()));
+                    candidateVars.add(new VariableDeclarator(param.getType(), param.getName()));
             }
         }
 
@@ -174,11 +178,14 @@ public abstract class MethodBodyEditor {
             if (stmtExpr.isVariableDeclarationExpr()) {
                 VariableDeclarationExpr expr = stmt.asExpressionStmt().getExpression().asVariableDeclarationExpr();
                 if (expr.getVariable(0).getType().equals(wantedType))
-                    return Optional.of(expr.getVariable(0));
+                    candidateVars.add(expr.getVariable(0));
             }
         }
 
-        return Optional.empty();
+        if (candidateVars.isEmpty())
+            return Optional.empty();
+        else
+            return Optional.of(candidateVars.get(new Random().nextInt(candidateVars.size())));
     }
 
     /**
