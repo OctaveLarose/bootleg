@@ -13,7 +13,8 @@ import com.github.octavelarose.bootleg.builders.BuildFailedException;
 import com.github.octavelarose.bootleg.builders.programs.calltraces.asm_types.ASMBytecodeParsingUtils;
 import com.github.octavelarose.bootleg.builders.programs.classes.ClassBuilder;
 import com.github.octavelarose.bootleg.builders.programs.classes.methods.bodies.variables.DummyValueCreator;
-import com.github.octavelarose.bootleg.builders.programs.classes.methods.bodies.variables.LocalVariableMonitor;
+import com.github.octavelarose.bootleg.builders.programs.classes.methods.bodies.variables.LocalVariableFetcher;
+import com.github.octavelarose.bootleg.builders.programs.classes.methods.bodies.variables.visitors.VarInstantiatorVisitor;
 import com.github.octavelarose.bootleg.builders.programs.utils.RandomUtils;
 
 import java.util.List;
@@ -26,8 +27,8 @@ public abstract class MethodBodyEditor {
     protected final BlockStmt instrsBlock = new BlockStmt();
     protected ReturnStmt returnStmt;
 
-    // Used to manage local variables.
-    protected LocalVariableMonitor varManager = new LocalVariableMonitor(instrsBlock);
+    // Used to return values of local variables.
+    protected LocalVariableFetcher varFetcher = new LocalVariableFetcher(instrsBlock);
 
     /**
      * Default constructor, creates a BlockStmt instance.
@@ -80,7 +81,7 @@ public abstract class MethodBodyEditor {
      * @param returnType The return type of the method.
      */
     public boolean setReturnStatementFromLocalVar(Type returnType) {
-        Optional<VariableDeclarator> localVar = this.varManager.getLocalVarOrParamOfType(returnType);
+        Optional<VariableDeclarator> localVar = this.varFetcher.getLocalVarOrParamOfType(returnType);
 
         if (localVar.isPresent())
             this.setReturnStatement(new ReturnStmt(new NameExpr(localVar.get().getName())));
@@ -118,7 +119,7 @@ public abstract class MethodBodyEditor {
      * @param methodParameters The method parameters
      */
     public void setMethodParameters(NodeList<Parameter> methodParameters) {
-        this.varManager.setMethodParameters(methodParameters);
+        this.varFetcher.setMethodParameters(methodParameters);
     }
 
     /**
@@ -130,7 +131,7 @@ public abstract class MethodBodyEditor {
             Type opType = ASMBytecodeParsingUtils.getTypeFromBytecodePrefix(opStr.charAt(0));
             AssignExpr.Operator operator = ASMBytecodeParsingUtils.getAssignOperatorFromBytecodeStr(opStr.substring(1));
 
-            Optional<VariableDeclarator> localVarName = this.varManager.getLocalVarOrParamOfType(opType);
+            Optional<VariableDeclarator> localVarName = this.varFetcher.getLocalVarOrParamOfType(opType);
 
             if (localVarName.isEmpty()) {
                 this.addStatement(new ExpressionStmt(
@@ -147,5 +148,14 @@ public abstract class MethodBodyEditor {
                 ));
             }
         }
+    }
+
+    /**
+     * Accepts a visitor that will instantiate a new variable in the class context.
+     * @param varInstVisitor The visitor object that contains the variable instantiation logic.
+     * @throws BuildFailedException If instantiating the variable goes wrong.
+     */
+    public void accept(VarInstantiatorVisitor varInstVisitor) throws BuildFailedException {
+        varInstVisitor.visit(this, this.varFetcher);
     }
 }

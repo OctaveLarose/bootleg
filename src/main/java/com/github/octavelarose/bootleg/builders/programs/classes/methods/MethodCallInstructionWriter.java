@@ -7,6 +7,8 @@ import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.octavelarose.bootleg.builders.BuildFailedException;
 import com.github.octavelarose.bootleg.builders.programs.classes.ClassBuilder;
 import com.github.octavelarose.bootleg.builders.programs.classes.methods.bodies.CallableMethodBodyEditor;
+import com.github.octavelarose.bootleg.builders.programs.classes.methods.bodies.variables.visitors.ConstructorCallResultInstVisitor;
+import com.github.octavelarose.bootleg.builders.programs.classes.methods.bodies.variables.visitors.MethodCallResultInstVisitor;
 
 import java.util.HashMap;
 
@@ -98,14 +100,9 @@ public class MethodCallInstructionWriter {
                 ? IsCalleeMethodStatic.YES : IsCalleeMethodStatic.NO;
 
         if (calleeMethod instanceof ConstructorDeclaration) {
-            cmbe.addConstructorCallToLocalVar(calleeClass, calleeMethod.getParameters(), otherClasses);
+            cmbe.accept(new ConstructorCallResultInstVisitor(calleeClass, calleeMethod.getParameters(), otherClasses));
         } else {
-            cmbe.addMethodCallToLocalVar(
-                    (MethodDeclaration)calleeMethod,
-                    calleeClass,
-                    isCalleeMethodStatic,
-                    otherClasses
-            );
+            cmbe.accept(new MethodCallResultInstVisitor((MethodDeclaration)calleeMethod, calleeClass, callerClass.getName(), isCalleeMethodStatic, otherClasses));
         }
 
         cmbe.setBodyToCallable();

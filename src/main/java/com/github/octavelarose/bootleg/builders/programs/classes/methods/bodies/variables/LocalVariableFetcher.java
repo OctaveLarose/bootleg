@@ -16,11 +16,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 
-public class LocalVariableMonitor {
+/**
+ * Returns values of local variables. Input method parameters are also local variables.
+ */
+public class LocalVariableFetcher {
     private final BlockStmt instrsBlock;
     private NodeList<Parameter> methodParameters;
 
-    public LocalVariableMonitor(BlockStmt instrsBlock) { this.instrsBlock = instrsBlock; }
+    public LocalVariableFetcher(BlockStmt instrsBlock) { this.instrsBlock = instrsBlock; }
 
     /**
      * Sets the method's parameters, which are special local variables.
