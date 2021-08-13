@@ -8,7 +8,6 @@ import com.github.javaparser.ast.stmt.ExpressionStmt;
 import com.github.octavelarose.bootleg.builders.BuildConstants;
 import com.github.octavelarose.bootleg.builders.BuildFailedException;
 import com.github.octavelarose.bootleg.builders.programs.classes.ClassBuilder;
-import com.github.octavelarose.bootleg.builders.programs.classes.methods.MethodCallInstructionWriter;
 import com.github.octavelarose.bootleg.builders.programs.classes.methods.bodies.MethodBodyEditor;
 import com.github.octavelarose.bootleg.builders.programs.classes.methods.bodies.variables.LocalVariableFetcher;
 import com.github.octavelarose.bootleg.builders.programs.utils.RandomUtils;
@@ -16,52 +15,70 @@ import com.github.octavelarose.bootleg.builders.programs.utils.RandomUtils;
 import java.util.HashMap;
 import java.util.Optional;
 
+/**
+ * Puts the result of a method call into a local variable.
+ */
 public class MethodCallResultInstVisitor extends VarInstantiatorVisitor {
-    private final MethodDeclaration calleeMethod;
-    private final ClassBuilder calleeClass;
-    private final String callerClassName;
-    private final MethodCallInstructionWriter.IsCalleeMethodStatic isCalleeMethodStatic;
-    private final HashMap<String, ClassBuilder> otherClasses;
+    // The method called.
+    private MethodDeclaration calleeMethod;
 
-    public MethodCallResultInstVisitor(MethodDeclaration calleeMethod,
-                                       ClassBuilder calleeClass,
-                                       String callerClassName,
-                                       MethodCallInstructionWriter.IsCalleeMethodStatic isCalleeMethodStatic,
-                                       HashMap<String, ClassBuilder> otherClasses) {
+    // The class the method belongs to.
+    private ClassBuilder calleeClass;
+
+    // Whether or not the method is static.
+    private boolean isCalleeMethodStatic;
+
+    // Whether or not the method call is to a class from the current context (i.e whether it must be called from "this")
+    private boolean isLocalMethodCall;
+
+    // The other classes in our system.
+    private HashMap<String, ClassBuilder> classesContext;
+
+    public MethodCallResultInstVisitor setCalleeMethod(MethodDeclaration calleeMethod) {
         this.calleeMethod = calleeMethod;
+        return this;
+    }
+
+    public MethodCallResultInstVisitor setMethodClass(ClassBuilder calleeClass) {
         this.calleeClass = calleeClass;
-        this.callerClassName = callerClassName;
-        this.isCalleeMethodStatic = isCalleeMethodStatic;
-        this.otherClasses = otherClasses;
+        return this;
+    }
+
+    public MethodCallResultInstVisitor setIsLocalMethodCall(boolean isLocalMethodCall) {
+        this.isLocalMethodCall = isLocalMethodCall;
+        return this;
+    }
+
+    public MethodCallResultInstVisitor setIsMethodStatic(boolean isMethodStatic) {
+        this.isCalleeMethodStatic = isMethodStatic;
+        return this;
+    }
+
+    public MethodCallResultInstVisitor setClassesContext(HashMap<String, ClassBuilder> classesContext) {
+        this.classesContext = classesContext;
+        return this;
     }
 
     @Override
     public void visit(MethodBodyEditor methodBodyEditor, LocalVariableFetcher localVariableFetcher) throws BuildFailedException {
         super.visit(methodBodyEditor, localVariableFetcher);
-        this.addMethodCallToLocalVar(calleeMethod, calleeClass, isCalleeMethodStatic, otherClasses);
+        this.addMethodCallToLocalVar();
     }
 
     /**
      * Generates a new statement from a method call, a var. instantiation statement or a regular statement if void is returned
-     * @param method A method instance
-     * @param calleeClass The class the method belongs to
-     * @param isCalleeMethodStatic Whether or not the method is static
-     * @param otherClasses The other classes we created so far.
      */
-    public void addMethodCallToLocalVar(MethodDeclaration method,
-                                        ClassBuilder calleeClass,
-                                        MethodCallInstructionWriter.IsCalleeMethodStatic isCalleeMethodStatic,
-                                        HashMap<String, ClassBuilder> otherClasses) throws BuildFailedException {
+    public void addMethodCallToLocalVar() throws BuildFailedException {
         String calleeClassName = calleeClass.getName();
-        NodeList<Expression> dummyParamVals = this.getParamValuesFromContext(method.getParameters(), otherClasses);
+        NodeList<Expression> dummyParamVals = this.getParamValuesFromContext(calleeMethod.getParameters(), classesContext);
         MethodCallExpr methodCallExpr = new MethodCallExpr()
-                .setName(method.getName())
+                .setName(calleeMethod.getName())
                 .setArguments(dummyParamVals);
 
-        if (isCalleeMethodStatic == MethodCallInstructionWriter.IsCalleeMethodStatic.YES) {
+        if (isCalleeMethodStatic) {
             methodCallExpr.setScope(new NameExpr(calleeClassName));
         } else {
-            if (calleeClassName.equals(this.callerClassName))
+            if (isLocalMethodCall)
                 methodCallExpr.setScope(new ThisExpr());
             else {
                 Optional<VariableDeclarator> localVarOfType = this.localVariableFetcher.getLocalVarOrParamOfTypeObjFromStr(calleeClass.getImportStr());
@@ -78,11 +95,11 @@ public class MethodCallResultInstVisitor extends VarInstantiatorVisitor {
             }
         }
 
-        if (method.getType().isVoidType())
+        if (calleeMethod.getType().isVoidType())
             methodBodyEditor.addStatement(new ExpressionStmt(methodCallExpr));
         else
             methodBodyEditor.addStatement(new ExpressionStmt(new VariableDeclarationExpr(
-                    new VariableDeclarator(method.getType(),
+                    new VariableDeclarator(calleeMethod.getType(),
                             RandomUtils.generateRandomName(BuildConstants.LOCAL_VAR_NAME_LENGTH),
                             methodCallExpr))
             ));

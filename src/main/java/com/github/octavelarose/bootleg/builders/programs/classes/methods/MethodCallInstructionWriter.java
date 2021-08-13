@@ -24,29 +24,16 @@ public class MethodCallInstructionWriter {
 
     // Needed for context when a method takes other classes as arguments, and those can't be fetched from local variables/the method context, ...
     // ...hence they need to be instantiated. Which requires their constructors, which requires access to the class instances.
-    HashMap<String, ClassBuilder> otherClasses;
-
-    public enum IsCalleeMethodStatic {
-        YES,
-        NO
-    }
+    HashMap<String, ClassBuilder> classesContext;
 
     /**
      * @param callerClass The caller class.
      * @param callerMethodSignature The caller method signature.
      * @return The MethodCallInstructionWriter object.
      */
-    public MethodCallInstructionWriter setCaller(ClassBuilder callerClass, CallableDeclaration.Signature callerMethodSignature) throws BuildFailedException {
+    public MethodCallInstructionWriter setCaller(ClassBuilder callerClass, CallableDeclaration.Signature callerMethodSignature) {
         this.callerClass = callerClass;
-
-        if (this.callerClass == null)
-            throw new BuildFailedException("Caller class is null.");
-
         this.callerMethod = callerClass.getMethodFromSignature(callerMethodSignature);
-
-        if (this.callerMethod == null)
-            throw new BuildFailedException("Couldn't fetch caller method from caller class.");
-
         return this;
     }
 
@@ -55,22 +42,19 @@ public class MethodCallInstructionWriter {
      * @param calleeMethodSignature The callee method signature.
      * @return The MethodCallInstructionWriter object.
      */
-    public MethodCallInstructionWriter setCallee(ClassBuilder calleeClass, CallableDeclaration.Signature calleeMethodSignature) throws BuildFailedException {
+    public MethodCallInstructionWriter setCallee(ClassBuilder calleeClass, CallableDeclaration.Signature calleeMethodSignature) {
         this.calleeClass = calleeClass;
-
-        if (this.calleeClass == null)
-            throw new BuildFailedException("Callee class is null.");
-
         this.calleeMethod = calleeClass.getMethodFromSignature(calleeMethodSignature);
-
-        if (this.calleeMethod == null)
-            throw new BuildFailedException("Couldn't fetch callee method from callee class.");
-
         return this;
     }
 
+    /**
+     * Sets the class context.
+     * @param classBuilders The other classes' fetched from the calltrace so far.
+     * @return A this instance.
+     */
     public MethodCallInstructionWriter setOtherClassesContext(HashMap<String, ClassBuilder> classBuilders) {
-        this.otherClasses = classBuilders;
+        this.classesContext = classBuilders;
         return this;
     }
 
@@ -94,15 +78,22 @@ public class MethodCallInstructionWriter {
 
         CallableMethodBodyEditor cmbe = new CallableMethodBodyEditor(callerMethod, callerClass);
 
-        IsCalleeMethodStatic isCalleeMethodStatic = calleeMethod.getModifiers()
+        boolean isCalleeMethodStatic = calleeMethod.getModifiers()
                 .stream()
-                .anyMatch(s -> s.getKeyword() == Modifier.Keyword.STATIC)
-                ? IsCalleeMethodStatic.YES : IsCalleeMethodStatic.NO;
+                .anyMatch(s -> s.getKeyword() == Modifier.Keyword.STATIC);
 
         if (calleeMethod instanceof ConstructorDeclaration) {
-            cmbe.accept(new ConstructorCallResultInstVisitor(calleeClass, calleeMethod.getParameters(), otherClasses));
+            cmbe.accept(new ConstructorCallResultInstVisitor()
+                    .setCallerClass(calleeClass)
+                    .setParameters(calleeMethod.getParameters())
+                    .setClassesContext(classesContext));
         } else {
-            cmbe.accept(new MethodCallResultInstVisitor((MethodDeclaration)calleeMethod, calleeClass, callerClass.getName(), isCalleeMethodStatic, otherClasses));
+            cmbe.accept(new MethodCallResultInstVisitor()
+                    .setCalleeMethod((MethodDeclaration)calleeMethod)
+                    .setMethodClass(calleeClass)
+                    .setIsLocalMethodCall(callerClass.getName().equals(calleeClass.getName()))
+                    .setIsMethodStatic(isCalleeMethodStatic)
+                    .setClassesContext(classesContext));
         }
 
         cmbe.setBodyToCallable();

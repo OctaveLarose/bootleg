@@ -18,39 +18,55 @@ import com.github.octavelarose.bootleg.builders.programs.utils.RandomUtils;
 
 import java.util.HashMap;
 
+/**
+ * Puts the result of a constructor call into a local variable.
+ */
 public class ConstructorCallResultInstVisitor extends VarInstantiatorVisitor {
+    // The callee class to which the constructor belongs.
     ClassBuilder calleeClass;
-    NodeList<Parameter> parameters;
-    HashMap<String, ClassBuilder> otherClasses;
 
-    public ConstructorCallResultInstVisitor(ClassBuilder calleeClass, NodeList<Parameter> parameters, HashMap<String, ClassBuilder> otherClasses) {
+    // The constructor's parameters.
+    NodeList<Parameter> parameters;
+
+    // The other classes in our system.
+    HashMap<String, ClassBuilder> classesContext;
+
+    public ConstructorCallResultInstVisitor setCallerClass(ClassBuilder calleeClass) {
         this.calleeClass = calleeClass;
+        return this;
+    }
+
+    public ConstructorCallResultInstVisitor setParameters(NodeList<Parameter> parameters) {
         this.parameters = parameters;
-        this.otherClasses = otherClasses;
+        return this;
+    }
+
+    public ConstructorCallResultInstVisitor setClassesContext(HashMap<String, ClassBuilder> classesContext) {
+        this.classesContext = classesContext;
+        return this;
     }
 
     @Override
     public void visit(MethodBodyEditor methodBodyEditor, LocalVariableFetcher localVariableFetcher) throws BuildFailedException {
         super.visit(methodBodyEditor, localVariableFetcher);
-        this.addConstructorCallToLocalVar(calleeClass, parameters, otherClasses);
+        this.addConstructorCallToLocalVar(calleeClass, parameters, classesContext);
     }
 
     /**
      * Adds a call to a constructor, i.e instantiates a class and puts it in a new local variable.
      * @param calleeClass The class to be instantiated
      * @param constructorParameters Parameters of the class constructor.
-     * @param otherClasses The other classes we created so far.
+     * @param classesContext The other classes we created so far.
      * @throws BuildFailedException If the class with the given name couldn't be accessed.
      */
     public void addConstructorCallToLocalVar(ClassBuilder calleeClass,
                                              NodeList<Parameter> constructorParameters,
-                                             HashMap<String, ClassBuilder> otherClasses) throws BuildFailedException {
-        var dummyParamVals = this.getParamValuesFromContext(constructorParameters, otherClasses);
+                                             HashMap<String, ClassBuilder> classesContext) throws BuildFailedException {
+        var dummyParamVals = this.getParamValuesFromContext(constructorParameters, classesContext);
 
         try {
             ClassOrInterfaceType classWithName = JPTypeUtils.getClassTypeFromName(calleeClass.getImportStr());
 
-            // Added to the start to make sure it's instantiated before the operations that need it, since those operations may be in variable instantiations themselves
             methodBodyEditor.addStatement(new ExpressionStmt(new VariableDeclarationExpr(
                             new VariableDeclarator(classWithName, RandomUtils.generateRandomName(BuildConstants.LOCAL_VAR_NAME_LENGTH),
                                     new ObjectCreationExpr().setType(classWithName).setArguments(dummyParamVals))
