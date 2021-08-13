@@ -58,14 +58,6 @@ public abstract class MethodBodyEditor {
     }
 
     /**
-     * Adds a statement to the start of the method body.
-     * @param exprStmt The statement as an ExpressionStmt.
-     */
-    public void addStatementToStart(ExpressionStmt exprStmt) {
-        this.instrsBlock.addStatement(0, exprStmt);
-    }
-
-    /**
      * Adds a return statement.
      * @param returnStmt A return statement object.
      */

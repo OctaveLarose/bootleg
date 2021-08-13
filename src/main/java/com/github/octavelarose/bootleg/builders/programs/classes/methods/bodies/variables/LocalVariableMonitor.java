@@ -23,8 +23,16 @@ public class LocalVariableMonitor {
     public LocalVariableMonitor(BlockStmt instrsBlock) { this.instrsBlock = instrsBlock; }
 
     /**
+     * Sets the method's parameters, which are special local variables.
+     * @param methodParameters The method parameters
+     */
+    public void setMethodParameters(NodeList<Parameter> methodParameters) {
+        this.methodParameters = methodParameters;
+    }
+
+    /**
      * @param wantedType The type of the variable being queried
-     * @return The name of a local variable / parameter of that given type
+     * @return The name of a random local variable / parameter of that given type
      */
     public Optional<VariableDeclarator> getLocalVarOrParamOfType(Type wantedType) {
         List<VariableDeclarator> candidateVars = new ArrayList<>();
@@ -62,9 +70,5 @@ public class LocalVariableMonitor {
             System.err.println(e.getMessage()); // Ugly, but should never happen (famous last words)
             return Optional.empty();
         }
-    }
-
-    public void setMethodParameters(NodeList<Parameter> methodParameters) {
-        this.methodParameters = methodParameters;
     }
 }

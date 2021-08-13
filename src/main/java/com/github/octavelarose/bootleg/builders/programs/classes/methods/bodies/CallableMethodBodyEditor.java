@@ -215,8 +215,7 @@ public class CallableMethodBodyEditor extends MethodBodyEditor {
                     RandomUtils.generateRandomName(BuildConstants.LOCAL_VAR_NAME_LENGTH),
                     new ObjectCreationExpr().setType(classType).setArguments(dummyParamVals));
 
-            // Added to the start to make sure it's instantiated before the operations that need it
-            this.addStatementToStart(new ExpressionStmt(new VariableDeclarationExpr(varDeclarator)));
+            this.addStatement(new ExpressionStmt(new VariableDeclarationExpr(varDeclarator)));
 
             return varDeclarator;
         } catch (ParseException e) {
