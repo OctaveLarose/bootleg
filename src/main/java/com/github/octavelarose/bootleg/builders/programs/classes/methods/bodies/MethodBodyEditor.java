@@ -1,6 +1,5 @@
 package com.github.octavelarose.bootleg.builders.programs.classes.methods.bodies;
 
-import com.github.javaparser.ParseException;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.body.VariableDeclarator;
@@ -13,14 +12,12 @@ import com.github.javaparser.ast.type.Type;
 import com.github.octavelarose.bootleg.builders.BuildFailedException;
 import com.github.octavelarose.bootleg.builders.programs.calltraces.asm_types.ASMBytecodeParsingUtils;
 import com.github.octavelarose.bootleg.builders.programs.classes.ClassBuilder;
-import com.github.octavelarose.bootleg.builders.programs.classes.methods.bodies.values.DummyValueCreator;
-import com.github.octavelarose.bootleg.builders.programs.utils.JPTypeUtils;
+import com.github.octavelarose.bootleg.builders.programs.classes.methods.bodies.variables.DummyValueCreator;
+import com.github.octavelarose.bootleg.builders.programs.classes.methods.bodies.variables.LocalVariableMonitor;
 import com.github.octavelarose.bootleg.builders.programs.utils.RandomUtils;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Random;
 
 /**
  * Creates and manages a method body, i.e a BlockStmt object.
@@ -29,7 +26,8 @@ public abstract class MethodBodyEditor {
     protected final BlockStmt instrsBlock = new BlockStmt();
     protected ReturnStmt returnStmt;
 
-    protected NodeList<Parameter> methodParameters;
+    // Used to manage local variables.
+    protected LocalVariableMonitor varManager = new LocalVariableMonitor(instrsBlock);
 
     /**
      * Default constructor, creates a BlockStmt instance.
@@ -90,7 +88,7 @@ public abstract class MethodBodyEditor {
      * @param returnType The return type of the method.
      */
     public boolean setReturnStatementFromLocalVar(Type returnType) {
-        Optional<VariableDeclarator> localVar = this.getLocalVarOrParamOfType(returnType);
+        Optional<VariableDeclarator> localVar = this.varManager.getLocalVarOrParamOfType(returnType);
 
         if (localVar.isPresent())
             this.setReturnStatement(new ReturnStmt(new NameExpr(localVar.get().getName())));
@@ -103,7 +101,7 @@ public abstract class MethodBodyEditor {
     }
 
     /**
-     * Adds a return statement as a new class instantiation.
+     * Adds a return statement as a new class instantiation. If the class has no constructors, set it to a null expression.
      * @param classCb The class
      */
     public void setReturnStatementAsNewClass(ClassBuilder classCb) {
@@ -124,11 +122,11 @@ public abstract class MethodBodyEditor {
     }
 
     /**
-     * Sets the method's parameters. Need to be used by operations, ideally
+     * Sets the method's parameters.
      * @param methodParameters The method parameters
      */
     public void setMethodParameters(NodeList<Parameter> methodParameters) {
-        this.methodParameters = methodParameters;
+        this.varManager.setMethodParameters(methodParameters);
     }
 
     /**
@@ -140,7 +138,7 @@ public abstract class MethodBodyEditor {
             Type opType = ASMBytecodeParsingUtils.getTypeFromBytecodePrefix(opStr.charAt(0));
             AssignExpr.Operator operator = ASMBytecodeParsingUtils.getAssignOperatorFromBytecodeStr(opStr.substring(1));
 
-            Optional<VariableDeclarator> localVarName = this.getLocalVarOrParamOfType(opType);
+            Optional<VariableDeclarator> localVarName = this.varManager.getLocalVarOrParamOfType(opType);
 
             if (localVarName.isEmpty()) {
                 this.addStatement(new ExpressionStmt(
@@ -156,48 +154,6 @@ public abstract class MethodBodyEditor {
                             operator)
                 ));
             }
-        }
-    }
-
-    /**
-     * @param wantedType The type of the variable being queried
-     * @return The name of a local variable / parameter of that given type
-     */
-    protected Optional<VariableDeclarator> getLocalVarOrParamOfType(Type wantedType) {
-        List<VariableDeclarator> candidateVars = new ArrayList<>();
-
-        if (this.methodParameters != null && this.methodParameters.isNonEmpty()) {
-            for (Parameter param : this.methodParameters) {
-                if (param.getType().equals(wantedType))
-                    candidateVars.add(new VariableDeclarator(param.getType(), param.getName()));
-            }
-        }
-
-        for (Statement stmt: this.instrsBlock.getStatements()) {
-            Expression stmtExpr = stmt.asExpressionStmt().getExpression();
-            if (stmtExpr.isVariableDeclarationExpr()) {
-                VariableDeclarationExpr expr = stmt.asExpressionStmt().getExpression().asVariableDeclarationExpr();
-                if (expr.getVariable(0).getType().equals(wantedType))
-                    candidateVars.add(expr.getVariable(0));
-            }
-        }
-
-        if (candidateVars.isEmpty())
-            return Optional.empty();
-        else
-            return Optional.of(candidateVars.get(new Random().nextInt(candidateVars.size())));
-    }
-
-    /**
-     * @param objName The name of the object, as a string.
-     * @return The name of a local variable / parameter of that given type
-     */
-    protected Optional<VariableDeclarator> getLocalVarOrParamOfTypeObjFromStr(String objName) {
-        try {
-            return this.getLocalVarOrParamOfType(JPTypeUtils.getClassTypeFromName(objName));
-        } catch (ParseException e) {
-            System.err.println(e.getMessage()); // Ugly, but should never happen (famous last words)
-            return Optional.empty();
         }
     }
 }

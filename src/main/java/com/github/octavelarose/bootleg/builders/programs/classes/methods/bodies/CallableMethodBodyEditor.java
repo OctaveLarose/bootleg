@@ -13,7 +13,7 @@ import com.github.octavelarose.bootleg.builders.BuildConstants;
 import com.github.octavelarose.bootleg.builders.BuildFailedException;
 import com.github.octavelarose.bootleg.builders.programs.classes.ClassBuilder;
 import com.github.octavelarose.bootleg.builders.programs.classes.methods.MethodCallInstructionWriter;
-import com.github.octavelarose.bootleg.builders.programs.classes.methods.bodies.values.DummyValueCreator;
+import com.github.octavelarose.bootleg.builders.programs.classes.methods.bodies.variables.DummyValueCreator;
 import com.github.octavelarose.bootleg.builders.programs.utils.JPTypeUtils;
 import com.github.octavelarose.bootleg.builders.programs.utils.RandomUtils;
 
@@ -132,7 +132,7 @@ public class CallableMethodBodyEditor extends MethodBodyEditor {
             if (calleeClassName.equals(this.parentClass.getName()))
                 methodCallExpr.setScope(new ThisExpr());
             else {
-                Optional<VariableDeclarator> localVarOfType = this.getLocalVarOrParamOfTypeObjFromStr(calleeClass.getImportStr());
+                Optional<VariableDeclarator> localVarOfType = this.varManager.getLocalVarOrParamOfTypeObjFromStr(calleeClass.getImportStr());
 
                 if (localVarOfType.isPresent())
                     methodCallExpr.setScope(new NameExpr(localVarOfType.get().getName()));
@@ -166,7 +166,7 @@ public class CallableMethodBodyEditor extends MethodBodyEditor {
         NodeList<Expression> paramValues = new NodeList<>();
 
         for (Parameter param: parameters) {
-            Optional<VariableDeclarator> localVar = this.getLocalVarOrParamOfType(param.getType());
+            Optional<VariableDeclarator> localVar = this.varManager.getLocalVarOrParamOfType(param.getType());
 
             if (localVar.isPresent()) {
                 paramValues.add(new NameExpr(localVar.get().getName()));
@@ -215,7 +215,7 @@ public class CallableMethodBodyEditor extends MethodBodyEditor {
                     RandomUtils.generateRandomName(BuildConstants.LOCAL_VAR_NAME_LENGTH),
                     new ObjectCreationExpr().setType(classType).setArguments(dummyParamVals));
 
-            // Added to the start to make sure it's instantiated before the operations that need it, since those operations may be in variable instantiations themselves
+            // Added to the start to make sure it's instantiated before the operations that need it
             this.addStatementToStart(new ExpressionStmt(new VariableDeclarationExpr(varDeclarator)));
 
             return varDeclarator;

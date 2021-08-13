@@ -1,4 +1,4 @@
-package com.github.octavelarose.bootleg.builders.programs.classes.methods.bodies.values;
+package com.github.octavelarose.bootleg.builders.programs.classes.methods.bodies.variables;
 
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.Parameter;
