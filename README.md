@@ -25,6 +25,9 @@ and is not specified explicitly anywhere as of right now as it's susceptible to 
 `--op-file FILENAME` ("operations file") can be used to provide additional information about the program.
 As of now (08/06/21), this information corresponds to arithmetic bytecode operators called in order in each function. 
 
+`--no-print-method-names` disables the default behaviour of adding a print statement to every method, 
+to show they're actually being called and in which order they are.
+
 ---
 
 The exported code is generated in the `code_output/` directory. 
