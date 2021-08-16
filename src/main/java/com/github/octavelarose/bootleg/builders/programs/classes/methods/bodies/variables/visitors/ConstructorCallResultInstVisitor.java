@@ -59,7 +59,7 @@ public class ConstructorCallResultInstVisitor extends VarInstantiatorVisitor {
      * @param classesContext The other classes we created so far.
      * @throws BuildFailedException If the class with the given name couldn't be accessed.
      */
-    public void addConstructorCallToLocalVar(ClassBuilder calleeClass,
+    private void addConstructorCallToLocalVar(ClassBuilder calleeClass,
                                              NodeList<Parameter> constructorParameters,
                                              HashMap<String, ClassBuilder> classesContext) throws BuildFailedException {
         var dummyParamVals = this.getParamValuesFromContext(constructorParameters, classesContext);

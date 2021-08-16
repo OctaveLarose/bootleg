@@ -92,10 +92,13 @@ public abstract class VarInstantiatorVisitor {
                     ClassOrInterfaceType classType = param.getType().asClassOrInterfaceType();
                     ClassBuilder cb = otherClasses.get(classType.getNameWithScope().replace(".", "/"));
 
-                    // TODO check if there are constructors
-                    var dummyParamVals = DummyValueCreator.getDummyParameterValuesAsExprs(cb.getConstructors().get(0).getParameters());
-
-                    paramValues.add(new ObjectCreationExpr().setType(classType).setArguments(dummyParamVals));
+                    // A bit rough imo, needs more looking into: in which cases would this condition be met?
+                    if (cb == null || cb.getConstructors().size() == 0)
+                        paramValues.add(new NullLiteralExpr());
+                    else {
+                        var dummyParamVals = DummyValueCreator.getDummyParameterValuesAsExprs(cb.getConstructors().get(0).getParameters());
+                        paramValues.add(new ObjectCreationExpr().setType(classType).setArguments(dummyParamVals));
+                    }
                 }
             }
         }

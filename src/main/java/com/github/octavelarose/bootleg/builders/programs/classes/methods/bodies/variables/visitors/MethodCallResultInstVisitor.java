@@ -68,7 +68,7 @@ public class MethodCallResultInstVisitor extends VarInstantiatorVisitor {
     /**
      * Generates a new statement from a method call, a var. instantiation statement or a regular statement if void is returned
      */
-    public void addMethodCallToLocalVar() throws BuildFailedException {
+    private void addMethodCallToLocalVar() throws BuildFailedException {
         String calleeClassName = calleeClass.getName();
         NodeList<Expression> dummyParamVals = this.getParamValuesFromContext(calleeMethod.getParameters(), classesContext);
         MethodCallExpr methodCallExpr = new MethodCallExpr()
