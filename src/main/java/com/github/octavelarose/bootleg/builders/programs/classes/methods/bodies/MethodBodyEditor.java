@@ -131,22 +131,26 @@ public abstract class MethodBodyEditor {
             Type opType = ASMBytecodeParsingUtils.getTypeFromBytecodePrefix(opStr.charAt(0));
             AssignExpr.Operator operator = ASMBytecodeParsingUtils.getAssignOperatorFromBytecodeStr(opStr.substring(1));
 
-            Optional<VariableDeclarator> localVarName = this.varFetcher.getLocalVarOrParamOfType(opType);
+            Optional<VariableDeclarator> localVarOpt = this.varFetcher.getLocalVarOrParamOfType(opType);
+            String localVarName;
 
-            if (localVarName.isEmpty()) {
-                this.addStatement(new ExpressionStmt(
-                        new VariableDeclarationExpr(
-                            new VariableDeclarator(opType, RandomUtils.generateRandomName(5),
-                                new NameExpr(DummyValueCreator.getDummyParamValueFromType(opType))))
-                ));
+            if (localVarOpt.isEmpty()) {
+                VariableDeclarator newVar = new VariableDeclarator(opType,
+                        RandomUtils.generateRandomName(5),
+                        new NameExpr(DummyValueCreator.getDummyParamValueFromType(opType)));
+
+                this.addStatement(new ExpressionStmt(new VariableDeclarationExpr(newVar)));
+                localVarName = newVar.getNameAsString();
             } else {
-                this.addStatement(new ExpressionStmt(
-                        new AssignExpr(
-                            new NameExpr(localVarName.get().getName()),
+                localVarName = localVarOpt.get().getNameAsString();
+            }
+
+            this.addStatement(new ExpressionStmt(
+                       new AssignExpr(
+                            new NameExpr(localVarName),
                             new NameExpr(DummyValueCreator.getDummyParamValueFromType(opType)),
                             operator)
-                ));
-            }
+            ));
         }
     }
 
